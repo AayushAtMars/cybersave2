@@ -76,15 +76,17 @@ app.use(
 );
 
 // ── Server startup (Render long-running process) ───────────────────────────────
-ensureConnected()
-  .then(() => {
-    app.listen(config.port, () => {
-      logger.info(`core-service listening on port ${config.port}`, { env: config.nodeEnv });
+if (require.main === module) {
+  ensureConnected()
+    .then(() => {
+      app.listen(config.port, () => {
+        logger.info(`core-service listening on port ${config.port}`, { env: config.nodeEnv });
+      });
+    })
+    .catch((err) => {
+      logger.error('Failed to start core-service', { error: err });
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    logger.error('Failed to start core-service', { error: err });
-    process.exit(1);
-  });
+}
 
 export default app;

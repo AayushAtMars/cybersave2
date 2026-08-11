@@ -75,18 +75,20 @@ app.use(
 );
 
 // ── Server startup (Render long-running process) ───────────────────────────────
-ensureConnected()
-  .then(() => {
-    // Start background cron jobs (e.g., draft reminders)
-    startDraftReminderCron();
+if (require.main === module) {
+  ensureConnected()
+    .then(() => {
+      // Start background cron jobs (e.g., draft reminders)
+      startDraftReminderCron();
 
-    app.listen(config.port, () => {
-      logger.info(`ops-service listening on port ${config.port}`, { env: config.nodeEnv });
+      app.listen(config.port, () => {
+        logger.info(`ops-service listening on port ${config.port}`, { env: config.nodeEnv });
+      });
+    })
+    .catch((err) => {
+      logger.error('Failed to start ops-service', { error: err });
+      process.exit(1);
     });
-  })
-  .catch((err) => {
-    logger.error('Failed to start ops-service', { error: err });
-    process.exit(1);
-  });
+}
 
 export default app;
