@@ -439,7 +439,7 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
 
     const operatorLogsList: any[] = [];
     appsWithOperatorTimeline.forEach(app => {
-      app.timeline.forEach(event => {
+      app.timeline.forEach((event: any) => {
         if (event.actorRole === 'operator') {
           operatorLogsList.push({
             applicationId: app._id,

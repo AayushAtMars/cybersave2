@@ -17,7 +17,6 @@
   },
   "include": [
     "monolith.ts",
-    "gateway/src/**/*",
     "services/core-service/src/**/*",
     "services/ops-service/src/**/*",
     "shared/src/**/*"
