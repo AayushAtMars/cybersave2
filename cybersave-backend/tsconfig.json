@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cybersave/shared": ["shared/src"]
+    }
+  },
+  "include": [
+    "monolith.ts",
+    "gateway/src/**/*",
+    "services/*/src/**/*",
+    "shared/src/**/*"
+  ],
+  "exclude": [
+    "**/node_modules",
+    "**/dist"
+  ]
+}

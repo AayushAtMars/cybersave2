@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "337114487039",
+    "project_id": "cybersave-625ad",
+    "storage_bucket": "cybersave-625ad.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:337114487039:android:e8786e10629fa3653e94ca",
+        "android_client_info": {
+          "package_name": "com.cybersave.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD77qnLm1NOdP_-ZtDR4u19JCvjwZU8zaM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
