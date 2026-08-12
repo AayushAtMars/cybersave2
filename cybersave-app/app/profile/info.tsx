@@ -48,15 +48,40 @@ export default function PersonalInfoScreen() {
 
   const handleSave = async () => {
     try {
-      await updateProfile.mutateAsync({
-        dob: dob || undefined,
-        gender: (gender.toLowerCase() as any) || undefined,
-        email: email || undefined,
-      });
+      const payload: Record<string, any> = {};
+
+      // Only include email since that's the only field the user can freely edit
+      if (email && email.trim()) {
+        payload.email = email.trim();
+      }
+
+      // Only include dob if it differs from what's stored and is non-empty
+      const storedDob = user?.dob ?? '';
+      if (dob.trim() && dob.trim() !== storedDob) {
+        payload.dob = dob.trim();
+      }
+
+      // Only include gender if it differs from what's stored and is non-empty
+      const storedGender = user?.gender ?? '';
+      if (gender.trim() && gender.trim().toLowerCase() !== storedGender.toLowerCase()) {
+        payload.gender = gender.trim().toLowerCase() as any;
+      }
+
+      if (Object.keys(payload).length === 0) {
+        Alert.alert('No Changes', 'Nothing to save — no fields were modified.');
+        return;
+      }
+
+      await updateProfile.mutateAsync(payload);
       Alert.alert('Success', 'Profile details updated successfully');
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', err?.response?.data?.error ?? 'Failed to update profile');
+      const msg =
+        err?.response?.data?.message ??
+        err?.response?.data?.error ??
+        err?.message ??
+        'Failed to update profile';
+      Alert.alert('Error', msg);
     }
   };
 

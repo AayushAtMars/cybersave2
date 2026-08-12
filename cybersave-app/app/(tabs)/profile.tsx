@@ -59,7 +59,7 @@ export default function ProfileScreen() {
     ? (user.phone.startsWith('+') ? user.phone : `+91 ${user.phone.replace(/(\d{5})(\d{5})/, '$1 $2')}`)
     : '+91 98765 43210';
 
-  const emailText = user?.email ?? 'rajesh.kumar@email.com';
+  const emailText = user?.email ?? null;
 
   return (
     <View style={styles.flex}>
@@ -101,8 +101,10 @@ export default function ProfileScreen() {
             {formattedPhone && (
               <Text style={styles.subText}>{formattedPhone}</Text>
             )}
-            {emailText && (
+            {emailText ? (
               <Text style={styles.subText}>{emailText}</Text>
+            ) : (
+              <Text style={[styles.subText, styles.notAddedText]}>Not added</Text>
             )}
           </View>
         </View>
@@ -299,6 +301,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748B',
     fontWeight: '400',
+  },
+  notAddedText: {
+    color: '#94A3B8',
+    fontStyle: 'italic',
   },
   menuSection: {
     gap: 8,
