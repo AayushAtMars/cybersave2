@@ -697,7 +697,7 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
         limit,
         totalPages: Math.ceil(total / limit),
         metrics: {
-          totalApplications,
+          totalApplications: await Application.countDocuments({ status: { $ne: ApplicationStatus.DRAFT } }),
           todayReceived,
           pendingReview,
           inProcessing,

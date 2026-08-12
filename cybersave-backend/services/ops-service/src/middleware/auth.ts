@@ -11,6 +11,7 @@ declare global {
     }
   }
 }
+//deploy
 
 export const authenticateGateway = (req: Request, res: Response, next: NextFunction): void => {
   const userId = req.headers['x-user-id'] as string;

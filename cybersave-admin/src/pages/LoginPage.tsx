@@ -22,7 +22,7 @@ export default function LoginPage() {
       if ((window as any).turnstile) {
         clearInterval(checkTurnstile);
         (window as any).turnstile.render('#turnstile-container', {
-          sitekey: '1x00000000000000000000AA',
+          sitekey: '0x4AAAAAAENtO54p6ZN5yS55',
           callback: (token: string) => {
             setCaptchaToken(token);
           },
