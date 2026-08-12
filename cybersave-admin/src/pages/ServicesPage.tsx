@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { adminClient } from '../api/client';
+import ServiceConfigWizard from './ServiceConfigWizard';
 
 interface RequiredDocument {
   name: string;
@@ -31,6 +32,7 @@ export default function ServicesPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [showWizard, setShowWizard] = useState(false);
 
   // Selected Service for edit/view
   const [selectedService, setSelectedService] = useState<Service | null>(null);
@@ -162,21 +164,7 @@ export default function ServicesPage() {
   };
 
   const handleAddNewClick = () => {
-    setName('');
-    setDescription('');
-    setCategory('aadhaar');
-    setDepartment('');
-    setGovtFee(0);
-    setConvenienceFee(0);
-    setSlaHours(24);
-    setEligibility('Indian Citizen');
-    setRequiredDocs('Aadhaar Card');
-    setIsActive(true);
-    setVisualFields([
-      { key: 'applicantName', label: 'Applicant Full Name', type: 'text', required: true, placeholder: 'Enter Full Name' }
-    ]);
-
-    setIsCreateModalOpen(true);
+    setShowWizard(true);
   };
 
   // Submit Edit Form
@@ -342,6 +330,10 @@ export default function ServicesPage() {
   const totalServices = services.length;
   const activeServices = services.filter(s => s.isActive).length;
   const underMaintenance = services.filter(s => !s.isActive).length;
+
+  if (showWizard) {
+    return <ServiceConfigWizard onClose={() => setShowWizard(false)} onSave={() => { setShowWizard(false); fetchServices(); }} />;
+  }
 
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>

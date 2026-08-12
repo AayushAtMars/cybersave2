@@ -606,7 +606,15 @@ export default function CitizensPage() {
             Loading citizen directories...
           </div>
         ) : (
-          <div style={{ overflowX: 'auto' }}>
+          <div style={{
+            overflowX: 'auto',
+            paddingBottom: (() => {
+              const openMenuIndex = citizens.findIndex(c => c._id === openActionMenu);
+              const isNearBottom = openMenuIndex !== -1 && (citizens.length - openMenuIndex <= 2);
+              return isNearBottom ? '100px' : '0px';
+            })(),
+            transition: 'padding-bottom 0.15s ease'
+          }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '900px' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid #F1F5F9' }}>

@@ -48,6 +48,8 @@ interface Application {
     status: 'pending' | 'approved' | 'rejected';
     comments?: string;
   }>;
+  certificateUrl?: string;
+  department?: string;
 }
 
 interface DocumentDetail {
@@ -69,6 +71,94 @@ export default function ApplicationVerifyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [newNote, setNewNote] = useState('');
+  
+  // Modal states for Certificate approval
+  const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [certDept, setCertDept] = useState('');
+  const [isSubmittingCert, setIsSubmittingCert] = useState(false);
+
+  const handleApproveWithCertificate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      showToast('Please select a certificate file to upload');
+      return;
+    }
+    
+    setIsSubmittingCert(true);
+    try {
+      // Step 1: Request pre-signed upload URL
+      showToast('Requesting upload credentials...');
+      const urlRes = await adminClient.post('/documents/upload-url', {
+        fileName: selectedFile.name,
+        mimeType: selectedFile.type || 'application/octet-stream',
+        sizeBytes: selectedFile.size,
+        documentCategory: 'certificate',
+        applicationId: id
+      });
+      
+      if (!urlRes.data?.success) {
+        throw new Error(urlRes.data?.error || 'Failed to get upload URL');
+      }
+      
+      const { uploadUrl, token, storageKey } = urlRes.data.data;
+      
+      // Step 2: Upload file directly to storage via pre-signed URL
+      showToast('Uploading certificate file...');
+      const uploadRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        body: selectedFile,
+        headers: {
+          'Content-Type': selectedFile.type || 'application/octet-stream',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!uploadRes.ok) {
+        throw new Error('Supabase Storage upload failed');
+      }
+      
+      // Step 3: Confirm document upload to document-service
+      showToast('Confirming file upload...');
+      const confirmRes = await adminClient.post('/documents/confirm', { storageKey });
+      if (!confirmRes.data?.success) {
+        throw new Error(confirmRes.data?.error || 'Failed to confirm document upload');
+      }
+      
+      const documentId = confirmRes.data.data.document.id;
+      
+      // Step 4: Retrieve secure download URL for the uploaded document
+      showToast('Retrieving certificate access link...');
+      const downloadRes = await adminClient.get(`/documents/${documentId}/download-url`);
+      if (!downloadRes.data?.success) {
+        throw new Error(downloadRes.data?.error || 'Failed to retrieve download URL');
+      }
+      
+      const certificateUrl = downloadRes.data.data.downloadUrl;
+      
+      // Step 5: Complete application approval by attaching certificate URL
+      showToast('Finalizing application approval...');
+      const approveRes = await adminClient.patch(`/applications/${id}/certificate`, {
+        certificateUrl,
+        department: certDept.trim() || undefined
+      });
+      
+      if (approveRes.data?.success) {
+        showToast('Application approved and certificate attached successfully!');
+        setIsApproveModalOpen(false);
+        setSelectedFile(null);
+        setCertDept('');
+        fetchDetails();
+      } else {
+        showToast(approveRes.data?.error || 'Failed to finalize approval');
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.response?.data?.error || err.message || 'Verification & upload process failed');
+    } finally {
+      setIsSubmittingCert(false);
+    }
+  };
   
   // Interactive checklist state
   const [checklist, setChecklist] = useState({
@@ -364,7 +454,7 @@ export default function ApplicationVerifyDetailsPage() {
           </button>
 
           <button
-            onClick={() => handleStatusUpdate('completed')}
+            onClick={() => setIsApproveModalOpen(true)}
             style={{
               padding: '10px 22px', border: 'none', backgroundColor: '#10B981',
               color: '#FFFFFF', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
@@ -443,6 +533,30 @@ export default function ApplicationVerifyDetailsPage() {
                 {reasonForUpdate}
               </span>
             </div>
+
+            {app.status === 'completed' && app.certificateUrl && (
+              <div style={{
+                marginTop: '20px', padding: '16px', borderRadius: '12px',
+                backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+              }}>
+                <div>
+                  <div style={{ fontSize: '13.5px', fontWeight: 800, color: '#16A34A' }}>Application Approved</div>
+                  {app.department && <div style={{ fontSize: '11.5px', color: '#15803D', marginTop: '2px' }}>Issued by: {app.department}</div>}
+                </div>
+                <button
+                  onClick={() => window.open(app.certificateUrl, '_blank')}
+                  style={{
+                    padding: '8px 14px', backgroundColor: '#16A34A', border: 'none',
+                    borderRadius: '8px', color: '#FFFFFF', fontSize: '12.5px', fontWeight: 700,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px'
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                  View Certificate
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Supporting Documents */}
@@ -709,6 +823,127 @@ export default function ApplicationVerifyDetailsPage() {
         </div>
 
       </div>
+
+      {/* Approve and Attach Certificate Modal Overlay */}
+      {isApproveModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: '16px',
+            padding: '32px',
+            width: '100%',
+            maxWidth: '520px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            border: '1px solid #E2E8F0',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0F172A', letterSpacing: '-0.02em', margin: 0 }}>
+                  Approve Application
+                </h2>
+                <p style={{ fontSize: '13.5px', color: '#64748B', margin: '4px 0 0 0', fontWeight: 500 }}>
+                  Attach the official certificate to complete this application. The citizen will be notified and can download it immediately.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsApproveModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '24px',
+                  fontWeight: 600,
+                  color: '#64748B',
+                  cursor: 'pointer'
+                }}
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleApproveWithCertificate} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Certificate File (PDF or Image) *
+                </label>
+                <input
+                  type="file"
+                  required
+                  accept="application/pdf,image/*"
+                  onChange={e => {
+                    const file = e.target.files?.[0] || null;
+                    setSelectedFile(file);
+                  }}
+                  style={{
+                    padding: '12px',
+                    border: '1.5px dashed #E2E8F0',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    cursor: 'pointer',
+                    outline: 'none',
+                    backgroundColor: '#F8FAFC'
+                  }}
+                />
+                {selectedFile && (
+                  <span style={{ fontSize: '12.5px', color: '#10B981', fontWeight: 600, marginTop: '2px' }}>
+                    Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  Issuing Department (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Department of Information Technology"
+                  value={certDept}
+                  onChange={e => setCertDept(e.target.value)}
+                  style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsApproveModalOpen(false)}
+                  style={{ padding: '10px 20px', border: '1px solid #E2E8F0', backgroundColor: '#FFFFFF', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, color: '#475569', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingCert}
+                  style={{
+                    padding: '10px 20px',
+                    border: 'none',
+                    backgroundColor: '#10B981',
+                    borderRadius: '8px',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    color: '#FFFFFF',
+                    cursor: isSubmittingCert ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {isSubmittingCert ? 'Approving...' : 'Confirm Approval'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

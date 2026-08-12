@@ -7,12 +7,15 @@ import {
   StyleSheet,
   Dimensions,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+
+import { useServices } from '../../src/api/applications';
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - spacing.base * 2 - spacing.md) / 2;
@@ -28,6 +31,9 @@ interface HubCard {
   implemented: boolean;
   tags: string[];
   isCustomGovStyle?: boolean;
+  iconUrl?: string;
+  serviceId?: string;
+  hasSubServices?: boolean;
 }
 
 const HUB_CARDS: HubCard[] = [
@@ -153,10 +159,57 @@ const HUB_CARDS: HubCard[] = [
 
 export default function ServicesScreen() {
   const [selectedChip, setSelectedChip] = useState('All');
+  const { data } = useServices();
+
+  // Filter out the pre-seeded sub-services to identify custom created main services
+  const seededNames = [
+    "update address", "update mobile", "update name", "download e-aadhaar", "check status", "book appointment", "verify aadhaar", "link bank account",
+    "apply new pan", "corrections", "reprint pan", "link with aadhaar", "pan status", "e-pan download", "pan verification", "tan application",
+    "birth certificate", "death certificate", "marriage certificate", "income certificate", "caste certificate", "domicile certificate", "character certificate", "residence certificate",
+    "pm-kisan samman nidhi", "electricity bill", "pm svanidhi scheme", "ayushman bharat pm-jay", "pradhan mantri awas yojana",
+    "aeps cash withdrawal", "balance inquiry", "mini statement", "pmsby — accident insurance", "pmjjby — life insurance",
+    "national scholarship scheme", "central sector scholarship", "atal pension yojana", "ignoaps old age pension", "shramik card registration",
+    "nregs job card", "nrega job card", "itr filing (salary class)", "gst registration"
+  ];
+
+  const customDbCards: HubCard[] = (data?.items ?? [])
+    .filter(svc => {
+      const nameLower = svc.name.toLowerCase();
+      // It is a custom main service card if its name is not a seeded sub-service and it has sub-services or is marked active
+      return !seededNames.includes(nameLower) && (svc.subServices && svc.subServices.length > 0 || svc.isActive);
+    })
+    .map(svc => ({
+      label: svc.name,
+      icon: 'library-outline',
+      iconColor: '#7C3AED',
+      iconBg: '#F5F3FF',
+      category: svc.category || 'gov_scheme',
+      implemented: true,
+      tags: ['All', 'Government'],
+      iconUrl: svc.iconUrl,
+      serviceId: svc._id,
+      hasSubServices: svc.subServices && svc.subServices.length > 0
+    }));
+
+  const finalCards = [...HUB_CARDS, ...customDbCards];
 
   const handlePressCard = (card: HubCard) => {
     if (!card.implemented) {
       Alert.alert('Coming Soon', `${card.label} services are being configured and will be available soon.`);
+      return;
+    }
+    if (card.serviceId) {
+      if (card.hasSubServices) {
+        router.push({
+          pathname: '/services/hub',
+          params: { category: card.category, hubName: card.label, parentServiceId: card.serviceId },
+        });
+      } else {
+        router.push({
+          pathname: '/services/detail',
+          params: { serviceId: card.serviceId },
+        });
+      }
       return;
     }
     router.push({
@@ -165,7 +218,7 @@ export default function ServicesScreen() {
     });
   };
 
-  const filteredCards = HUB_CARDS.filter((card) => card.tags.includes(selectedChip));
+  const filteredCards = finalCards.filter((card) => card.tags.includes(selectedChip));
 
   return (
     <View style={styles.flex}>
@@ -229,7 +282,11 @@ export default function ServicesScreen() {
                       isCustomGov && styles.customGovIconBox,
                     ]}
                   >
-                    <Ionicons name={card.icon} size={20} color={card.iconColor} />
+                    {card.iconUrl ? (
+                      <Image source={{ uri: card.iconUrl }} style={{ width: 24, height: 24, borderRadius: 6 }} resizeMode="contain" />
+                    ) : (
+                      <Ionicons name={card.icon} size={20} color={card.iconColor} />
+                    )}
                   </View>
                   <Text style={styles.cardLabel}>{card.label}</Text>
                 </TouchableOpacity>

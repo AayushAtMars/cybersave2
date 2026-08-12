@@ -20,6 +20,12 @@ export interface FormField {
   maxLength?: number;
 }
 
+export interface SubService {
+  name: string;
+  code: string;
+  isActive: boolean;
+}
+
 export interface Service {
   _id: string;
   name: string;
@@ -33,7 +39,12 @@ export interface Service {
   eligibility?: string[];
   requiredDocuments: RequiredDocument[];
   formFields: FormField[];
+  subServices?: SubService[];
   isActive: boolean;
+  iconUrl?: string;
+  paymentMethods?: string[];
+  refundPolicy?: string;
+  additionalCharges?: any[];
 }
 
 

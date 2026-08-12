@@ -21,8 +21,10 @@ export default function LoginPage() {
     const checkTurnstile = setInterval(() => {
       if ((window as any).turnstile) {
         clearInterval(checkTurnstile);
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const sitekey = isLocalhost ? '1x00000000000000000000AA' : '0x4AAAAAAENtO54p6ZN5yS55';
         (window as any).turnstile.render('#turnstile-container', {
-          sitekey: '0x4AAAAAAENtO54p6ZN5yS55',
+          sitekey,
           callback: (token: string) => {
             setCaptchaToken(token);
           },

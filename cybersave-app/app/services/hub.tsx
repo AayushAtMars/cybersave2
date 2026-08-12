@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -24,7 +25,7 @@ interface HubService {
 }
 
 export default function ServicesHubScreen() {
-  const { category } = useLocalSearchParams<{ category: string }>();
+  const { category, parentServiceId } = useLocalSearchParams<{ category: string; parentServiceId?: string }>();
 
   // Fetch real services from DB for this category
   const dbCategoryQuery = (category === 'aadhaar' || category === 'pan' || category === 'certificate') ? category : 'gov_scheme';
@@ -266,22 +267,147 @@ export default function ServicesHubScreen() {
             contentContainerStyle={styles.scrollContent}
           >
             <View style={styles.grid}>
-              {currentList.map((item, idx) => (
-                <TouchableOpacity
-                  key={idx}
-                  style={styles.card}
-                  activeOpacity={0.8}
-                  onPress={() => handlePressOption(item)}
-                >
-                  <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
-                    <Ionicons name={item.icon} size={20} color={item.iconColor} />
-                  </View>
-                  <View style={styles.cardInfo}>
-                    <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
-                    <Text style={styles.cardSub} numberOfLines={3}>{item.sub}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
+              {(() => {
+                // 1. Get lowercase names of mock items (COMMENTED OUT)
+                // const mockNames = currentList.map(item => item.name.toLowerCase());
+
+                // Helper to resolve icon details dynamically by name matching mock lists
+                const getIconDetailsByName = (name: string, cat: string) => {
+                  let iconName = cat === 'aadhaar' ? 'shield-checkmark-outline' :
+                                 cat === 'pan' ? 'card-outline' :
+                                 cat === 'certificate' ? 'ribbon-outline' : 'library-outline';
+                  let iconColor = cat === 'aadhaar' ? '#2563EB' :
+                                  cat === 'pan' ? '#10B981' :
+                                  cat === 'certificate' ? '#F59E0B' : '#3B82F6';
+                  let iconBg = cat === 'aadhaar' ? '#EFF6FF' :
+                               cat === 'pan' ? '#ECFDF5' :
+                               cat === 'certificate' ? '#FEF3C7' : '#EFF6FF';
+
+                  const allMockLists = [
+                    ...mockAadhaar,
+                    ...mockPan,
+                    ...mockCertificate,
+                    ...mockGovScheme,
+                    ...mockUtility,
+                    ...mockAgriculture,
+                    ...mockHealth,
+                    ...mockBanking,
+                    ...mockInsurance,
+                    ...mockEducation,
+                    ...mockPension,
+                    ...mockEmployment
+                  ];
+
+                  const matchedMock = allMockLists.find(mockItem => 
+                    name.toLowerCase().includes(mockItem.name.toLowerCase()) ||
+                    mockItem.name.toLowerCase().includes(name.toLowerCase())
+                  );
+
+                  if (matchedMock) {
+                    iconName = matchedMock.icon;
+                    iconBg = matchedMock.iconBg;
+                    iconColor = matchedMock.iconColor;
+                  }
+
+                  return { iconName, iconColor, iconBg };
+                };
+
+                // 2. Map DB items
+                const targetItems = parentServiceId 
+                  ? (data?.items ?? []).filter(svc => svc._id === parentServiceId)
+                  : (data?.items ?? []);
+
+                const dbItems = targetItems.flatMap(svc => {
+                  if (!svc.subServices || svc.subServices.length === 0) {
+                    const { iconName, iconColor, iconBg } = getIconDetailsByName(svc.name, svc.category);
+                    return [{
+                      name: svc.name,
+                      sub: svc.description || 'Government Service',
+                      icon: iconName as any,
+                      iconBg: iconBg,
+                      iconColor: iconColor,
+                      iconUrl: svc.iconUrl,
+                      parentServiceId: svc._id
+                    }];
+                  }
+                  return svc.subServices.map(sub => {
+                    const { iconName, iconColor, iconBg } = getIconDetailsByName(sub.name, svc.category);
+                    return {
+                      name: sub.name,
+                      sub: svc.description || 'Government Service',
+                      icon: iconName as any,
+                      iconBg: iconBg,
+                      iconColor: iconColor,
+                      iconUrl: svc.iconUrl,
+                      parentServiceId: svc._id
+                    };
+                  });
+                });
+
+                // 3. Filter DB items to strictly display under correct categories and prevent mixing
+                const allowedNames = currentList.map(item => item.name.toLowerCase());
+                let filteredDbItems = [];
+
+                if (parentServiceId) {
+                  // If navigating to a specific dynamic parent service, bypass name filters and show all its sub-services
+                  filteredDbItems = dbItems;
+                } else if (category === 'gov_scheme') {
+                  // For the general Government Schemes portal, show PM SVANidhi, PMAY, and any custom admin-configured services (which are not in the predefined lists of other sub-categories)
+                  const allOtherSubCategoryMockNames = [
+                    ...mockAadhaar, ...mockPan, ...mockCertificate,
+                    ...mockUtility, ...mockAgriculture, ...mockHealth, ...mockBanking,
+                    ...mockInsurance, ...mockEducation, ...mockPension, ...mockEmployment, ...mockTax
+                  ].map(item => item.name.toLowerCase());
+
+                  filteredDbItems = dbItems.filter(dbItem => {
+                    const dbNameLower = dbItem.name.toLowerCase();
+                    const matchesGovScheme = allowedNames.some(name => dbNameLower.includes(name) || name.includes(dbNameLower));
+                    const matchesOther = allOtherSubCategoryMockNames.some(name => dbNameLower.includes(name) || name.includes(dbNameLower));
+                    return matchesGovScheme || !matchesOther;
+                  });
+                } else {
+                  // For specific categories (Aadhaar, PAN, Utility, Banking, Insurance, Pension, Employment, etc.), strictly match name tokens
+                  filteredDbItems = dbItems.filter(dbItem => {
+                    const dbNameLower = dbItem.name.toLowerCase();
+                    return allowedNames.some(name => dbNameLower.includes(name) || name.includes(dbNameLower));
+                  });
+                }
+
+                // 5. Use filtered database items directly
+                const finalDisplayList = filteredDbItems;
+
+                return finalDisplayList.map((item: any, idx) => {
+                  return (
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.card}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        if (item.parentServiceId) {
+                          router.push({
+                            pathname: '/services/detail',
+                            params: { serviceId: item.parentServiceId },
+                          });
+                        } else {
+                          Alert.alert('Configuring Service', `${item.name} is currently offline for server migration. Please try Birth Certificate or PAN Card.`);
+                        }
+                      }}
+                    >
+                      <View style={[styles.iconBox, { backgroundColor: item.iconBg || '#EFF6FF' }]}>
+                        {item.iconUrl ? (
+                          <Image source={{ uri: item.iconUrl }} style={{ width: 24, height: 24, borderRadius: 6 }} resizeMode="contain" />
+                        ) : (
+                          <Ionicons name={item.icon || 'library-outline'} size={20} color={item.iconColor || '#2563EB'} />
+                        )}
+                      </View>
+                      <View style={styles.cardInfo}>
+                        <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
+                        <Text style={styles.cardSub} numberOfLines={3}>{item.sub}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  );
+                });
+              })()}
             </View>
           </ScrollView>
         )}

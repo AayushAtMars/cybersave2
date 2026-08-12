@@ -191,6 +191,38 @@ export default function ServiceDetailScreen() {
               </View>
             </View>
 
+            {/* Additional Charges Section */}
+            {service.additionalCharges && service.additionalCharges.length > 0 && (
+              <View style={styles.sectionCard}>
+                <Text style={styles.sectionTitle}>Additional Options / Processing Fees</Text>
+                {service.additionalCharges.map((ch: any, idx: number) => (
+                  <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 4 }}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 13, fontWeight: '700', color: '#0F172A' }}>{ch.name}</Text>
+                      {ch.condition ? <Text style={{ fontSize: 11, color: '#64748B' }}>{ch.condition}</Text> : null}
+                    </View>
+                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#EF4444' }}>+₹{ch.amount}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Payment & Refund Info Section */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Payment & Refund Information</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
+                {(service.paymentMethods && service.paymentMethods.length > 0 ? service.paymentMethods : ['Online Payment', 'UPI']).map((m: string, idx: number) => (
+                  <View key={idx} style={{ backgroundColor: '#EFF6FF', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 100 }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#2563EB' }}>{m}</Text>
+                  </View>
+                ))}
+              </View>
+              <View style={{ borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingTop: 8, marginTop: 4 }}>
+                <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>Refund Policy:</Text>
+                <Text style={{ fontSize: 12, color: '#0F172A', marginTop: 2 }}>{service.refundPolicy || 'Non-refundable after processing starts'}</Text>
+              </View>
+            </View>
+
             {/* Apply Now Button */}
             <TouchableOpacity
               style={[styles.applyBtn, isCreating && { opacity: 0.7 }]}

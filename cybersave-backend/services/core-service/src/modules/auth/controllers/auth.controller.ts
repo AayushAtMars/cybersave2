@@ -410,7 +410,9 @@ export const toggleOperator2FA = async (req: Request, res: Response): Promise<vo
 export const operatorLogin = async (req: Request, res: Response): Promise<void> => {
   const { email, password, captchaToken } = req.body as { email: string; password: string; captchaToken?: string };
 
-  const turnstileSecret = process.env.TURNSTILE_SECRET_KEY ?? '1x0000000000000000000000000000000AA';
+  const turnstileSecret = process.env.NODE_ENV === 'development'
+    ? '1x0000000000000000000000000000000AA'
+    : (process.env.TURNSTILE_SECRET_KEY ?? '1x0000000000000000000000000000000AA');
 
   // Verify captcha in development (using local test sitekey) and production
   if (process.env.NODE_ENV !== 'test') {
