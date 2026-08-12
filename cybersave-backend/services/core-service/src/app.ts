@@ -30,7 +30,7 @@ app.use(express.json({ limit: '1mb' }));
 
 // ── DB init — on Render (long-running server), connect once at startup ─────────
 let initialized = false;
-const ensureConnected = async () => {
+export const ensureConnected = async () => {
   if (initialized) return;
   await connectAllDBs();
   registerModels();

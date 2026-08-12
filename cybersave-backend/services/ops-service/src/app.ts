@@ -31,7 +31,7 @@ app.use(
 app.use(express.json({ limit: '5mb' }));
 
 let initialized = false;
-const ensureConnected = async () => {
+export const ensureConnected = async () => {
   if (initialized) return;
   await connectAllDBs();
   registerModels();

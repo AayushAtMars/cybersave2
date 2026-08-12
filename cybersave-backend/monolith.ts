@@ -7,8 +7,8 @@ import jwt from 'jsonwebtoken';
 import winston from 'winston';
 
 // Import consolidated services
-import coreApp from './services/core-service/src/app';
-import opsApp from './services/ops-service/src/app';
+import coreApp, { ensureConnected as ensureCoreConnected } from './services/core-service/src/app';
+import opsApp, { ensureConnected as ensureOpsConnected } from './services/ops-service/src/app';
 
 import { startDraftReminderCron } from './services/ops-service/src/modules/application/utils/draftReminder';
 
@@ -97,8 +97,14 @@ if (!MONGO_URI) {
 
 // Connect to MongoDB once globally and start the server + crons
 mongoose.connect(MONGO_URI)
-  .then(() => {
+  .then(async () => {
     logger.info('Monolith MongoDB connected successfully');
+    
+    // Ensure all sub-service models and connections are fully registered before launching cron jobs
+    await Promise.all([
+      ensureCoreConnected(),
+      ensureOpsConnected()
+    ]);
     
     // Start background jobs/crons
     startDraftReminderCron();
