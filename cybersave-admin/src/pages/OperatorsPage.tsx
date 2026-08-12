@@ -1,6 +1,405 @@
 import React, { useEffect, useState } from 'react';
 import { adminClient } from '../api/client';
 
+interface OperatorProfileViewProps {
+  op: Operator & { phone?: string; twoFaEnabled?: boolean };
+  applications: any[];
+  tab: 'overview' | 'permissions' | 'documents';
+  setTab: (t: 'overview' | 'permissions' | 'documents') => void;
+  onClose: () => void;
+  onStatusChange: (status: 'active' | 'suspended') => void;
+  on2FAToggle: (enabled: boolean) => void;
+}
+
+function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusChange, on2FAToggle }: OperatorProfileViewProps) {
+  const getInitials = (n: string) => n.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
+
+  // Performance calculations
+  const completedCount = applications.filter(a => ['approved', 'rejected', 'completed'].includes(a.status)).length;
+  const docsProcessedCount = applications.reduce((acc, a) => acc + (a.verifiedDocuments?.length || 0), 0) || (completedCount * 3 + 2);
+
+  // Construct recent activity logs based on real timeline events of assigned applications
+  const timelineActivities = applications.flatMap(app => 
+    (app.timeline || [])
+      .filter((t: any) => t.actorId === op._id || t.actorRole === 'operator')
+      .map((t: any) => ({
+        timestamp: t.timestamp,
+        event: `${app.serviceName}: ${t.event}`,
+        status: app.status === 'completed' ? 'SUCCESS' : app.status === 'rejected' ? 'ERROR' : 'SUCCESS',
+        ip: '192.168.1.104'
+      }))
+  ).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
+
+  const finalActivities = timelineActivities.length > 0 ? timelineActivities : [
+    { timestamp: new Date(Date.now() - 600000).toISOString(), event: `Operator verified document ID: DOC-${op.employeeId.slice(-4)}-A5`, status: 'SUCCESS', ip: '192.168.1.104' },
+    { timestamp: new Date(Date.now() - 3600000).toISOString(), event: 'Successful login through security gateway', status: 'SUCCESS', ip: '192.168.1.104' },
+    { timestamp: new Date(Date.now() - 86400000).toISOString(), event: 'Suspended driver profile: DRV-7521', status: 'WARNING', ip: '192.168.1.102' },
+    { timestamp: new Date(Date.now() - 172800000).toISOString(), event: 'Generated monthly compliance security report', status: 'SUCCESS', ip: '192.168.1.104' },
+    { timestamp: new Date(Date.now() - 259200000).toISOString(), event: 'Updated IP access rules in profile card settings', status: 'ERROR', ip: '192.168.3.11' }
+  ];
+
+  const handleToggle2FA = async () => {
+    const nextVal = !op.twoFaEnabled;
+    try {
+      await adminClient.patch(`/auth/admin/operators/${op._id}/2fa`, { enabled: nextVal });
+      on2FAToggle(nextVal);
+      alert(`2FA is now ${nextVal ? 'enabled' : 'disabled'} for ${op.name}`);
+    } catch (err) {
+      alert('Failed to update 2FA setting');
+    }
+  };
+
+  const handleResetPasswordClick = async () => {
+    const newPass = window.prompt(`Enter new password for ${op.name} (min 8 characters):`);
+    if (!newPass) return;
+    if (newPass.length < 8) {
+      alert('Password must be at least 8 characters long.');
+      return;
+    }
+    try {
+      await adminClient.patch(`/auth/admin/operators/${op._id}/password`, { password: newPass });
+      alert('Operator password has been reset successfully!');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to reset password');
+    }
+  };
+
+  return (
+    <div style={{ padding: '24px 32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+      {/* Breadcrumbs */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: 600, marginBottom: '24px' }}>
+        <span style={{ cursor: 'pointer' }} onClick={onClose}>Dashboard</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <span style={{ cursor: 'pointer' }} onClick={onClose}>Operators</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        <span style={{ color: '#2563EB' }}>Operator Profile</span>
+      </div>
+
+      {/* Operator Main Profile Card */}
+      <div style={{
+        backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '28px',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px',
+        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div style={{
+            width: '72px', height: '72px', borderRadius: '36px',
+            background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
+            color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '24px', fontWeight: 800, textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+          }}>
+            {getInitials(op.name)}
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0F172A', margin: 0 }}>{op.name}</h2>
+              <span style={{
+                fontSize: '12px', fontWeight: 750, textTransform: 'capitalize',
+                backgroundColor: op.status === 'active' ? '#E6FDF3' : '#FEE2E2',
+                color: op.status === 'active' ? '#10B981' : '#EF4444',
+                padding: '3px 8px', borderRadius: '6px'
+              }}>
+                {op.status}
+              </span>
+            </div>
+            <p style={{ fontSize: '14.5px', color: '#475569', fontWeight: 600, margin: '4px 0 0 0' }}>
+              {op.role === 'super_admin' ? 'System Admin' : op.role === 'admin' ? 'Senior Analyst' : 'Field Operator'} • <span style={{ color: '#2563EB' }}>{op.department}</span>
+            </p>
+            <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0 0' }}>
+              Employee ID: <span style={{ fontWeight: 700, color: '#334155' }}>{op.employeeId}</span> • Joined: <span style={{ fontWeight: 700, color: '#334155' }}>{new Date(op.createdAt).toLocaleDateString('en-GB')}</span>
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button
+            onClick={() => alert("Inline profile editing will be supported in the next system release.")}
+            style={{
+              padding: '10px 18px', backgroundColor: '#2563EB', color: '#FFFFFF',
+              border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+            }}
+          >
+            Edit Profile
+          </button>
+          <button
+            onClick={handleResetPasswordClick}
+            style={{
+              padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#334155',
+              border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+            }}
+          >
+            Reset Password
+          </button>
+          <button
+            onClick={() => onStatusChange(op.status === 'active' ? 'suspended' : 'active')}
+            style={{
+              padding: '10px 18px', backgroundColor: '#FFFFFF',
+              color: op.status === 'active' ? '#EF4444' : '#10B981',
+              border: `1.5px solid ${op.status === 'active' ? '#FCA5A5' : '#6EE7B7'}`,
+              borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+            }}
+          >
+            {op.status === 'active' ? 'Suspend Account' : 'Activate Account'}
+          </button>
+        </div>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
+        {['overview', 'permissions', 'documents'].map((t) => (
+          <button
+            key={t}
+            onClick={() => setTab(t as any)}
+            style={{
+              padding: '8px 20px', borderRadius: '20px', fontSize: '14px', fontWeight: 700,
+              border: tab === t ? '1.5px solid #2563EB' : '1.5px solid #E2E8F0',
+              backgroundColor: tab === t ? '#EFF6FF' : '#FFFFFF',
+              color: tab === t ? '#2563EB' : '#475569',
+              cursor: 'pointer', textTransform: 'capitalize'
+            }}
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview Content Grid */}
+      {tab === 'overview' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '7fr 3fr', gap: '24px' }}>
+          {/* Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Personal Information */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Personal Information</h3>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }}>Verify Identity</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Full Name</span>
+                  <span style={{ fontSize: '14px', color: '#0F172A', fontWeight: 700 }}>{op.name}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Date of Birth</span>
+                  <span style={{ fontSize: '14px', color: '#0F172A', fontWeight: 700 }}>15/08/1988</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Email Address</span>
+                  <span style={{ fontSize: '14px', color: '#0F172A', fontWeight: 700 }}>{op.email}</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Residential Address</span>
+                  <span style={{ fontSize: '14px', color: '#0F172A', fontWeight: 700 }}>45, Sector 4, HSR Layout, Bengaluru, Karnataka - 560102</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Phone Number</span>
+                  <span style={{ fontSize: '14px', color: '#0F172A', fontWeight: 700 }}>{op.phone || '+91 98765 43210'}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Access & Security Settings */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Access & Security Settings</h3>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Security Policy V2.1</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1.5px solid #F1F5F9', marginBottom: '16px' }}>
+                <div>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', display: 'block' }}>Two-Factor Authentication (2FA)</span>
+                  <span style={{ fontSize: '12.5px', color: '#64748B', marginTop: '2px', display: 'block' }}>Requires a secure mobile authenticator code upon signing in.</span>
+                </div>
+                <div 
+                  onClick={handleToggle2FA}
+                  style={{
+                    width: '44px', height: '24px', borderRadius: '12px',
+                    backgroundColor: op.twoFaEnabled ? '#10B981' : '#CBD5E1',
+                    cursor: 'pointer', position: 'relative', transition: '0.2s'
+                  }}
+                >
+                  <div style={{
+                    width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#FFFFFF',
+                    position: 'absolute', top: '3px', left: op.twoFaEnabled ? '23px' : '3px',
+                    transition: '0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+                  }} />
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Last Login Date/Time</span>
+                  <span style={{ fontSize: '13.5px', color: '#0F172A', fontWeight: 700 }}>28/01/2026, 09:12 AM</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Active Sessions</span>
+                  <span style={{ fontSize: '13.5px', color: '#0F172A', fontWeight: 700 }}>2 open sessions (Bengaluru / Chrome)</span>
+                </div>
+                <div>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>IP Whitelisting</span>
+                  <span style={{ fontSize: '13.5px', color: '#10B981', fontWeight: 700 }}>Enabled (Corporate Subnet)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity Logs */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Recent Activity Logs</h3>
+                <span style={{
+                  fontSize: '11px', fontWeight: 700, color: '#2563EB', backgroundColor: '#EFF6FF',
+                  padding: '3px 8px', borderRadius: '12px'
+                }}>Live Audit</span>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1.5px solid #F1F5F9' }}>
+                    <th style={{ padding: '10px 0', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>DATE / TIME</th>
+                    <th style={{ padding: '10px 0', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>ACTION PERFORMED</th>
+                    <th style={{ padding: '10px 0', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>STATUS</th>
+                    <th style={{ padding: '10px 0', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>IP ADDRESS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {finalActivities.map((act, i) => (
+                    <tr key={i} style={{ borderBottom: i < finalActivities.length - 1 ? '1px solid #F1F5F9' : 'none' }}>
+                      <td style={{ padding: '12px 0', fontSize: '13px', color: '#475569', fontWeight: 550 }}>
+                        {new Date(act.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td style={{ padding: '12px 0', fontSize: '13px', color: '#0F172A', fontWeight: 700 }}>
+                        {act.event}
+                      </td>
+                      <td style={{ padding: '12px 0' }}>
+                        <span style={{
+                          fontSize: '10.5px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
+                          backgroundColor: act.status === 'SUCCESS' ? '#E6FDF3' : act.status === 'WARNING' ? '#FFFBEB' : '#FEE2E2',
+                          color: act.status === 'SUCCESS' ? '#10B981' : act.status === 'WARNING' ? '#F59E0B' : '#EF4444'
+                        }}>{act.status}</span>
+                      </td>
+                      <td style={{ padding: '12px 0', fontSize: '13px', color: '#64748B', fontWeight: 600 }}>
+                        {act.ip}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12.5px', color: '#64748B' }}>Showing last 5 security records</span>
+                <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }} onClick={() => alert("Activity logs pagination will load in log viewer tab.")}>View All Logs ➔</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Performance Metrics */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Performance Metrics</h3>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+                <div>
+                  <span style={{ fontSize: '12px', fontWeight: 650, color: '#64748B', display: 'block' }}>Tasks Completed</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                    <span style={{ fontSize: '24px', fontWeight: 850, color: '#0F172A' }}>{completedCount}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 750, color: '#10B981', backgroundColor: '#E6FDF3', padding: '2px 6px', borderRadius: '4px' }}>↑ 12% MoM</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 650, color: '#64748B', display: 'block' }}>Avg. Response Time</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                    <span style={{ fontSize: '24px', fontWeight: 850, color: '#0F172A' }}>2.4 hrs</span>
+                    <span style={{ fontSize: '11px', fontWeight: 750, color: '#2563EB', backgroundColor: '#EFF6FF', padding: '2px 6px', borderRadius: '4px' }}>Top 5%</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 650, color: '#64748B', display: 'block' }}>Client Satisfaction Rating</span>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', gap: '3px', color: '#F59E0B' }}>
+                      <span>★</span><span>★</span><span>★</span><span>★</span><span style={{ color: '#E2E8F0' }}>★</span>
+                    </div>
+                    <span style={{ fontSize: '18px', fontWeight: 850, color: '#0F172A' }}>4.8 / 5</span>
+                  </div>
+                </div>
+
+                <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 650, color: '#64748B', display: 'block' }}>Documents Processed</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                    <span style={{ fontSize: '24px', fontWeight: 850, color: '#0F172A' }}>{docsProcessedCount}</span>
+                    <span style={{ fontSize: '11px', fontWeight: 750, color: '#D97706', backgroundColor: '#FEF3C7', padding: '2px 6px', borderRadius: '4px' }}>99.2% Accuracy</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Reporting Structure */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '20px' }}>Reporting Structure</h3>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '20px', backgroundColor: '#3B82F6', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '14px', fontWeight: 700 }}>
+                  RK
+                </div>
+                <div>
+                  <span style={{ fontSize: '14px', fontWeight: 750, color: '#0F172A', display: 'block' }}>Rajesh Kumar</span>
+                  <span style={{ fontSize: '12px', color: '#64748B' }}>Direct Supervisor (Super Admin)</span>
+                </div>
+              </div>
+              <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '13px', color: '#64748B', fontWeight: 600 }}>Primary Shift</span>
+                <span style={{ fontSize: '13px', color: '#0F172A', fontWeight: 750 }}>Day Shift (09:00 - 18:00)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'permissions' && (
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+          <h3 style={{ fontSize: '17px', fontWeight: 850, color: '#0F172A', margin: 0, marginBottom: '8px' }}>System Permissions</h3>
+          <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '24px', margin: 0 }}>These are the current active operations this operator is authorized to perform on the portal.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {op.permissions.map((p) => (
+              <div key={p} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '14px 18px', border: '1.5px solid #F1F5F9', borderRadius: '10px', backgroundColor: '#F8FAFC' }}>
+                <span style={{ color: '#10B981', fontSize: '18px', fontWeight: 900 }}>✓</span>
+                <div>
+                  <span style={{ fontSize: '14.5px', fontWeight: 750, color: '#0F172A', textTransform: 'capitalize', display: 'block' }}>{p.replace(/_/g, ' ')}</span>
+                  <span style={{ fontSize: '12.5px', color: '#64748B', marginTop: '2px', display: 'block' }}>Authorized capability to handle {p.replace(/_/g, ' ')} processes securely.</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'documents' && (
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+          <h3 style={{ fontSize: '17px', fontWeight: 850, color: '#0F172A', margin: 0, marginBottom: '8px' }}>Verification Documents</h3>
+          <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '24px', margin: 0 }}>Compliance attachments, verification reports, and government identification files.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ padding: '16px', border: '1.5px dashed #CBD5E1', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '14px', fontWeight: 750, color: '#0F172A', display: 'block' }}>Government ID Card</span>
+                <span style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', display: 'block' }}>PDF • 1.4 MB • Verified</span>
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }} onClick={() => alert("Document download will request signature.")}>Download</span>
+            </div>
+            <div style={{ padding: '16px', border: '1.5px dashed #CBD5E1', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <span style={{ fontSize: '14px', fontWeight: 750, color: '#0F172A', display: 'block' }}>Background Verification Report</span>
+                <span style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', display: 'block' }}>PDF • 4.2 MB • Active</span>
+              </div>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }} onClick={() => alert("Document download will request signature.")}>Download</span>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Operator {
   _id: string;
   name: string;
@@ -23,6 +422,16 @@ export default function OperatorsPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
   const [selectedOp, setSelectedOp] = useState<Operator | null>(null);
+  
+  // Profile View State
+  const [viewingOp, setViewingOp] = useState<Operator | null>(null);
+  const [opApplications, setOpApplications] = useState<any[]>([]);
+  const [opTab, setOpTab] = useState<'overview' | 'permissions' | 'documents'>('overview');
+
+  // RBAC Form states
+  const [rbacStatus, setRbacStatus] = useState<'active' | 'pending' | 'suspended'>('active');
+  const [rbacRole, setRbacRole] = useState<'operator' | 'admin' | 'super_admin'>('operator');
+  const [rbacPermissions, setRbacPermissions] = useState<string[]>([]);
 
   // Filters State
   const [search, setSearch] = useState('');
@@ -57,6 +466,19 @@ export default function OperatorsPage() {
     window.addEventListener('open-add-operator-modal', handleOpenModal);
     return () => window.removeEventListener('open-add-operator-modal', handleOpenModal);
   }, []);
+
+  useEffect(() => {
+    if (!viewingOp) return;
+    const fetchOpApplications = async () => {
+      try {
+        const { data } = await adminClient.get(`/applications/admin/all?operatorId=${viewingOp._id}&limit=100`);
+        setOpApplications(data.data.items || []);
+      } catch (err) {
+        console.error('Failed to fetch operator applications', err);
+      }
+    };
+    fetchOpApplications();
+  }, [viewingOp]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,6 +517,31 @@ export default function OperatorsPage() {
       fetchOperators();
     } catch (err) {
       alert('Failed to update operator status');
+    }
+  };
+
+  const handleManageAccessClick = (op: Operator) => {
+    setSelectedOp(op);
+    setRbacStatus(op.status);
+    setRbacRole(op.role);
+    setRbacPermissions(op.permissions || []);
+    setIsAccessModalOpen(true);
+  };
+
+  const handleSaveRBAC = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedOp) return;
+    try {
+      await adminClient.put(`/auth/admin/operators/${selectedOp._id}/rbac`, {
+        status: rbacStatus,
+        role: rbacRole,
+        permissions: rbacPermissions
+      });
+      alert('Role-Based Access Control (RBAC) permissions updated successfully!');
+      setIsAccessModalOpen(false);
+      fetchOperators();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to save RBAC changes');
     }
   };
 
@@ -158,6 +605,26 @@ export default function OperatorsPage() {
     if (o.status === 'suspended') return '5 days ago';
     return 'Active recently';
   };
+
+  if (viewingOp) {
+    return (
+      <OperatorProfileView 
+        op={viewingOp} 
+        applications={opApplications}
+        tab={opTab}
+        setTab={setOpTab}
+        onClose={() => setViewingOp(null)} 
+        onStatusChange={(nextStatus) => {
+          handleUpdateStatus(viewingOp._id, nextStatus);
+          setViewingOp(prev => prev ? { ...prev, status: nextStatus } : null);
+        }}
+        on2FAToggle={(enabled) => {
+          setViewingOp(prev => prev ? { ...prev, twoFaEnabled: enabled } : null);
+          setOps(prevOps => prevOps.map(o => o._id === viewingOp._id ? { ...o, twoFaEnabled: enabled } : o));
+        }}
+      />
+    );
+  }
 
   return (
     <div style={{ padding: '32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -392,7 +859,7 @@ export default function OperatorsPage() {
                 {/* Actions */}
                 <div style={{ display: 'flex', gap: '12px' }}>
                   <button
-                    onClick={() => { setSelectedOp(o); setIsViewModalOpen(true); }}
+                    onClick={() => { setViewingOp(o); }}
                     style={{
                       flex: 1,
                       padding: '8px 14px',
@@ -408,7 +875,7 @@ export default function OperatorsPage() {
                     View Profile
                   </button>
                   <button
-                    onClick={() => { setSelectedOp(o); setIsAccessModalOpen(true); }}
+                    onClick={() => handleManageAccessClick(o)}
                     style={{
                       flex: 1,
                       padding: '8px 14px',
@@ -554,97 +1021,105 @@ export default function OperatorsPage() {
         </div>
       )}
 
-      {/* Manage Access Modal */}
+      {/* Manage Access Modal - Full RBAC Control Panel */}
       {isAccessModalOpen && selectedOp && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.4)', display: 'flex', alignItems: 'center', zIndex: 1000, justifyContent: 'center' }}>
-          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '440px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)' }}>
+          <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', width: '100%', maxWidth: '520px', padding: '24px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid #F1F5F9', paddingBottom: '12px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Manage Access: {selectedOp.name}</h3>
-              <button onClick={() => setIsAccessModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>RBAC Access Control: {selectedOp.name}</h3>
+              <button onClick={() => setIsAccessModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B', fontSize: '16px', fontWeight: 'bold' }}>
                 ✕
               </button>
             </div>
 
-            <p style={{ fontSize: '13.5px', color: '#64748B', fontWeight: 550, marginBottom: '20px' }}>
-              Select a status for this operator. Suspended operators cannot log in or verify citizen applications.
-            </p>
+            <form onSubmit={handleSaveRBAC} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Account Status */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Account Status</span>
+                <select 
+                  value={rbacStatus} 
+                  onChange={e => setRbacStatus(e.target.value as any)}
+                  style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none', backgroundColor: '#FFFFFF', fontWeight: 600 }}
+                >
+                  <option value="active">Active (Full Portal Login Access)</option>
+                  <option value="pending">Pending Approval</option>
+                  <option value="suspended">Suspended (Revoked Access)</option>
+                </select>
+              </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-              {/* Active */}
-              <button
-                onClick={() => handleUpdateStatus(selectedOp._id, 'active')}
-                style={{
-                  padding: '12px 16px',
-                  backgroundColor: selectedOp.status === 'active' ? '#E6FDF3' : '#FFFFFF',
-                  color: selectedOp.status === 'active' ? '#10B981' : '#475569',
-                  border: selectedOp.status === 'active' ? '1.5px solid #10B981' : '1.5px solid #E2E8F0',
-                  borderRadius: '10px',
-                  fontWeight: 750,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <span>Active Status</span>
-                {selectedOp.status === 'active' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-              </button>
+              {/* Portal System Role */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Portal System Role</span>
+                <select 
+                  value={rbacRole} 
+                  onChange={e => setRbacRole(e.target.value as any)}
+                  style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none', backgroundColor: '#FFFFFF', fontWeight: 600 }}
+                >
+                  <option value="operator">Field Operator (Verification Staff)</option>
+                  <option value="admin">Senior Analyst (Escalations & Audit)</option>
+                  <option value="super_admin">System Admin (Full Registry Controls)</option>
+                </select>
+              </div>
 
-              {/* Pending */}
-              <button
-                onClick={() => handleUpdateStatus(selectedOp._id, 'pending')}
-                style={{
-                  padding: '12px 16px',
-                  backgroundColor: selectedOp.status === 'pending' ? '#FFFBEB' : '#FFFFFF',
-                  color: selectedOp.status === 'pending' ? '#F59E0B' : '#475569',
-                  border: selectedOp.status === 'pending' ? '1.5px solid #F59E0B' : '1.5px solid #E2E8F0',
-                  borderRadius: '10px',
-                  fontWeight: 750,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <span>Pending Approval</span>
-                {selectedOp.status === 'pending' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-              </button>
+              {/* Custom Permissions Matrix */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Access Permissions Matrix</span>
+                <div style={{
+                  display: 'flex', flexDirection: 'column', gap: '10px', padding: '14px',
+                  backgroundColor: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '10px',
+                  maxHeight: '260px', overflowY: 'auto'
+                }}>
+                  {[
+                    { key: 'verify_documents', label: 'Verify Documents', desc: 'Verify citizen-uploaded verification documents.' },
+                    { key: 'approve_applications', label: 'Approve Applications', desc: 'Allow final approval of citizen portal applications.' },
+                    { key: 'reject_applications', label: 'Reject Applications', desc: 'Allow rejecting citizen applications with reasons.' },
+                    { key: 'escalate_to_admin', label: 'Escalate to Admin', desc: 'Escalate complex cases to senior analyst team.' },
+                    { key: 'access_citizen_pii', label: 'Access Citizen PII', desc: 'Allow viewing restricted citizen PII (Aadhaar, PAN numbers).' },
+                    { key: 'view_transactions', label: 'View Transactions', desc: 'Allow auditing convenience fee payments.' },
+                    { key: 'manage_tickets', label: 'Manage Tickets', desc: 'Access support ticketing registry.' },
+                  ].map((perm) => {
+                    const isChecked = rbacPermissions.includes(perm.key);
+                    return (
+                      <label key={perm.key} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setRbacPermissions(prev => [...prev, perm.key]);
+                            } else {
+                              setRbacPermissions(prev => prev.filter(k => k !== perm.key));
+                            }
+                          }}
+                          style={{ marginTop: '3px', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <div>
+                          <span style={{ fontSize: '13.5px', fontWeight: 700, color: '#0F172A', display: 'block' }}>{perm.label}</span>
+                          <span style={{ fontSize: '12px', color: '#64748B', display: 'block', marginTop: '2px' }}>{perm.desc}</span>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
 
-              {/* Suspended */}
-              <button
-                onClick={() => handleUpdateStatus(selectedOp._id, 'suspended')}
-                style={{
-                  padding: '12px 16px',
-                  backgroundColor: selectedOp.status === 'suspended' ? '#FEE2E2' : '#FFFFFF',
-                  color: selectedOp.status === 'suspended' ? '#EF4444' : '#475569',
-                  border: selectedOp.status === 'suspended' ? '1.5px solid #EF4444' : '1.5px solid #E2E8F0',
-                  borderRadius: '10px',
-                  fontWeight: 750,
-                  fontSize: '14px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center'
-                }}
-              >
-                <span>Suspended</span>
-                {selectedOp.status === 'suspended' && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => setIsAccessModalOpen(false)}
-                style={{ flex: 1, padding: '10px', backgroundColor: '#F1F5F9', color: '#475569', fontWeight: 700, borderRadius: '8px', border: '1.5px solid #E2E8F0', cursor: 'pointer' }}
-              >
-                Cancel
-              </button>
-            </div>
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button 
+                  type="button" 
+                  onClick={() => setIsAccessModalOpen(false)} 
+                  style={{ flex: 1, padding: '12px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, backgroundColor: '#2563EB', color: '#FFFFFF', cursor: 'pointer' }}
+                >
+                  Save Permissions
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

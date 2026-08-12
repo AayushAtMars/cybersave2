@@ -23,6 +23,9 @@ import {
   updateOperatorPassword,
   toggleOperator2FA,
   getCitizenDetail,
+  adminResetOperatorPassword,
+  adminToggleOperator2FA,
+  adminUpdateOperatorRBAC,
 } from '../controllers/auth.controller';
 import { createAuditLog, listAuditLogs } from '../controllers/audit.controller';
 import { SendOtpSchema, VerifyOtpSchema, OperatorLoginSchema } from '@cybersave/shared';
@@ -163,6 +166,9 @@ router.post(
 );
 router.patch('/admin/citizens/:id/block', authenticate, toggleCitizenStatus);
 router.patch('/admin/operators/:id/status', authenticate, updateOperatorStatus);
+router.patch('/admin/operators/:id/password', authenticate, adminResetOperatorPassword);
+router.patch('/admin/operators/:id/2fa', authenticate, adminToggleOperator2FA);
+router.put('/admin/operators/:id/rbac', authenticate, adminUpdateOperatorRBAC);
 
 // ── Operator / Admin login route (with Cloudflare Turnstile CAPTCHA validation) ─
 router.post('/operator/login', loginLimiter, validate(OperatorLoginSchema), operatorLogin);

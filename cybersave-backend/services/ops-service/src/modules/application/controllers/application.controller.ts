@@ -597,11 +597,14 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
     const category = req.query.category as string | undefined;
     const assigned = req.query.assigned as string | undefined;
     const citizenId = req.query.citizenId as string | undefined;
+    const operatorId = req.query.operatorId as string | undefined;
 
     const Application = getApplicationModel();
     const filter: Record<string, any> = {};
 
-    if (citizenId) {
+    if (operatorId) {
+      filter.assignedOperatorId = operatorId;
+    } else if (citizenId) {
       filter.citizenId = citizenId;
     } else {
       filter.status = { $ne: ApplicationStatus.DRAFT };

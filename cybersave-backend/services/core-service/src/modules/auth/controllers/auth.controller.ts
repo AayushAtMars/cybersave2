@@ -406,6 +406,53 @@ export const toggleOperator2FA = async (req: Request, res: Response): Promise<vo
   }
 };
 
+export const adminResetOperatorPassword = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const Operator = getOperator();
+    const { id } = req.params;
+    const { password } = req.body as { password?: string };
+
+    if (!password || password.length < 8) {
+      res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+      return;
+    }
+
+    const operator = await Operator.findById(id);
+    if (!operator) {
+      res.status(404).json({ success: false, error: 'Operator not found' });
+      return;
+    }
+
+    operator.passwordHash = await hashPassword(password);
+    await operator.save();
+
+    res.json({ success: true, message: 'Operator password reset successfully' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const adminToggleOperator2FA = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const Operator = getOperator();
+    const { id } = req.params;
+    const { enabled } = req.body as { enabled: boolean };
+
+    const operator = await Operator.findById(id);
+    if (!operator) {
+      res.status(404).json({ success: false, error: 'Operator not found' });
+      return;
+    }
+
+    operator.twoFaEnabled = enabled;
+    await operator.save();
+
+    res.json({ success: true, data: { twoFaEnabled: operator.twoFaEnabled } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
 // ── POST /auth/operator/login ───────────────────────────────────────────────
 export const operatorLogin = async (req: Request, res: Response): Promise<void> => {
   const { email, password, captchaToken } = req.body as { email: string; password: string; captchaToken?: string };
@@ -902,6 +949,30 @@ export const updateOperatorStatus = async (req: Request, res: Response): Promise
       type: status === 'suspended' ? 'security_alert' : 'system_update'
     }).catch(err => console.error('Failed to trigger operator status notification:', err.message))
   );
+};
+
+export const adminUpdateOperatorRBAC = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status, role, permissions } = req.body as { status?: 'active' | 'suspended' | 'pending'; role?: 'operator' | 'admin' | 'super_admin'; permissions?: string[] };
+
+    const Operator = getOperator();
+    const operator = await Operator.findById(id);
+    if (!operator) {
+      res.status(404).json({ success: false, error: 'Operator not found', errorCode: 'OPERATOR_NOT_FOUND' });
+      return;
+    }
+
+    if (status) operator.status = status;
+    if (role) operator.role = role;
+    if (permissions) operator.permissions = permissions;
+
+    await operator.save();
+
+    res.json({ success: true, data: { operator: { id: operator.id, name: operator.name, status: operator.status, role: operator.role, permissions: operator.permissions } } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 };
 
 // ── POST /auth/admin/citizens — create citizen ──────────────────────────────────
