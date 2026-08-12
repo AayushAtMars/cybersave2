@@ -24,7 +24,14 @@ export const config = {
   razorpayKeySecret: required('RAZORPAY_KEY_SECRET'),
   razorpayWebhookSecret: required('RAZORPAY_WEBHOOK_SECRET'),
 
-  coreServiceUrl: required('CORE_SERVICE_URL'),
+  coreServiceUrl: (() => {
+    const url = process.env.CORE_SERVICE_URL ?? 'http://localhost:3001';
+    if (process.env.PORT && (url.includes('localhost:') || url.includes('127.0.0.1:') || url.includes('::1:'))) {
+      const port = process.env.PORT;
+      return url.replace(/(localhost|127\.0\.0\.1|::1):\d+/, `$1:${port}`);
+    }
+    return url;
+  })(),
   allowedOrigins: (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000').split(','),
   cronSecret: process.env.CRON_SECRET ?? 'secret',
 };
