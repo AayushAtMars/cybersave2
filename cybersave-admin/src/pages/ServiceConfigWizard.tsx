@@ -257,7 +257,12 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
       number: 'Custom Number Field',
       select: 'Custom Dropdown Field',
       date: 'Custom Date Field',
-      aadhaar: 'Aadhaar Card Field'
+      aadhaar: 'Aadhaar Card Field',
+      email: 'Custom Email Field',
+      phone: 'Custom Phone Field',
+      file: 'Custom File Field',
+      checkbox: 'Custom Checkbox Field',
+      radio: 'Custom Radio Field'
     };
     const key = 'custom_' + Date.now();
     const newField: FormField = {

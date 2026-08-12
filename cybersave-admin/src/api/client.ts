@@ -29,7 +29,11 @@ adminClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       useAdminStore.getState().clearAuth();
-      window.location.href = '/login';
+      const isLoginPage = window.location.pathname === '/login';
+      const isLoginRequest = error.config?.url?.includes('/auth/operator/login');
+      if (!isLoginPage && !isLoginRequest) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
