@@ -6,6 +6,7 @@ interface AdminUser {
   name: string;
   email: string;
   role: 'operator' | 'admin' | 'super_admin';
+  avatar?: string;
 }
 
 interface AdminState {

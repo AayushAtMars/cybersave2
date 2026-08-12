@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { adminClient } from '../api/client';
+import axios from 'axios';
 
 interface OperatorProfileViewProps {
   op: Operator & { phone?: string; twoFaEnabled?: boolean };
   applications: any[];
-  tab: 'overview' | 'permissions' | 'documents';
-  setTab: (t: 'overview' | 'permissions' | 'documents') => void;
+  tab: 'overview' | 'activity_log' | 'permissions' | 'documents';
+  setTab: (t: 'overview' | 'activity_log' | 'permissions' | 'documents') => void;
   onClose: () => void;
   onStatusChange: (status: 'active' | 'suspended') => void;
   on2FAToggle: (enabled: boolean) => void;
@@ -37,6 +38,58 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
     { timestamp: new Date(Date.now() - 172800000).toISOString(), event: 'Generated monthly compliance security report', status: 'SUCCESS', ip: '192.168.1.104' },
     { timestamp: new Date(Date.now() - 259200000).toISOString(), event: 'Updated IP access rules in profile card settings', status: 'ERROR', ip: '192.168.3.11' }
   ];
+  const [opDocs, setOpDocs] = useState<any[]>([]);
+  const [loadingDocs, setLoadingDocs] = useState(false);
+
+  const fetchOpDocs = async () => {
+    setLoadingDocs(true);
+    try {
+      const res = await adminClient.get(`/documents/admin/all?ownerId=${op._id}`);
+      setOpDocs(res.data.data.items || []);
+    } catch (err) {
+      console.error("Failed to load operator documents:", err);
+    } finally {
+      setLoadingDocs(false);
+    }
+  };
+
+  useEffect(() => {
+    if (tab === 'documents') {
+      fetchOpDocs();
+    }
+  }, [tab, op._id]);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const categorySim = file.name.toLowerCase().includes('aadhaar') ? 'id_proof' : 'proof';
+      const uploadReq = await adminClient.post('/documents/upload-url', {
+        fileName: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+        documentCategory: categorySim,
+        ownerId: op._id
+      });
+
+      const { uploadUrl, token, storageKey } = uploadReq.data.data;
+
+      await axios.put(uploadUrl, file, {
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      await adminClient.post('/documents/confirm', { storageKey, ownerId: op._id });
+
+      alert('Document uploaded successfully!');
+      fetchOpDocs();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to upload document');
+    }
+  };
 
   const handleToggle2FA = async () => {
     const nextVal = !op.twoFaEnabled;
@@ -147,7 +200,7 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '24px' }}>
-        {['overview', 'permissions', 'documents'].map((t) => (
+        {['overview', 'activity_log', 'permissions', 'documents'].map((t) => (
           <button
             key={t}
             onClick={() => setTab(t as any)}
@@ -156,10 +209,10 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
               border: tab === t ? '1.5px solid #2563EB' : '1.5px solid #E2E8F0',
               backgroundColor: tab === t ? '#EFF6FF' : '#FFFFFF',
               color: tab === t ? '#2563EB' : '#475569',
-              cursor: 'pointer', textTransform: 'capitalize'
+              cursor: 'pointer', textTransform: 'none'
             }}
           >
-            {t}
+            {t === 'activity_log' ? 'Activity Log' : t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
       </div>
@@ -374,24 +427,258 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
         </div>
       )}
 
-      {tab === 'documents' && (
+      {tab === 'activity_log' && (
         <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
-          <h3 style={{ fontSize: '17px', fontWeight: 850, color: '#0F172A', margin: 0, marginBottom: '8px' }}>Verification Documents</h3>
-          <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '24px', margin: 0 }}>Compliance attachments, verification reports, and government identification files.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div style={{ padding: '16px', border: '1.5px dashed #CBD5E1', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '14px', fontWeight: 750, color: '#0F172A', display: 'block' }}>Government ID Card</span>
-                <span style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', display: 'block' }}>PDF • 1.4 MB • Verified</span>
+          <h3 style={{ fontSize: '17px', fontWeight: 850, color: '#0F172A', margin: 0, marginBottom: '8px' }}>Operator Activity Logs</h3>
+          <p style={{ fontSize: '14px', color: '#64748B', marginBottom: '24px', margin: 0 }}>Full historical trail of service configurations, verifications, and status actions processed by this operator.</p>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ borderBottom: '1.5px solid #F1F5F9' }}>
+                <th style={{ padding: '12px 14px', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>DATE / TIME</th>
+                <th style={{ padding: '12px 14px', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>ACTION PERFORMED</th>
+                <th style={{ padding: '12px 14px', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>STATUS</th>
+                <th style={{ padding: '12px 14px', fontSize: '11px', fontWeight: 800, color: '#64748B' }}>IP ADDRESS</th>
+              </tr>
+            </thead>
+            <tbody>
+              {finalActivities.map((act, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #F1F5F9' }}>
+                  <td style={{ padding: '14px', fontSize: '13.5px', color: '#475569', fontWeight: 600 }}>
+                    {new Date(act.timestamp).toLocaleString('en-GB')}
+                  </td>
+                  <td style={{ padding: '14px', fontSize: '13.5px', color: '#0F172A', fontWeight: 700 }}>
+                    {act.event}
+                  </td>
+                  <td style={{ padding: '14px' }}>
+                    <span style={{
+                      fontSize: '11px', fontWeight: 800, padding: '2px 6px', borderRadius: '4px',
+                      backgroundColor: act.status === 'SUCCESS' ? '#E6FDF3' : act.status === 'WARNING' ? '#FFFBEB' : '#FEE2E2',
+                      color: act.status === 'SUCCESS' ? '#10B981' : act.status === 'WARNING' ? '#F59E0B' : '#EF4444'
+                    }}>{act.status}</span>
+                  </td>
+                  <td style={{ padding: '14px', fontSize: '13.5px', color: '#64748B', fontWeight: 600 }}>
+                    {act.ip}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {tab === 'documents' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {/* Document Metrics Row */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+            {[
+              { label: 'Total Documents', val: opDocs.length, color: '#0F172A' },
+              { label: 'Verified Docs', val: opDocs.filter(d => d.verifiedStatus === 'verified').length, color: '#10B981' },
+              { label: 'Pending Review', val: opDocs.filter(d => d.verifiedStatus === 'pending').length, color: '#3B82F6' },
+              { label: 'Expired/Warnings', val: opDocs.filter(d => d.verifiedStatus === 'rejected').length, color: '#EF4444' }
+            ].map((m, idx) => (
+              <div key={idx} style={{
+                backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '12px', padding: '16px 20px',
+                display: 'flex', flexDirection: 'column', gap: '6px', boxShadow: '0 1px 3px rgba(0,0,0,0.01)'
+              }}>
+                <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>{m.label}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '4px', backgroundColor: m.color }} />
+                  <span style={{ fontSize: '22px', fontWeight: 850, color: '#0F172A' }}>{m.val}</span>
+                </div>
               </div>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }} onClick={() => alert("Document download will request signature.")}>Download</span>
+            ))}
+          </div>
+
+          {/* Main Document Content Area */}
+          <div style={{ display: 'grid', gridTemplateColumns: '7fr 3fr', gap: '24px' }}>
+            {/* Left Column - Identity & Verification Documents */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Identity & Verification Documents</h3>
+              
+              {loadingDocs ? (
+                <div style={{ padding: '40px', textAlign: 'center', color: '#64748B', fontWeight: 700 }}>Loading operator vault documents...</div>
+              ) : opDocs.length === 0 ? (
+                <div style={{ padding: '60px 40px', textAlign: 'center', border: '1.5px dashed #E2E8F0', borderRadius: '12px', color: '#64748B' }}>
+                  <span style={{ fontSize: '32px', display: 'block', marginBottom: '10px' }}>📂</span>
+                  <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#0F172A', display: 'block' }}>No Documents Uploaded</span>
+                  <span style={{ fontSize: '13px', display: 'block', marginTop: '4px' }}>Use the right panel to upload this operator's verification documents.</span>
+                </div>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                  {opDocs.map((doc, idx) => {
+                    const isPdf = doc.mimeType?.includes('pdf') || doc.originalName?.toLowerCase().endsWith('.pdf');
+                    return (
+                      <div key={idx} style={{
+                        border: '1.5px solid #F1F5F9', backgroundColor: '#F8FAFC', borderRadius: '12px', padding: '16px',
+                        display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <div style={{
+                            width: '40px', height: '48px', borderRadius: '6px', backgroundColor: isPdf ? '#FEE2E2' : '#E6FDF3',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2px'
+                          }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={isPdf ? '#EF4444' : '#10B981'} strokeWidth="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            <span style={{ fontSize: '8px', fontWeight: 900, color: isPdf ? '#EF4444' : '#10B981' }}>{isPdf ? 'PDF' : 'IMAGE'}</span>
+                          </div>
+                          
+                          {/* Action Icons */}
+                          <div style={{ display: 'flex', gap: '8px', color: '#64748B' }}>
+                            <button 
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '4px' }} 
+                              onClick={async () => {
+                                try {
+                                  const dUrlReq = await adminClient.get(`/documents/${doc._id || doc.id}/download-url`);
+                                  window.open(dUrlReq.data.data.downloadUrl, '_blank');
+                                } catch (err) {
+                                  alert('Failed to get preview URL');
+                                }
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                            <button 
+                              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', padding: '4px' }} 
+                              onClick={async () => {
+                                try {
+                                  const dUrlReq = await adminClient.get(`/documents/${doc._id || doc.id}/download-url`);
+                                  const link = document.createElement('a');
+                                  link.href = dUrlReq.data.data.downloadUrl;
+                                  link.download = doc.originalName;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                } catch (err) {
+                                  alert('Failed to download document');
+                                }
+                              }}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Doc Title & Info */}
+                        <div>
+                          <span style={{ fontSize: '14.5px', fontWeight: 800, color: '#0F172A', display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{doc.originalName}</span>
+                          <span style={{ fontSize: '13px', color: '#64748B', display: 'block', marginTop: '2px' }}>{(doc.sizeBytes / 1024).toFixed(1)} KB</span>
+                        </div>
+
+                        {/* Status Pill */}
+                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                          <span style={{
+                            fontSize: '11px', fontWeight: 800, 
+                            backgroundColor: doc.verifiedStatus === 'verified' ? '#E6FDF3' : doc.verifiedStatus === 'pending' ? '#EFF6FF' : '#FEE2E2', 
+                            color: doc.verifiedStatus === 'verified' ? '#10B981' : doc.verifiedStatus === 'pending' ? '#2563EB' : '#EF4444',
+                            padding: '3px 8px', borderRadius: '6px', textTransform: 'capitalize'
+                          }}>{doc.verifiedStatus}</span>
+                        </div>
+
+                        {/* Footer Metadata */}
+                        <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '10px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '11px', color: '#64748B' }}>
+                          <div>
+                            <span>Uploaded: </span>
+                            <span style={{ fontWeight: 700, color: '#475569' }}>{new Date(doc.createdAt).toLocaleDateString('en-GB')}</span>
+                          </div>
+                          <div>
+                            <span>Category: </span>
+                            <span style={{ fontWeight: 700, color: '#475569', textTransform: 'capitalize' }}>{doc.documentCategory?.replace(/_/g, ' ') || 'Proof'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            <div style={{ padding: '16px', border: '1.5px dashed #CBD5E1', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <span style={{ fontSize: '14px', fontWeight: 750, color: '#0F172A', display: 'block' }}>Background Verification Report</span>
-                <span style={{ fontSize: '12px', color: '#64748B', marginTop: '2px', display: 'block' }}>PDF • 4.2 MB • Active</span>
+
+            {/* Right Column - Upload & Compliance */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Upload Card */}
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Upload New Document</h3>
+                
+                <input 
+                  type="file" 
+                  id={`operator-file-upload-${op._id}`} 
+                  onChange={handleFileUpload} 
+                  style={{ display: 'none' }} 
+                />
+                
+                <label 
+                  htmlFor={`operator-file-upload-${op._id}`}
+                  style={{
+                    border: '1.5px dashed #CBD5E1', borderRadius: '12px', padding: '32px 16px',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    gap: '12px', backgroundColor: '#F8FAFC', cursor: 'pointer'
+                  }}
+                >
+                  <div style={{
+                    width: '40px', height: '40px', borderRadius: '20px', backgroundColor: '#EFF6FF',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB'
+                  }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                  </div>
+                  <div style={{ textAlign: 'center' }}>
+                    <span style={{ fontSize: '13.5px', fontWeight: 750, color: '#0F172A', display: 'block' }}>Drag & drop files here</span>
+                    <span style={{ fontSize: '12.5px', color: '#2563EB', fontWeight: 700, textDecoration: 'underline', marginTop: '2px', display: 'block' }}>or Browse files</span>
+                  </div>
+                  <span style={{ fontSize: '11px', color: '#64748B' }}>Supported formats: PDF, JPG, PNG (Max 10MB)</span>
+                </label>
               </div>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }} onClick={() => alert("Document download will request signature.")}>Download</span>
+
+              {/* Compliance Actions */}
+              <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Compliance Action Required</h3>
+                
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {/* Item 1 */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#0F172A' }}>Hazmat Handling Expired</span>
+                      <span style={{ fontSize: '11px', fontWeight: 750, color: '#EF4444' }}>Action Required</span>
+                    </div>
+                    <p style={{ fontSize: '12.5px', color: '#64748B', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                      Operator cannot be assigned to Tier-2 transit tasks involving chemical assets.
+                    </p>
+                  </div>
+                  {/* Item 2 */}
+                  <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '14px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#0F172A' }}>Driving License Renew</span>
+                      <span style={{ fontSize: '11px', fontWeight: 750, color: '#D97706' }}>4 Years Left</span>
+                    </div>
+                    <p style={{ fontSize: '12.5px', color: '#64748B', margin: '4px 0 0 0', lineHeight: 1.4 }}>
+                      Regular permit audit recommended before the scheduled Q3 compliance checklist.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Action Bar */}
+          <div style={{
+            backgroundColor: '#FFFFFF', borderRadius: '12px', border: '1px solid #E2E8F0', padding: '16px 24px',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#D97706', fontSize: '13.5px', fontWeight: 650 }}>
+              <span>⚠️</span>
+              <span>Requesting updates will notify operator {op.name} immediately.</span>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button style={{
+                padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#2563EB',
+                border: '1.5px solid #2563EB', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+              }} onClick={() => alert("Downloading all files as ZIP...")}>
+                Download All (ZIP)
+              </button>
+              <button style={{
+                padding: '10px 18px', backgroundColor: '#2563EB', color: '#FFFFFF',
+                border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+              }} onClick={() => alert(`Document update request sent to ${op.name}.`)}>
+                Request Document Update
+              </button>
             </div>
           </div>
         </div>
@@ -426,7 +713,7 @@ export default function OperatorsPage() {
   // Profile View State
   const [viewingOp, setViewingOp] = useState<Operator | null>(null);
   const [opApplications, setOpApplications] = useState<any[]>([]);
-  const [opTab, setOpTab] = useState<'overview' | 'permissions' | 'documents'>('overview');
+  const [opTab, setOpTab] = useState<'overview' | 'activity_log' | 'permissions' | 'documents'>('overview');
 
   // RBAC Form states
   const [rbacStatus, setRbacStatus] = useState<'active' | 'pending' | 'suspended'>('active');

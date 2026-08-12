@@ -28,7 +28,11 @@ export const requestUploadUrl = async (req: Request, res: Response): Promise<voi
   const { fileName, mimeType, sizeBytes, documentCategory, applicationId } =
     req.body as typeof RequestUploadUrlSchema._type;
 
-  const citizenId = req.user!.id;
+  let citizenId = req.user!.id;
+  const userRole = req.user!.role;
+  if (['operator', 'admin', 'super_admin'].includes(userRole) && (req.body as any).ownerId) {
+    citizenId = (req.body as any).ownerId;
+  }
   const DocumentRecord = getDocumentModel();
 
   // Calculate current storage usage
@@ -73,8 +77,12 @@ export const requestUploadUrl = async (req: Request, res: Response): Promise<voi
 
 // ── POST /documents/confirm ───────────────────────────────────────────────────
 export const confirmUpload = async (req: Request, res: Response): Promise<void> => {
-  const { storageKey } = req.body as { storageKey: string };
-  const citizenId = req.user!.id;
+  const { storageKey, ownerId } = req.body as { storageKey: string; ownerId?: string };
+  let citizenId = req.user!.id;
+  const userRole = req.user!.role;
+  if (['operator', 'admin', 'super_admin'].includes(userRole) && ownerId) {
+    citizenId = ownerId;
+  }
   const DocumentRecord = getDocumentModel();
 
   const doc = await DocumentRecord.findOneAndUpdate(
@@ -248,7 +256,12 @@ export const listAdminDocuments = async (req: Request, res: Response): Promise<v
       await DocumentRecord.insertMany(seedDocs);
     }
 
-    const docs = await DocumentRecord.find({ deletedAt: { $exists: false } }).sort({ createdAt: -1 });
+    const query: any = { deletedAt: { $exists: false } };
+    const { ownerId } = req.query;
+    if (ownerId) {
+      query.ownerId = ownerId;
+    }
+    const docs = await DocumentRecord.find(query).sort({ createdAt: -1 });
 
     // Connect to core-service's Auth URI (mongoUriApplication is typically the main db string)
     const dbUri = config.mongoUriApplication.includes('cybersave-applications')

@@ -20,6 +20,7 @@ interface Ticket {
   category?: string;
   priority?: 'low' | 'medium' | 'high' | 'critical';
   attachmentUrl?: string;
+  internalNotes?: { authorName: string; authorRole: string; note: string; timestamp: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -31,6 +32,16 @@ export default function TicketsPage() {
   const [replyText, setReplyText] = useState('');
   const [isRespondModalOpen, setIsRespondModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+
+  // Resolution form states
+  const [isRespondPageOpen, setIsRespondPageOpen] = useState(false);
+  const [resSummary, setResSummary] = useState('Google OAuth endpoint redirect URI mismatch identified and corrected. Client credentials updated in Google Cloud Console. Temporary direct portal redirect provided during investigation.');
+  const [resCategory, setResCategory] = useState('Configuration Fix');
+  const [resRootCause, setResRootCause] = useState('Third-Party Service Misconfiguration');
+  const [resTime, setResTime] = useState('2 days, 4 hours');
+  const [resTags, setResTags] = useState(['OAuth', 'Google SSO', '502-error']);
+  const [notifyReporter, setNotifyReporter] = useState(true);
+  const [csatSurvey, setCsatSurvey] = useState(true);
 
   // Filters State
   const [search, setSearch] = useState('');
@@ -180,6 +191,507 @@ export default function TicketsPage() {
         return { bg: '#F1F5F9', color: '#475569' };
     }
   };
+
+  if (selectedTicket && isRespondPageOpen) {
+    const tktId = getTktIdStr(selectedTicket);
+    const statusBadge = getStatusBadgeStyles(selectedTicket.status);
+    const priorityBadge = getPriorityBadgeStyles(selectedTicket.priority);
+    const citizenInitials = 'JS';
+    const agentInitials = selectedTicket.assignedOperatorName ? selectedTicket.assignedOperatorName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) : 'AS';
+
+    const handleConfirmResolution = async () => {
+      try {
+        await adminClient.patch(`/support/operator/tickets/${selectedTicket._id}/status`, { status: 'resolved' });
+        await adminClient.post(`/support/tickets/${selectedTicket._id}/reply`, {
+          message: `✅ Ticket Resolved.\nResolution Summary: ${resSummary}\nCategory: ${resCategory}\nRoot Cause: ${resRootCause}`
+        });
+        alert('Ticket marked as RESOLVED and notifications dispatched!');
+        setIsRespondPageOpen(false);
+        fetchTickets();
+      } catch (err) {
+        alert('Failed to resolve support ticket');
+      }
+    };
+
+    return (
+      <div style={{ padding: '24px 32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+        {/* Breadcrumbs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: 600, marginBottom: '24px' }}>
+          <span style={{ cursor: 'pointer' }} onClick={() => setIsRespondPageOpen(false)}>Dashboard</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style={{ cursor: 'pointer' }} onClick={() => setIsRespondPageOpen(false)}>Support Tickets</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style={{ cursor: 'pointer' }} onClick={() => setIsRespondPageOpen(false)}>Ticket #{tktId}</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style={{ color: '#2563EB' }}>Resolution</span>
+        </div>
+
+        {/* Resolve Ticket Title */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 850, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>Resolve Ticket #{tktId}</h1>
+            <span style={{
+              fontSize: '11px', fontWeight: 800, textTransform: 'capitalize',
+              padding: '3px 8px', borderRadius: '6px',
+              backgroundColor: statusBadge.bg, color: statusBadge.color
+            }}>{selectedTicket.status.replace('_', ' ')}</span>
+          </div>
+        </div>
+
+        {/* Main Grid Content */}
+        <div style={{ display: 'grid', gridTemplateColumns: '7fr 3fr', gap: '24px', marginBottom: '28px' }}>
+          {/* Left Column - Resolution Specs */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Resolution Specifications</h3>
+
+              {/* Summary Textarea */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Resolution Summary</span>
+                <textarea
+                  value={resSummary}
+                  onChange={e => setResSummary(e.target.value)}
+                  style={{
+                    width: '100%', padding: '12px 16px', border: '1.5px solid #E2E8F0', borderRadius: '10px',
+                    fontSize: '14px', minHeight: '110px', outline: 'none', fontFamily: 'inherit', resize: 'vertical',
+                    lineHeight: 1.5, color: '#1E293B', fontWeight: 550
+                  }}
+                />
+              </div>
+
+              {/* Dropdowns row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Resolution Category</span>
+                  <select
+                    value={resCategory}
+                    onChange={e => setResCategory(e.target.value)}
+                    style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', backgroundColor: '#FFFFFF', fontWeight: 600, color: '#1E293B' }}
+                  >
+                    <option value="Configuration Fix">Configuration Fix</option>
+                    <option value="Bug Fix">Bug Fix</option>
+                    <option value="Documentation Update">Documentation Update</option>
+                    <option value="Account Access Recovery">Account Access Recovery</option>
+                    <option value="Server/Infrastructural Patch">Server/Infrastructural Patch</option>
+                  </select>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Root Cause</span>
+                  <select
+                    value={resRootCause}
+                    onChange={e => setResRootCause(e.target.value)}
+                    style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', backgroundColor: '#FFFFFF', fontWeight: 600, color: '#1E293B' }}
+                  >
+                    <option value="Third-Party Service Misconfiguration">Third-Party Service Misconfiguration</option>
+                    <option value="Code bug in redirect controller">Code bug in redirect controller</option>
+                    <option value="Server downtime / timeout error">Server downtime / timeout error</option>
+                    <option value="Missing profile access scope attributes">Missing profile access scope attributes</option>
+                    <option value="User authentication failure">User authentication failure</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Time & Tags Row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Time to Resolution</span>
+                  <input
+                    type="text"
+                    value={resTime}
+                    onChange={e => setResTime(e.target.value)}
+                    style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', outline: 'none', fontWeight: 600, color: '#1E293B' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 700, color: '#64748B' }}>Internal Tags</span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', padding: '6px 10px', border: '1.5px solid #E2E8F0', borderRadius: '8px', minHeight: '42px', alignItems: 'center', backgroundColor: '#FFFFFF' }}>
+                    {resTags.map(tag => (
+                      <span key={tag} style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 700,
+                        backgroundColor: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '6px'
+                      }}>
+                        {tag}
+                        <button type="button" onClick={() => setResTags(prev => prev.filter(t => t !== tag))} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#94A3B8', fontWeight: 800, padding: 0 }}>×</button>
+                      </span>
+                    ))}
+                    <input 
+                      type="text"
+                      placeholder="+ Add Tag"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                          setResTags(prev => [...prev, e.currentTarget.value.trim()]);
+                          e.currentTarget.value = '';
+                        }
+                      }}
+                      style={{ border: 'none', outline: 'none', fontSize: '12.5px', color: '#475569', fontWeight: 600, width: '70px' }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Toggles */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', display: 'block' }}>Notify Reporter (John Smith) via Email</span>
+                    <span style={{ fontSize: '12.5px', color: '#64748B', display: 'block', marginTop: '2px' }}>Send a summary and resolution notes immediately upon confirmation.</span>
+                  </div>
+                  <div 
+                    onClick={() => setNotifyReporter(!notifyReporter)}
+                    style={{
+                      width: '44px', height: '24px', borderRadius: '12px',
+                      backgroundColor: notifyReporter ? '#2563EB' : '#CBD5E1',
+                      cursor: 'pointer', position: 'relative', transition: '0.2s'
+                    }}
+                  >
+                    <div style={{
+                      width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#FFFFFF',
+                      position: 'absolute', top: '3px', left: notifyReporter ? '23px' : '3px',
+                      transition: '0.2s'
+                    }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', display: 'block' }}>Customer Satisfaction Survey</span>
+                    <span style={{ fontSize: '12.5px', color: '#64748B', display: 'block', marginTop: '2px' }}>Embed a CSAT rating block at the footer of the resolution email.</span>
+                  </div>
+                  <div 
+                    onClick={() => setCsatSurvey(!csatSurvey)}
+                    style={{
+                      width: '44px', height: '24px', borderRadius: '12px',
+                      backgroundColor: csatSurvey ? '#2563EB' : '#CBD5E1',
+                      cursor: 'pointer', position: 'relative', transition: '0.2s'
+                    }}
+                  >
+                    <div style={{
+                      width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#FFFFFF',
+                      position: 'absolute', top: '3px', left: csatSurvey ? '23px' : '3px',
+                      transition: '0.2s'
+                    }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Actions Card */}
+            <div style={{
+              backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '16px 24px',
+              display: 'flex', gap: '12px', alignItems: 'center'
+            }}>
+              <button 
+                onClick={handleConfirmResolution}
+                style={{ padding: '12px 24px', backgroundColor: '#2563EB', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Confirm Resolution
+              </button>
+              <button 
+                onClick={() => { alert('Draft saved.'); setIsRespondPageOpen(false); }}
+                style={{ padding: '12px 24px', backgroundColor: '#FFFFFF', color: '#475569', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Save as Draft
+              </button>
+              <button 
+                onClick={() => setIsRespondPageOpen(false)}
+                style={{ background: 'none', border: 'none', color: '#64748B', fontSize: '14px', fontWeight: 700, cursor: 'pointer', marginLeft: '12px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+
+          {/* Right Column - Summary & Preview */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Ticket Summary */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '20px' }}>Ticket Summary</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Ticket ID</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{tktId}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Priority</span>
+                  <span style={{
+                    fontSize: '11.5px', fontWeight: 800, textTransform: 'capitalize',
+                    padding: '2px 6px', borderRadius: '4px',
+                    backgroundColor: priorityBadge.bg, color: priorityBadge.color
+                  }}>{selectedTicket.priority || 'medium'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Category</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{selectedTicket.category || 'Technical'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Reporter</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>John Smith</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Assigned To</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{selectedTicket.assignedOperatorName || 'Unassigned'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Created</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{new Date(selectedTicket.createdAt).toLocaleDateString('en-GB')}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Notification Preview */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Notification Preview</h3>
+                <span style={{ fontSize: '10px', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase' }}>Email Mockup</span>
+              </div>
+
+              <div style={{ border: '1px solid #E2E8F0', borderRadius: '8px', padding: '14px', backgroundColor: '#F8FAFC', fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div>
+                  <span style={{ fontWeight: 700 }}>Subject:</span> Resolved: {selectedTicket.subject} (#{tktId})
+                </div>
+                <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <p style={{ margin: 0, fontWeight: 700 }}>Hello John Smith,</p>
+                  <p style={{ margin: 0, color: '#475569', lineHeight: 1.4 }}>
+                    Our technical support team has marked your issue as <span style={{ color: '#2563EB', fontWeight: 700 }}>Resolved</span>.
+                  </p>
+                  
+                  {/* Summary Box */}
+                  <div style={{ border: '1.5px solid #E2E8F0', borderRadius: '8px', padding: '10px', backgroundColor: '#FFFFFF', color: '#1E293B', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase' }}>Resolution Summary:</span>
+                    <span style={{ fontSize: '12.5px', fontWeight: 550, lineHeight: 1.4 }}>{resSummary}</span>
+                  </div>
+
+                  {csatSurvey && (
+                    <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '10px', textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <span style={{ fontSize: '11.5px', color: '#64748B', fontWeight: 650 }}>How would you rate our support?</span>
+                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'center', color: '#F59E0B', fontSize: '16px' }}>
+                        <span>☆</span><span>☆</span><span>☆</span><span>☆</span><span>☆</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (selectedTicket && isViewModalOpen) {
+    const tktId = getTktIdStr(selectedTicket);
+    const statusBadge = getStatusBadgeStyles(selectedTicket.status);
+    const priorityBadge = getPriorityBadgeStyles(selectedTicket.priority);
+    const citizenInitials = 'JS';
+    const agentInitials = selectedTicket.assignedOperatorName ? selectedTicket.assignedOperatorName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) : 'AS';
+
+    return (
+      <div style={{ padding: '24px 32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
+        {/* Breadcrumbs */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: '#64748B', fontWeight: 600, marginBottom: '24px' }}>
+          <span style={{ cursor: 'pointer' }} onClick={() => setIsViewModalOpen(false)}>Dashboard</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style={{ cursor: 'pointer' }} onClick={() => setIsViewModalOpen(false)}>Support Tickets</span>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <span style={{ color: '#2563EB' }}>Ticket #{tktId}</span>
+        </div>
+
+        {/* Ticket Title & Status */}
+        <div style={{ marginBottom: '24px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: 850, color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>{selectedTicket.subject}</h1>
+            <span style={{
+              fontSize: '11px', fontWeight: 800, textTransform: 'capitalize',
+              padding: '3px 8px', borderRadius: '6px',
+              backgroundColor: statusBadge.bg, color: statusBadge.color
+            }}>{selectedTicket.status.replace('_', ' ')}</span>
+          </div>
+          <p style={{ fontSize: '14.5px', color: '#64748B', marginTop: '6px', fontWeight: 550 }}>{selectedTicket.description}</p>
+        </div>
+
+        {/* Main Columns Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '7fr 3fr', gap: '24px', marginBottom: '28px' }}>
+          {/* Left Column - Conversation Thread */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            {/* Conversation Thread Card */}
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '20px' }}>Conversation Thread</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
+                {selectedTicket.messages.map((m, idx) => {
+                  const isOp = m.senderRole === 'operator';
+                  const isBot = m.senderRole === 'system';
+                  const senderName = isOp ? (selectedTicket.assignedOperatorName || 'Support Agent') : isBot ? 'System Bot' : 'John Smith';
+                  const initials = senderName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
+                  
+                  return (
+                    <div key={idx} style={{ 
+                      display: 'flex', gap: '14px', padding: '16px', 
+                      backgroundColor: '#F8FAFC', border: '1.5px solid #F1F5F9', borderRadius: '12px' 
+                    }}>
+                      <div style={{
+                        width: '36px', height: '36px', borderRadius: '18px',
+                        backgroundColor: isOp ? '#EFF6FF' : '#F1F5F9',
+                        color: isOp ? '#2563EB' : '#475569',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '13px', fontWeight: 700
+                      }}>{initials}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '14px', fontWeight: 800, color: '#0F172A' }}>{senderName}</span>
+                            {isOp && <span style={{ fontSize: '10px', fontWeight: 800, backgroundColor: '#EFF6FF', color: '#2563EB', padding: '1px 5px', borderRadius: '4px' }}>Agent</span>}
+                            {!isOp && !isBot && <span style={{ fontSize: '10px', fontWeight: 700, color: '#64748B' }}>Customer / Reporter</span>}
+                          </div>
+                          <span style={{ fontSize: '12px', color: '#64748B' }}>{new Date(m.timestamp).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                        <p style={{ fontSize: '13.5px', color: '#334155', fontWeight: 550, margin: '8px 0 0 0', lineHeight: 1.4 }}>{m.message}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Write a Response */}
+              <div style={{ borderTop: '1.5px solid #F1F5F9', paddingTop: '20px' }}>
+                <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '12px' }}>Write a Response</h4>
+                <textarea
+                  placeholder={`Type your response to John Smith here...`}
+                  value={replyText}
+                  onChange={e => setReplyText(e.target.value)}
+                  style={{
+                    width: '100%', padding: '12px 16px', border: '1.5px solid #E2E8F0', borderRadius: '10px',
+                    fontSize: '13.5px', minHeight: '100px', outline: 'none', fontFamily: 'inherit', resize: 'vertical'
+                  }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
+                  <button style={{ background: 'none', border: 'none', color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }} onClick={() => alert("Attachment functionality requires storage ticket config.")}>
+                    <span>📎</span> Attach file or logs
+                  </button>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button style={{ padding: '8px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }} onClick={() => alert("Draft saved locally.")}>Save Draft</button>
+                    <button style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backgroundColor: '#2563EB', color: '#FFFFFF', cursor: 'pointer' }} onClick={async () => {
+                      if (!replyText.trim()) return;
+                      await adminClient.post(`/support/tickets/${selectedTicket._id}/reply`, { message: replyText });
+                      setReplyText('');
+                      fetchTickets();
+                    }}>Send Reply</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Ticket Details */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+              <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '20px' }}>Ticket Details</h3>
+              
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '20px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Ticket ID</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{tktId}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Category</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{selectedTicket.category || 'Technical'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Priority</span>
+                  <span style={{
+                    fontSize: '11px', fontWeight: 800, textTransform: 'capitalize',
+                    padding: '2px 6px', borderRadius: '4px',
+                    backgroundColor: priorityBadge.bg, color: priorityBadge.color
+                  }}>{selectedTicket.priority || 'medium'}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Created On</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{new Date(selectedTicket.createdAt).toLocaleDateString('en-GB')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Last Updated</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{new Date(selectedTicket.updatedAt).toLocaleDateString('en-GB')}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Assigned To</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '12px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>{agentInitials}</div>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{selectedTicket.assignedOperatorName || 'Unassigned'}</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Reporter</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '24px', height: '24px', borderRadius: '12px', backgroundColor: '#F1F5F9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>{citizenInitials}</div>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>John Smith</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <button style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: '#FEE2E2', color: '#EF4444', cursor: 'pointer' }} onClick={() => handleUpdateStatus(selectedTicket._id, 'escalated')}>Escalate Ticket</button>
+                <button style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: '#E6FDF3', color: '#10B981', cursor: 'pointer' }} onClick={() => handleUpdateStatus(selectedTicket._id, 'resolved')}>Mark as Resolved</button>
+                <button style={{ width: '100%', padding: '10px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }} onClick={() => {
+                  const agentName = window.prompt("Enter agent name to reassign to:");
+                  if (agentName) {
+                    adminClient.patch(`/support/operator/tickets/${selectedTicket._id}/reassign`, { assignedOperatorName: agentName }).then(() => {
+                      alert(`Ticket reassigned to ${agentName}`);
+                      fetchTickets();
+                    }).catch(() => alert("Failed to reassign"));
+                  }
+                }}>Reassign Ticket</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Internal Team Notes & Activity */}
+        <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Internal Team Notes & Activity</h3>
+            <button style={{
+              background: 'none', border: 'none', color: '#2563EB', fontSize: '13px', fontWeight: 750, cursor: 'pointer'
+            }} onClick={() => {
+              const noteText = window.prompt("Enter internal private note:");
+              if (noteText) {
+                adminClient.post(`/support/operator/tickets/${selectedTicket._id}/notes`, { note: noteText }).then(() => {
+                  alert("Internal note added successfully!");
+                  fetchTickets();
+                }).catch(() => alert("Failed to add note"));
+              }
+            }}>
+              + Add Private Note
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {(!selectedTicket.internalNotes || selectedTicket.internalNotes.length === 0) ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: '#64748B', border: '1.5px dashed #F1F5F9', borderRadius: '10px' }}>
+                No private internal notes have been recorded for this ticket yet.
+              </div>
+            ) : (
+              selectedTicket.internalNotes.map((note, idx) => (
+                <div key={idx} style={{
+                  backgroundColor: '#FFFBEB', border: '1.5px solid #FEF3C7', borderRadius: '12px', padding: '16px',
+                  display: 'flex', flexDirection: 'column', gap: '6px'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '14px' }}>📝</span>
+                      <span style={{ fontSize: '13.5px', fontWeight: 800, color: '#D97706' }}>Note by {note.authorName} ({note.authorRole})</span>
+                    </div>
+                    <span style={{ fontSize: '12px', color: '#64748B' }}>{new Date(note.timestamp).toLocaleString('en-GB')}</span>
+                  </div>
+                  <p style={{ fontSize: '13.5px', color: '#451A03', fontWeight: 550, margin: 0, lineHeight: 1.4 }}>{note.note}</p>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ padding: '32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -466,7 +978,7 @@ export default function TicketsPage() {
                     View
                   </button>
                   <button
-                    onClick={() => { setSelectedTicket(t); setIsRespondModalOpen(true); }}
+                    onClick={() => { setSelectedTicket(t); setIsRespondPageOpen(true); }}
                     style={{
                       flex: 1,
                       padding: '8px 14px',

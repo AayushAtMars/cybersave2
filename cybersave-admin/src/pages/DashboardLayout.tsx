@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../store/adminStore';
+import { adminClient } from '../api/client';
 import DashboardHome from './DashboardHome';
 import ApplicationsQueuePage from './ApplicationsQueuePage';
 import ApplicationVerifyDetailsPage from './ApplicationVerifyDetailsPage';
@@ -69,7 +70,6 @@ const navItems = [
   { to: '/applications', label: 'Applications', icon: Icons.Applications },
   { to: '/services', label: 'Services', icon: Icons.Services },
   { to: '/operators', label: 'Operators', icon: Icons.Operators },
-  { to: '/transactions', label: 'Transactions', icon: Icons.Transactions },
   { to: '/notifications', label: 'Notifications', icon: Icons.Notifications },
   { to: '/tickets', label: 'Support Tickets', icon: Icons.SupportTickets },
   { to: '/analytics', label: 'Analytics', icon: Icons.Analytics },
@@ -79,9 +79,25 @@ const navItems = [
 
 export default function DashboardLayout() {
   const user = useAdminStore((s) => s.user);
+  const setAuth = useAdminStore((s) => s.setAuth);
+  const accessToken = useAdminStore((s) => s.accessToken);
   const clearAuth = useAdminStore((s) => s.clearAuth);
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const fetchMe = async () => {
+      try {
+        const { data } = await adminClient.get('/auth/admin/me');
+        if (data.success && user && accessToken) {
+          setAuth({ ...user, name: data.data.name, email: data.data.email, avatar: data.data.avatar }, accessToken);
+        }
+      } catch (err) {
+        console.error("Failed to sync operator profile:", err);
+      }
+    };
+    fetchMe();
+  }, []);
 
   const displayUserName = user?.name || 'Rajesh Kumar';
   const displayUserRole = user?.role ? user.role.replace('_', ' ').toUpperCase() : 'SUPER ADMIN';
@@ -330,21 +346,35 @@ export default function DashboardLayout() {
                 <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 500, marginTop: '2px' }}>{displayUserRole}</div>
               </div>
               {/* Avatar Image (Simulated using dynamic Initials avatar if no image) */}
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: '#EFF6FF',
-                color: '#2563EB',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-                fontSize: '14px',
-                border: '1px solid #BFDBFE'
-              }}>
-                {displayUserName.split(' ').map(n => n[0]).join('')}
-              </div>
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={displayUserName}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    border: '1px solid #BFDBFE'
+                  }}
+                />
+              ) : (
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#EFF6FF',
+                  color: '#2563EB',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  border: '1px solid #BFDBFE'
+                }}>
+                  {displayUserName.split(' ').map(n => n[0]).join('')}
+                </div>
+              )}
             </div>
           </div>
         </header>

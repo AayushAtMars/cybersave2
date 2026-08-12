@@ -275,9 +275,9 @@ export default function SettingsPage() {
         avatar,
       });
       if (data.success) {
-        // Update the store so the header reflects the new name
+        // Update the store so the header reflects the new name and photo
         if (user && accessToken) {
-          setAuth({ ...user, name: data.data.name, email: data.data.email }, accessToken);
+          setAuth({ ...user, name: data.data.name, email: data.data.email, avatar: data.data.avatar }, accessToken);
         }
         showToast('Profile updated successfully', 'success');
       }

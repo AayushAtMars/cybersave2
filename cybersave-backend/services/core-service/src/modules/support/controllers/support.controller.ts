@@ -175,3 +175,55 @@ export const listAdminTickets = async (req: Request, res: Response): Promise<voi
     res.status(500).json({ success: false, error: err.message });
   }
 };
+
+export const addInternalNote = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body as { note: string };
+    const authorName = req.headers['x-user-name'] as string || 'Operator';
+    const authorRole = req.user!.role;
+
+    const { Ticket } = getModels();
+    const ticket = await Ticket.findById(id);
+    if (!ticket) {
+      res.status(404).json({ success: false, error: 'Ticket not found', errorCode: 'TICKET_NOT_FOUND' });
+      return;
+    }
+
+    if (!ticket.internalNotes) {
+      ticket.internalNotes = [];
+    }
+
+    ticket.internalNotes.push({
+      authorName,
+      authorRole,
+      note,
+      timestamp: new Date(),
+    });
+
+    await ticket.save();
+    res.json({ success: true, data: { ticket } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+export const reassignTicket = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { assignedOperatorName } = req.body as { assignedOperatorName: string };
+
+    const { Ticket } = getModels();
+    const ticket = await Ticket.findById(id);
+    if (!ticket) {
+      res.status(404).json({ success: false, error: 'Ticket not found', errorCode: 'TICKET_NOT_FOUND' });
+      return;
+    }
+
+    ticket.assignedOperatorName = assignedOperatorName;
+    await ticket.save();
+    res.json({ success: true, data: { ticket } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

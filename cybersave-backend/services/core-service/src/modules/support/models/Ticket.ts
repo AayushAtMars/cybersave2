@@ -7,6 +7,13 @@ export interface IMessage {
   timestamp: Date;
 }
 
+export interface IInternalNote {
+  authorName: string;
+  authorRole: string;
+  note: string;
+  timestamp: Date;
+}
+
 export interface ITicket extends Document {
   citizenId: string;
   subject: string;
@@ -18,6 +25,7 @@ export interface ITicket extends Document {
   messages: IMessage[];
   assignedOperatorId?: string;
   assignedOperatorName?: string;
+  internalNotes: IInternalNote[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +36,16 @@ const MessageSchema = new Schema<IMessage>(
     senderRole: { type: String, enum: ['citizen', 'operator', 'system'], required: true },
     message: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
+const InternalNoteSchema = new Schema<IInternalNote>(
+  {
+    authorName: { type: String, required: true },
+    authorRole: { type: String, required: true },
+    note: { type: String, required: true },
+    timestamp: { type: Date, default: Date.now }
   },
   { _id: false }
 );
@@ -49,6 +67,7 @@ const TicketSchema = new Schema<ITicket>(
     messages: { type: [MessageSchema], default: [] },
     assignedOperatorId: { type: String, index: true },
     assignedOperatorName: { type: String },
+    internalNotes: { type: [InternalNoteSchema], default: [] },
   },
   { timestamps: true }
 );
