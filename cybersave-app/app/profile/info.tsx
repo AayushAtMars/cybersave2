@@ -47,33 +47,24 @@ export default function PersonalInfoScreen() {
     : '+91 98765 43210';
 
   const handleSave = async () => {
+    const trimmedEmail = email.trim();
+
+    // Email is the only field the user can freely edit on this screen.
+    // DOB and Gender are display-only — they cannot be changed here.
+    if (!trimmedEmail) {
+      Alert.alert('No Changes', 'Please enter an email address to save.');
+      return;
+    }
+
+    // If email hasn't changed, nothing to do
+    if (trimmedEmail === (user?.email ?? '')) {
+      Alert.alert('No Changes', 'The email address is the same as the current one.');
+      return;
+    }
+
     try {
-      const payload: Record<string, any> = {};
-
-      // Only include email since that's the only field the user can freely edit
-      if (email && email.trim()) {
-        payload.email = email.trim();
-      }
-
-      // Only include dob if it differs from what's stored and is non-empty
-      const storedDob = user?.dob ?? '';
-      if (dob.trim() && dob.trim() !== storedDob) {
-        payload.dob = dob.trim();
-      }
-
-      // Only include gender if it differs from what's stored and is non-empty
-      const storedGender = user?.gender ?? '';
-      if (gender.trim() && gender.trim().toLowerCase() !== storedGender.toLowerCase()) {
-        payload.gender = gender.trim().toLowerCase() as any;
-      }
-
-      if (Object.keys(payload).length === 0) {
-        Alert.alert('No Changes', 'Nothing to save — no fields were modified.');
-        return;
-      }
-
-      await updateProfile.mutateAsync(payload);
-      Alert.alert('Success', 'Profile details updated successfully');
+      await updateProfile.mutateAsync({ email: trimmedEmail });
+      Alert.alert('Success', 'Profile updated successfully');
       router.back();
     } catch (err: any) {
       const msg =
