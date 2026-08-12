@@ -29,26 +29,12 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
 
   // Modal open states
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
+  const [wizardCategory, setWizardCategory] = useState<string | undefined>(undefined);
+  const [wizardDepartment, setWizardDepartment] = useState<string | undefined>(undefined);
 
-  // Selected Service for edit/view
+  // Selected Service for deletion
   const [selectedService, setSelectedService] = useState<Service | null>(null);
-
-  // Form Fields State
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('aadhaar');
-  const [department, setDepartment] = useState('');
-  const [govtFee, setGovtFee] = useState(0);
-  const [convenienceFee, setConvenienceFee] = useState(0);
-  const [slaHours, setSlaHours] = useState(24);
-  const [eligibility, setEligibility] = useState('');
-  const [requiredDocs, setRequiredDocs] = useState('');
-  const [isActive, setIsActive] = useState(true);
-  const [visualFields, setVisualFields] = useState<any[]>([]);
 
   // Search Filter & Pagination State
   const [search, setSearch] = useState('');
@@ -84,168 +70,31 @@ export default function ServicesPage() {
     }));
   };
 
-  // Google Forms helpers
-  const addVisualField = () => {
-    setVisualFields(prev => [
-      ...prev,
-      {
-        key: `field_${Date.now()}`,
-        label: 'New Field',
-        type: 'text',
-        required: true,
-        placeholder: '',
-        options: []
-      }
-    ]);
-  };
-
-  const updateVisualField = (index: number, keyStr: string, value: any) => {
-    setVisualFields(prev => {
-      const next = [...prev];
-      next[index] = { ...next[index], [keyStr]: value };
-      if (keyStr === 'label' && next[index].key.startsWith('field_')) {
-        next[index].key = value
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, '_')
-          .substring(0, 20);
-      }
-      return next;
-    });
-  };
-
-  const removeVisualField = (index: number) => {
-    setVisualFields(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleEditClick = (s: Service) => {
-    setSelectedService(s);
-    setName(s.name);
-    setDescription(s.description || '');
-    setCategory(s.category || 'gov_scheme');
-    setDepartment(s.department || '');
-    setGovtFee(s.govtFee / 100);
-    setConvenienceFee(s.convenienceFee / 100);
-    setSlaHours(s.slaHours || 24);
-    setEligibility((s.eligibility || []).join(', '));
-    setRequiredDocs((s.requiredDocuments || []).map(d => d.name).join(', '));
-    setIsActive(s.isActive);
-    setVisualFields(s.formFields || []);
-    
-    setIsEditModalOpen(true);
-  };
-
-  const handleViewClick = (s: Service) => {
-    setSelectedService(s);
-    setIsViewModalOpen(true);
+  // Delete service handler
+  const handleDeleteClick = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this service configuration?')) return;
+    try {
+      await adminClient.delete(`/services/${id}`);
+      alert('Service deleted successfully');
+      fetchServices();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to delete service');
+    }
   };
 
   const handleAddNewSubService = (group: any) => {
-    setName('');
-    setDescription('');
-    
     let catSlug = 'gov_scheme';
     if (group.name === 'Aadhaar Services') catSlug = 'aadhaar';
     else if (group.name === 'PAN Card Services') catSlug = 'pan';
     else if (group.name === 'Birth & Death Registration') catSlug = 'certificate';
 
-    setCategory(catSlug);
-    setDepartment(group.department || '');
-    setGovtFee(0);
-    setConvenienceFee(0);
-    setSlaHours(24);
-    setEligibility('Indian Citizen');
-    setRequiredDocs('Aadhaar Card');
-    setIsActive(true);
-    setVisualFields([
-      { key: 'applicantName', label: 'Applicant Full Name', type: 'text', required: true, placeholder: 'Enter Full Name' }
-    ]);
-
-    setIsCreateModalOpen(true);
+    setWizardCategory(catSlug);
+    setWizardDepartment(group.department || '');
+    setShowWizard(true);
   };
 
   const handleAddNewClick = () => {
     setShowWizard(true);
-  };
-
-  // Submit Edit Form
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedService) return;
-    try {
-      const eligibilityArr = eligibility.split(',').map(item => item.trim()).filter(item => item.length > 0);
-      const reqDocs = requiredDocs
-        .split(',')
-        .map(name => ({
-          name: name.trim(),
-          mandatory: true,
-          acceptedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
-          maxSizeMb: 5
-        }))
-        .filter(d => d.name.length > 0);
-
-      await adminClient.patch(`/services/${selectedService._id}`, {
-        name,
-        description,
-        category,
-        department,
-        govtFee: govtFee * 100,
-        convenienceFee: convenienceFee * 100,
-        slaHours,
-        isActive,
-        eligibility: eligibilityArr,
-        requiredDocuments: reqDocs,
-        formFields: visualFields
-      });
-
-      alert('Service configurations updated successfully');
-      setIsEditModalOpen(false);
-      fetchServices();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to update service config');
-    }
-  };
-
-  // Submit Create Form
-  const handleCreate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const reqDocs = requiredDocs
-        .split(',')
-        .map(name => ({
-          name: name.trim(),
-          mandatory: true,
-          acceptedFormats: ['pdf', 'jpg', 'jpeg', 'png'],
-          maxSizeMb: 5
-        }))
-        .filter(d => d.name.length > 0);
-
-      if (reqDocs.length === 0) {
-        alert('Please specify at least one required document.');
-        return;
-      }
-
-      const eligibilityArr = eligibility.split(',').map(item => item.trim()).filter(item => item.length > 0);
-
-      await adminClient.post('/services', {
-        name,
-        description,
-        category,
-        department,
-        govtFee: govtFee * 100,
-        convenienceFee: convenienceFee * 100,
-        slaHours,
-        isActive,
-        eligibility: eligibilityArr,
-        requiredDocuments: reqDocs,
-        formFields: visualFields
-      });
-
-      alert('New service successfully created');
-      setIsCreateModalOpen(false);
-      fetchServices();
-    } catch (err: any) {
-      alert(err.response?.data?.error || 'Failed to create service');
-    }
   };
 
   // Group services dynamically by category
@@ -332,7 +181,14 @@ export default function ServicesPage() {
   const underMaintenance = services.filter(s => !s.isActive).length;
 
   if (showWizard) {
-    return <ServiceConfigWizard onClose={() => setShowWizard(false)} onSave={() => { setShowWizard(false); fetchServices(); }} />;
+    return (
+      <ServiceConfigWizard 
+        onClose={() => { setShowWizard(false); setWizardCategory(undefined); setWizardDepartment(undefined); }} 
+        onSave={() => { setShowWizard(false); setWizardCategory(undefined); setWizardDepartment(undefined); fetchServices(); }} 
+        initialCategory={wizardCategory}
+        initialDepartment={wizardDepartment}
+      />
+    );
   }
 
   return (
@@ -613,34 +469,19 @@ export default function ServicesPage() {
                               <td style={{ padding: '14px 24px' }}>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                   <button
-                                    onClick={() => handleEditClick(s)}
-                                    style={{
-                                      padding: '5px 12px',
-                                      border: '1.5px solid #E2E8F0',
-                                      borderRadius: '6px',
-                                      backgroundColor: '#FFFFFF',
-                                      color: '#334155',
-                                      fontSize: '12.5px',
-                                      fontWeight: 700,
-                                      cursor: 'pointer'
-                                    }}
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() => handleViewClick(s)}
+                                    onClick={() => handleDeleteClick(s._id)}
                                     style={{
                                       padding: '5px 12px',
                                       border: 'none',
                                       borderRadius: '6px',
-                                      backgroundColor: '#2563EB',
+                                      backgroundColor: '#EF4444',
                                       color: '#FFFFFF',
                                       fontSize: '12.5px',
                                       fontWeight: 700,
                                       cursor: 'pointer'
                                     }}
                                   >
-                                    View
+                                    Delete
                                   </button>
                                 </div>
                               </td>
@@ -726,502 +567,7 @@ export default function ServicesPage() {
         </div>
       </div>
 
-      {/* Edit / Configuration Modal */}
-      {isEditModalOpen && selectedService && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '680px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-            padding: '24px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid #F1F5F9', paddingBottom: '12px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Configure Service: {selectedService.name}</h3>
-              <button onClick={() => setIsEditModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Service Name</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Govt Fee (₹)</label>
-                  <input type="number" step="0.01" value={govtFee} onChange={e => setGovtFee(parseFloat(e.target.value))} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Convenience Fee (₹)</label>
-                  <input type="number" step="0.01" value={convenienceFee} onChange={e => setConvenienceFee(parseFloat(e.target.value))} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SLA Hours</label>
-                  <input type="number" value={slaHours} onChange={e => setSlaHours(parseInt(e.target.value, 10))} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
-                  <select value={isActive ? 'true' : 'false'} onChange={e => setIsActive(e.target.value === 'true')} style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none', backgroundColor: '#FFFFFF' }}>
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Eligibility Criteria (comma-separated)</label>
-                <input type="text" value={eligibility} onChange={e => setEligibility(e.target.value)} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Required Documents (comma-separated)</label>
-                <input type="text" value={requiredDocs} onChange={e => setRequiredDocs(e.target.value)} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Application Form Fields</label>
-                  <button
-                    type="button"
-                    onClick={addVisualField}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#2563EB',
-                      color: '#FFFFFF',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add Field
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '240px', overflowY: 'auto', padding: '4px', border: '1.5px solid #E2E8F0', borderRadius: '8px' }}>
-                  {visualFields.length === 0 ? (
-                    <span style={{ fontSize: '13px', color: '#64748B', textAlign: 'center', padding: '12px 0' }}>No custom fields added yet.</span>
-                  ) : (
-                    visualFields.map((field, idx) => (
-                      <div key={idx} style={{ padding: '12px', border: '1.5px solid #F1F5F9', backgroundColor: '#F8FAFC', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
-                        <button
-                          type="button"
-                          onClick={() => removeVisualField(idx)}
-                          style={{
-                            position: 'absolute',
-                            right: '8px',
-                            top: '8px',
-                            border: 'none',
-                            background: 'none',
-                            color: '#EF4444',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: 700
-                          }}
-                        >
-                          ✕
-                        </button>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Field Label</span>
-                          <input
-                            type="text"
-                            value={field.label}
-                            onChange={e => updateVisualField(idx, 'label', e.target.value)}
-                            placeholder="e.g. Applicant Name"
-                            style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                          />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Field Type</span>
-                          <select
-                            value={field.type}
-                            onChange={e => updateVisualField(idx, 'type', e.target.value)}
-                            style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                          >
-                            <option value="text">Text</option>
-                            <option value="number">Number</option>
-                            <option value="date">Date</option>
-                            <option value="aadhaar">Aadhaar</option>
-                            <option value="pan">PAN Card</option>
-                            <option value="phone">Phone</option>
-                            <option value="select">Select</option>
-                          </select>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Placeholder</span>
-                          <input
-                            type="text"
-                            value={field.placeholder || ''}
-                            onChange={e => updateVisualField(idx, 'placeholder', e.target.value)}
-                            placeholder="e.g. Enter value"
-                            style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                          />
-                        </div>
-
-                        {field.type === 'select' && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Options (comma-separated)</span>
-                            <input
-                              type="text"
-                              value={Array.isArray(field.options) ? field.options.join(', ') : (field.options || '')}
-                              onChange={e => updateVisualField(idx, 'options', e.target.value.split(',').map(o => o.trim()).filter(Boolean))}
-                              placeholder="e.g. Male, Female, Other"
-                              style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                            />
-                          </div>
-                        )}
-
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569', fontWeight: 600, cursor: 'pointer', marginTop: '4px' }}>
-                          <input
-                            type="checkbox"
-                            checked={!!field.required}
-                            onChange={e => updateVisualField(idx, 'required', e.target.checked)}
-                            style={{ width: '15px', height: '15px' }}
-                          />
-                          Required Field
-                        </label>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                <button type="button" onClick={() => setIsEditModalOpen(false)} style={{ flex: 1, padding: '12px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, backgroundColor: '#2563EB', color: '#FFFFFF', cursor: 'pointer' }}>Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Add New Service Modal */}
-      {isCreateModalOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '680px',
-            maxHeight: '90vh',
-            overflowY: 'auto',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-            padding: '24px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid #F1F5F9', paddingBottom: '12px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Add New Service / Scheme</h3>
-              <button onClick={() => setIsCreateModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-
-            <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Service Name</label>
-                <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="e.g. Passport Re-issue" style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</label>
-                <textarea rows={2} value={description} onChange={e => setDescription(e.target.value)} required placeholder="Brief description of the service" style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Category</label>
-                <select value={category} onChange={e => setCategory(e.target.value)} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none', backgroundColor: '#FFFFFF' }}>
-                  <option value="aadhaar">Aadhaar</option>
-                  <option value="pan">PAN Card</option>
-                  <option value="certificate">Certificate / Registry</option>
-                  <option value="gov_scheme">Government Scheme (Banking, Pension, Tax, Insurance, Utilities, etc.)</option>
-                </select>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Department</label>
-                <input type="text" value={department} onChange={e => setDepartment(e.target.value)} required placeholder="e.g. Ministry of External Affairs" style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Govt Fee (₹)</label>
-                  <input type="number" step="0.01" value={govtFee} onChange={e => setGovtFee(parseFloat(e.target.value))} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Convenience Fee (₹)</label>
-                  <input type="number" step="0.01" value={convenienceFee} onChange={e => setConvenienceFee(parseFloat(e.target.value))} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>SLA Hours</label>
-                  <input type="number" value={slaHours} onChange={e => setSlaHours(parseInt(e.target.value, 10))} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
-                  <select value={isActive ? 'true' : 'false'} onChange={e => setIsActive(e.target.value === 'true')} style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none', backgroundColor: '#FFFFFF' }}>
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Eligibility Criteria (comma-separated)</label>
-                <input type="text" value={eligibility} onChange={e => setEligibility(e.target.value)} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Required Documents (comma-separated)</label>
-                <input type="text" value={requiredDocs} onChange={e => setRequiredDocs(e.target.value)} required style={{ padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14.5px', outline: 'none' }} />
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Application Form Fields</label>
-                  <button
-                    type="button"
-                    onClick={addVisualField}
-                    style={{
-                      padding: '6px 12px',
-                      backgroundColor: '#2563EB',
-                      color: '#FFFFFF',
-                      borderRadius: '6px',
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px'
-                    }}
-                  >
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Add Field
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '240px', overflowY: 'auto', padding: '4px', border: '1.5px solid #E2E8F0', borderRadius: '8px' }}>
-                  {visualFields.length === 0 ? (
-                    <span style={{ fontSize: '13px', color: '#64748B', textAlign: 'center', padding: '12px 0' }}>No custom fields added yet.</span>
-                  ) : (
-                    visualFields.map((field, idx) => (
-                      <div key={idx} style={{ padding: '12px', border: '1.5px solid #F1F5F9', backgroundColor: '#F8FAFC', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px', position: 'relative' }}>
-                        <button
-                          type="button"
-                          onClick={() => removeVisualField(idx)}
-                          style={{
-                            position: 'absolute',
-                            right: '8px',
-                            top: '8px',
-                            border: 'none',
-                            background: 'none',
-                            color: '#EF4444',
-                            cursor: 'pointer',
-                            fontSize: '14px',
-                            fontWeight: 700
-                          }}
-                        >
-                          ✕
-                        </button>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Field Label</span>
-                          <input
-                            type="text"
-                            value={field.label}
-                            onChange={e => updateVisualField(idx, 'label', e.target.value)}
-                            placeholder="e.g. Applicant Name"
-                            style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                          />
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Field Type</span>
-                          <select
-                            value={field.type}
-                            onChange={e => updateVisualField(idx, 'type', e.target.value)}
-                            style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                          >
-                            <option value="text">Text</option>
-                            <option value="number">Number</option>
-                            <option value="date">Date</option>
-                            <option value="aadhaar">Aadhaar</option>
-                            <option value="pan">PAN Card</option>
-                            <option value="phone">Phone</option>
-                            <option value="select">Select</option>
-                          </select>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Placeholder</span>
-                          <input
-                            type="text"
-                            value={field.placeholder || ''}
-                            onChange={e => updateVisualField(idx, 'placeholder', e.target.value)}
-                            placeholder="e.g. Enter value"
-                            style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                          />
-                        </div>
-
-                        {field.type === 'select' && (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B' }}>Options (comma-separated)</span>
-                            <input
-                              type="text"
-                              value={Array.isArray(field.options) ? field.options.join(', ') : (field.options || '')}
-                              onChange={e => updateVisualField(idx, 'options', e.target.value.split(',').map(o => o.trim()).filter(Boolean))}
-                              placeholder="e.g. Male, Female, Other"
-                              style={{ padding: '8px 12px', border: '1.5px solid #E2E8F0', borderRadius: '6px', fontSize: '13px', outline: 'none', backgroundColor: '#FFFFFF' }}
-                            />
-                          </div>
-                        )}
-
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', color: '#475569', fontWeight: 600, cursor: 'pointer', marginTop: '4px' }}>
-                          <input
-                            type="checkbox"
-                            checked={!!field.required}
-                            onChange={e => updateVisualField(idx, 'required', e.target.checked)}
-                            style={{ width: '15px', height: '15px' }}
-                          />
-                          Required Field
-                        </label>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                <button type="button" onClick={() => setIsCreateModalOpen(false)} style={{ flex: 1, padding: '12px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" style={{ flex: 1, padding: '12px', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, backgroundColor: '#2563EB', color: '#FFFFFF', cursor: 'pointer' }}>Create Service</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Details View Modal */}
-      {isViewModalOpen && selectedService && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(15, 23, 42, 0.4)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000
-        }}>
-          <div style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '480px',
-            boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-            padding: '24px'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1.5px solid #F1F5F9', paddingBottom: '12px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Service Details</h3>
-              <button onClick={() => setIsViewModalOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748B' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>{selectedService.name}</h4>
-                <p style={{ fontSize: '13px', color: '#64748B', marginTop: '4px', margin: 0 }}>{selectedService.department}</p>
-              </div>
-
-              {selectedService.description && (
-                <div>
-                  <h5 style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', margin: 0, marginBottom: '6px' }}>Description</h5>
-                  <p style={{ fontSize: '13.5px', color: '#334155', margin: 0, lineHeight: 1.5 }}>{selectedService.description}</p>
-                </div>
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-                <div>
-                  <h5 style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', margin: 0 }}>Govt Fee</h5>
-                  <p style={{ fontSize: '15px', fontWeight: 700, color: '#0F172A', marginTop: '4px', margin: 0 }}>₹{selectedService.govtFee / 100}</p>
-                </div>
-                <div>
-                  <h5 style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', margin: 0 }}>Conv. Fee</h5>
-                  <p style={{ fontSize: '15px', fontWeight: 700, color: '#0F172A', marginTop: '4px', margin: 0 }}>₹{selectedService.convenienceFee / 100}</p>
-                </div>
-                <div>
-                  <h5 style={{ fontSize: '11px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', margin: 0 }}>SLA</h5>
-                  <p style={{ fontSize: '15px', fontWeight: 700, color: '#0F172A', marginTop: '4px', margin: 0 }}>{selectedService.slaHours >= 24 ? `${Math.ceil(selectedService.slaHours / 24)} Days` : `${selectedService.slaHours}h`}</p>
-                </div>
-              </div>
-
-              {selectedService.eligibility && selectedService.eligibility.length > 0 && (
-                <div>
-                  <h5 style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', margin: 0, marginBottom: '6px' }}>Eligibility</h5>
-                  <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13.5px', color: '#334155', lineHeight: 1.5 }}>
-                    {selectedService.eligibility.map((el, i) => <li key={i}>{el}</li>)}
-                  </ul>
-                </div>
-              )}
-
-              {selectedService.requiredDocuments && selectedService.requiredDocuments.length > 0 && (
-                <div>
-                  <h5 style={{ fontSize: '12px', fontWeight: 800, color: '#475569', textTransform: 'uppercase', margin: 0, marginBottom: '6px' }}>Required Documents</h5>
-                  <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {selectedService.requiredDocuments.map((doc, i) => (
-                      <span key={i} style={{ fontSize: '12px', fontWeight: 600, color: '#2563EB', backgroundColor: '#EFF6FF', padding: '4px 8px', borderRadius: '6px' }}>{doc.name}</span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <button onClick={() => setIsViewModalOpen(false)} style={{ padding: '12px', backgroundColor: '#F1F5F9', border: 'none', borderRadius: '8px', color: '#334155', fontWeight: 700, fontSize: '14px', cursor: 'pointer', marginTop: '8px' }}>Close</button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Old modals completely removed in favor of premium config wizard */}
 
     </div>
   );

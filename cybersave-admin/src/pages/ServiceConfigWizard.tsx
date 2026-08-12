@@ -33,27 +33,30 @@ interface AdditionalCharge {
 interface ServiceConfigWizardProps {
   onClose: () => void;
   onSave: () => void;
+  initialCategory?: string;
+  initialDepartment?: string;
 }
 
-export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWizardProps) {
+export default function ServiceConfigWizard({ onClose, onSave, initialCategory, initialDepartment }: ServiceConfigWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Step 1: Main Service State
-  const [serviceName, setServiceName] = useState('Address Update');
-  const [serviceCategory, setServiceCategory] = useState('Aadhaar Services');
-  const [serviceCode, setServiceCode] = useState('CS-ID-ADDR-091');
+  const [serviceName, setServiceName] = useState('');
+  const [serviceCategory, setServiceCategory] = useState(
+    initialCategory === 'aadhaar' ? 'Aadhaar Services' :
+    initialCategory === 'pan' ? 'PAN Card Services' :
+    initialCategory === 'certificate' ? 'Certificates' : 'Government Schemes'
+  );
+  const [serviceCode, setServiceCode] = useState('');
   const [isActive, setIsActive] = useState(true);
-  const [description, setDescription] = useState('Verify and update residential address records in compliance with national cyber security guidelines.');
+  const [description, setDescription] = useState('');
   const [iconUrl, setIconUrl] = useState('');
   const [isUploadingIcon, setIsUploadingIcon] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Step 2: Sub-Services State
-  const [subServices, setSubServices] = useState<SubService[]>([
-    { name: 'Address Update', code: 'CS-ADDR-UPD', status: 'Active' },
-    { name: 'Name Correction', code: 'CS-NAME-CORR', status: 'Active' }
-  ]);
+  const [subServices, setSubServices] = useState<SubService[]>([]);
   const [showSubServiceModal, setShowSubServiceModal] = useState(false);
   const [newSubName, setNewSubName] = useState('');
   const [newSubCode, setNewSubCode] = useState('');
@@ -61,32 +64,23 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
   const [editingSubIndex, setEditingSubIndex] = useState<number | null>(null);
 
   // Step 3: Overview State
-  const [displayName, setDisplayName] = useState('Address Record Update Flow');
-  const [shortDesc, setShortDesc] = useState('Quick verification and processing of residential addresses.');
-  const [detailedDesc, setDetailedDesc] = useState('Please submit active proof of residential coordinates.');
+  const [displayName, setDisplayName] = useState('');
+  const [shortDesc, setShortDesc] = useState('');
+  const [detailedDesc, setDetailedDesc] = useState('');
   const [serviceType, setServiceType] = useState('Online Only');
   const [tat, setTat] = useState('3-5 business days');
-  const [departmentArea, setDepartmentArea] = useState('Ministry of Internal Coordinates');
-  const [teamPermissions, setTeamPermissions] = useState<string[]>(['Identity verification', 'Risk team', 'SLA level-1']);
+  const [departmentArea, setDepartmentArea] = useState(initialDepartment || '');
+  const [teamPermissions, setTeamPermissions] = useState<string[]>([]);
   const [newPermission, setNewPermission] = useState('');
-  const [searchTags, setSearchTags] = useState<string[]>(['identity', 'address', 'kyc']);
+  const [searchTags, setSearchTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState('');
 
   // Step 4: Form Builder State
-  const [formFields, setFormFields] = useState<FormField[]>([
-    { key: 'applicantName', label: 'Full Name', type: 'text', placeholder: 'Enter Full Name', required: true },
-    { key: 'dob', label: 'Date of Birth', type: 'date', placeholder: 'Select Date of Birth', required: true },
-    { key: 'newAddress', label: 'New Address', type: 'text', placeholder: 'Enter New Address', required: true },
-    { key: 'pincode', label: 'Pin Code', type: 'number', placeholder: 'e.g. 560001', required: true, validationRule: 'Exact 6 Digit Number' }
-  ]);
-  const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(3); // Pin Code selected by default
+  const [formFields, setFormFields] = useState<FormField[]>([]);
+  const [selectedFieldIndex, setSelectedFieldIndex] = useState<number>(-1);
 
   // Step 5: Required Documents State
-  const [requiredDocs, setRequiredDocs] = useState<RequiredDocument[]>([
-    { name: 'Proof of Address', acceptedFormats: ['PDF', 'JPG', 'PNG'], maxSizeMb: 5, mandatory: true },
-    { name: 'Aadhaar Card Copy', acceptedFormats: ['PDF'], maxSizeMb: 2, mandatory: true },
-    { name: 'Self Declaration Form', acceptedFormats: ['PDF'], maxSizeMb: 1, mandatory: false }
-  ]);
+  const [requiredDocs, setRequiredDocs] = useState<RequiredDocument[]>([]);
   const [showDocModal, setShowDocModal] = useState(false);
   const [newDocName, setNewDocName] = useState('');
   const [newDocFormats, setNewDocFormats] = useState<string[]>(['PDF']);
@@ -99,11 +93,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
   const [applyGst, setApplyGst] = useState(true);
   const [paymentMethods, setPaymentMethods] = useState<string[]>(['Online Payment', 'UPI']);
   const [refundPolicy, setRefundPolicy] = useState('Non-refundable after processing starts');
-  const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharge[]>([
-    { name: 'Late Submission Fee', amount: 50, condition: 'After due date' },
-    { name: 'Express Processing', amount: 300, condition: 'Optional upgrade' },
-    { name: 'Re-submission Fee', amount: 75, condition: 'Document rejection' }
-  ]);
+  const [additionalCharges, setAdditionalCharges] = useState<AdditionalCharge[]>([]);
   const [showChargeModal, setShowChargeModal] = useState(false);
   const [newChargeName, setNewChargeName] = useState('');
   const [newChargeAmount, setNewChargeAmount] = useState(50);
@@ -192,11 +182,17 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
   }, [newSubName, editingSubIndex]);
 
   const handleNext = () => {
-    setCurrentStep(prev => (prev < 7 ? prev + 1 : prev));
+    setCurrentStep(prev => {
+      if (initialCategory && prev === 1) return 3; // Skip Step 2 in sub-service mode
+      return prev < 7 ? prev + 1 : prev;
+    });
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => (prev > 1 ? prev - 1 : prev));
+    setCurrentStep(prev => {
+      if (initialCategory && prev === 3) return 1; // Skip Step 2 in sub-service mode
+      return prev > 1 ? prev - 1 : prev;
+    });
   };
 
   // Add/Edit Sub Service
@@ -381,7 +377,14 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
   // Calculations
   const totalCitizenPrice = applyGst ? Math.round(serviceFee * 1.18) : serviceFee;
 
-  const steps = [
+  const steps = initialCategory ? [
+    { step: 1, label: 'Sub Service' },
+    { step: 3, label: 'Overview' },
+    { step: 4, label: 'Form Builder' },
+    { step: 5, label: 'Documents' },
+    { step: 6, label: 'Pricing' },
+    { step: 7, label: 'Publish' }
+  ] : [
     { step: 1, label: 'Main Service' },
     { step: 2, label: 'Sub Service' },
     { step: 3, label: 'Overview' },
@@ -393,7 +396,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
 
   const getStepTitle = () => {
     switch (currentStep) {
-      case 1: return 'Main Service Configuration';
+      case 1: return initialCategory ? 'Sub-Service Configuration' : 'Main Service Configuration';
       case 2: return 'Sub-Service Association';
       case 3: return 'Service Overview & Information';
       case 4: return 'Interface Form Builder';
@@ -406,7 +409,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
 
   const getStepSubtitle = () => {
     switch (currentStep) {
-      case 1: return 'Select or create the foundational parent category for this service.';
+      case 1: return initialCategory ? 'Define general attributes for this sub-service flow.' : 'Select or create the foundational parent category for this service.';
       case 2: return 'Group granular update flows and procedures under the master parent service.';
       case 3: return 'Document external public descriptors and metrics for end-users.';
       case 4: return 'Formulate and sequence data capture inputs required from applicants.';
@@ -418,14 +421,18 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
   };
 
   const getStepInstruction = () => {
+    const totalSteps = initialCategory ? 6 : 7;
+    const currentDisplayStep = initialCategory 
+      ? (currentStep === 1 ? 1 : currentStep - 1)
+      : currentStep;
     switch (currentStep) {
-      case 1: return 'Step 1 of 9: Establish primary service container attributes.';
-      case 2: return 'Step 2 of 9: Bind child actions to parent container.';
-      case 3: return 'Step 3 of 9: Establish core service details and tagging.';
-      case 4: return 'Step 4 of 9: Establish input form design variables.';
-      case 5: return 'Step 5 of 9: Establish applicant document file checklist.';
-      case 6: return 'Step 6 of 9: Configure base fee and taxes.';
-      case 7: return 'Step 9 of 9: Push live to citizen portal.';
+      case 1: return `Step 1 of ${totalSteps}: Establish sub-service container attributes.`;
+      case 2: return `Step 2 of ${totalSteps}: Bind child actions to parent container.`;
+      case 3: return `Step ${currentDisplayStep} of ${totalSteps}: Establish core service details and tagging.`;
+      case 4: return `Step ${currentDisplayStep} of ${totalSteps}: Establish input form design variables.`;
+      case 5: return `Step ${currentDisplayStep} of ${totalSteps}: Establish applicant document file checklist.`;
+      case 6: return `Step ${currentDisplayStep} of ${totalSteps}: Configure base fee and taxes.`;
+      case 7: return `Step ${totalSteps} of ${totalSteps}: Push live to citizen portal.`;
       default: return '';
     }
   };
@@ -446,7 +453,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
           <span style={{ color: '#6B7280', fontSize: '12px' }}>➔</span>
           <span style={{ fontFamily: 'inherit', fontWeight: 400, fontSize: '13px', color: '#6B7280' }}>Create New Service</span>
           <span style={{ color: '#6B7280', fontSize: '12px' }}>➔</span>
-          <span style={{ fontFamily: 'inherit', fontWeight: 500, fontSize: '13px', color: '#111827' }}>{steps[currentStep - 1].label}</span>
+          <span style={{ fontFamily: 'inherit', fontWeight: 500, fontSize: '13px', color: '#111827' }}>{steps.find(s => s.step === currentStep)?.label}</span>
         </div>
         <button onClick={onClose} style={{
           border: '1px solid #E5E7EB', backgroundColor: '#FFFFFF', padding: '8px 16px',
@@ -474,10 +481,11 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
         height: '42px', backgroundColor: '#FFFFFF',
         border: '1px solid #E5E7EB', borderRadius: '8px'
       }}>
-        {steps.map((item) => {
+        {steps.map((item, index) => {
           const stepNum = item.step;
           const isActiveStep = currentStep === stepNum;
           const isCompletedStep = currentStep > stepNum;
+          const labelNum = index + 1;
           return (
             <div key={stepNum} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '6px', flex: 1 }}>
               {/* Step Circle indicator */}
@@ -490,7 +498,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
                   fontFamily: 'inherit', fontWeight: 600, fontSize: '11px', lineHeight: '13px',
                   color: (isActiveStep || isCompletedStep) ? '#FFFFFF' : '#6B7280'
                 }}>
-                  {isCompletedStep ? '✓' : (stepNum === 7 ? '9' : stepNum)}
+                  {isCompletedStep ? '✓' : labelNum}
                 </span>
               </div>
               {/* Step Label */}
@@ -502,7 +510,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
               }}>
                 {item.label}
               </span>
-              {stepNum < 7 && <div style={{ height: '1px', border: '1px solid #E5E7EB', flex: 1, margin: '0 4px' }} />}
+              {index < steps.length - 1 && <div style={{ height: '1px', border: '1px solid #E5E7EB', flex: 1, margin: '0 4px' }} />}
             </div>
           );
         })}
@@ -516,7 +524,7 @@ export default function ServiceConfigWizard({ onClose, onSave }: ServiceConfigWi
         borderRadius: '12px'
       }}>
         <span style={{ fontFamily: 'inherit', fontWeight: 600, fontSize: '16px', lineHeight: '19px', color: '#111827' }}>
-          Main Service General Information
+          {initialCategory ? 'Sub-Service General Information' : 'Main Service General Information'}
         </span>
         <div style={{ width: '100%', height: '1px', backgroundColor: '#E5E7EB' }} />
 
