@@ -86,7 +86,7 @@ export default function BotScreen() {
       return {
         text: 'You can easily update your Aadhaar address online. Please have a valid address proof (like a utility bill or rent agreement) ready. Shall I assist you with starting the application?',
         actionButton: service
-          ? { label: 'Update Address Now', route: '/(application)/start', params: { serviceId: service._id } }
+          ? { label: 'Update Address Now', route: '/services/detail', params: { serviceId: service._id } }
           : undefined,
       };
     }
@@ -97,7 +97,7 @@ export default function BotScreen() {
       return {
         text: 'To apply for a new PAN card or update your existing PAN details, you can use our dynamic wizard. Would you like to start the application now?',
         actionButton: service
-          ? { label: 'Start PAN Application', route: '/(application)/start', params: { serviceId: service._id } }
+          ? { label: 'Start PAN Application', route: '/services/detail', params: { serviceId: service._id } }
           : undefined,
       };
     }
@@ -108,7 +108,7 @@ export default function BotScreen() {
       return {
         text: 'You can pay central & state utility bills like Electricity instantly. Would you like to enter your consumer details and pay your bill?',
         actionButton: service
-          ? { label: 'Pay Electricity Bill', route: '/(application)/start', params: { serviceId: service._id } }
+          ? { label: 'Pay Electricity Bill', route: '/services/detail', params: { serviceId: service._id } }
           : undefined,
       };
     }
@@ -169,13 +169,13 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
 
       if (textLower.includes('aadhaar') || textLower.includes('address')) {
         const svc = servicesData?.items?.find(s => s.name.includes('Aadhaar'));
-        if (svc) actionButton = { label: 'Update Aadhaar Address', route: '/(application)/start', params: { serviceId: svc._id } };
+        if (svc) actionButton = { label: 'Update Aadhaar Address', route: '/services/detail', params: { serviceId: svc._id } };
       } else if (textLower.includes('pan')) {
         const svc = servicesData?.items?.find(s => s.name.includes('PAN'));
-        if (svc) actionButton = { label: 'Apply for PAN Card', route: '/(application)/start', params: { serviceId: svc._id } };
+        if (svc) actionButton = { label: 'Apply for PAN Card', route: '/services/detail', params: { serviceId: svc._id } };
       } else if (textLower.includes('bill') || textLower.includes('electricity')) {
         const svc = servicesData?.items?.find(s => s.name.includes('Electricity'));
-        if (svc) actionButton = { label: 'Pay Electricity Bill', route: '/(application)/start', params: { serviceId: svc._id } };
+        if (svc) actionButton = { label: 'Pay Electricity Bill', route: '/services/detail', params: { serviceId: svc._id } };
       } else if (textLower.includes('scheme') || textLower.includes('svanidhi') || textLower.includes('ayushman') || textLower.includes('awas') || textLower.includes('welfare')) {
         actionButton = { label: 'View Government Schemes', route: '/schemes' };
       }

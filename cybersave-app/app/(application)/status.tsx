@@ -197,7 +197,8 @@ export default function ApplicationStatusScreen() {
   if (app.status === 'rejected') {
     const handleReapply = () => {
       // Navigate to starting/filling a new form for the same service
-      router.push({ pathname: '/(application)/start', params: { id: app.serviceId } });
+      // Navigate to service detail screen first, then apply from there
+      router.push({ pathname: '/services/detail', params: { serviceId: app.serviceId } });
     };
 
     const handleAppeal = () => {

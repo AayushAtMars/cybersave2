@@ -246,7 +246,7 @@ export default function HomeScreen() {
                 onPress={() => {
                   if (electricityService) {
                     router.push({
-                      pathname: '/(application)/start',
+                      pathname: '/services/detail',
                       params: { serviceId: electricityService._id },
                     });
                   } else {
@@ -318,9 +318,9 @@ export default function HomeScreen() {
           <TouchableOpacity
             style={styles.popularCard}
             onPress={() => {
-              if (electricityService) {
+            if (electricityService) {
                 router.push({
-                  pathname: '/(application)/start',
+                  pathname: '/services/detail',
                   params: { serviceId: electricityService._id },
                 });
               } else {
@@ -353,7 +353,7 @@ export default function HomeScreen() {
               onPress={() => {
                 if (pmKisanService) {
                   router.push({
-                    pathname: '/(application)/start',
+                    pathname: '/services/detail',
                     params: { serviceId: pmKisanService._id },
                   });
                 } else {

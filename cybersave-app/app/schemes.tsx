@@ -100,9 +100,9 @@ export default function SchemesScreen() {
   });
 
   const handleApply = (scheme: Scheme) => {
-    // Navigate straight to the wizard for this service
+    // Navigate to the service detail screen first
     router.push({
-      pathname: '/(application)/start',
+      pathname: '/services/detail',
       params: { serviceId: scheme.id },
     });
   };
