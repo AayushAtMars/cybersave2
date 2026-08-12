@@ -189,7 +189,7 @@ export default function MyAddressScreen() {
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.labelRow}>
-          <Ionicons name="location-outline" size={18} color="#2563EB" />
+          <Ionicons name="location" size={18} color="#2563EB" />
           <Text style={styles.cardLabel}>{item.label}</Text>
           {item.isDefault && (
             <View style={styles.defaultBadge}>
@@ -199,10 +199,10 @@ export default function MyAddressScreen() {
         </View>
         <View style={styles.actionsRow}>
           <TouchableOpacity style={styles.actionIconBtn} onPress={() => openEditModal(item)}>
-            <Ionicons name="pencil-outline" size={16} color="#64748B" />
+            <Ionicons name="create-outline" size={18} color="#64748B" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionIconBtn} onPress={() => handleDelete(item.id, item.label)}>
-            <Ionicons name="trash-outline" size={16} color="#EF4444" />
+            <Ionicons name="trash-outline" size={18} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
@@ -224,43 +224,45 @@ export default function MyAddressScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Addresses</Text>
-          <View style={{ width: 36 }} />
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
       {/* Main Body */}
       <View style={styles.whiteContainer}>
-        {/* Add New Address Button */}
-        <TouchableOpacity style={styles.addBtn} onPress={openAddModal} activeOpacity={0.8}>
-          <Text style={styles.addBtnText}>+ Add New Address</Text>
-        </TouchableOpacity>
+        <View style={styles.cardContainer}>
+          {/* Add New Address Button */}
+          <TouchableOpacity style={styles.addBtn} onPress={openAddModal} activeOpacity={0.8}>
+            <Text style={styles.addBtnText}>+ Add New Address</Text>
+          </TouchableOpacity>
 
-        {/* Addresses List */}
-        {addresses.length === 0 ? (
-          <View style={styles.empty}>
-            <Ionicons name="location-outline" size={48} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>No saved addresses</Text>
-            <Text style={styles.emptySub}>
-              Add an address to automatically pre-fill your applications and security logs.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={addresses}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
+          {/* Addresses List */}
+          {addresses.length === 0 ? (
+            <View style={styles.empty}>
+              <Ionicons name="location-outline" size={48} color="#94A3B8" />
+              <Text style={styles.emptyTitle}>No saved addresses</Text>
+              <Text style={styles.emptySub}>
+                Add an address to automatically pre-fill your applications and security logs.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={addresses}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
+        </View>
       </View>
 
       {/* Add / Edit Address Form Modal */}
@@ -451,10 +453,12 @@ export default function MyAddressScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -463,22 +467,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
@@ -486,37 +496,42 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginHorizontal: 20,
+  },
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 30,
+    paddingHorizontal: 20,
+    gap: 16,
+    flex: 1,
   },
   addBtn: {
-    borderWidth: 1.5,
-    borderStyle: 'dashed',
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    marginBottom: spacing.base,
   },
   addBtnText: {
-    fontSize: 14,
+    fontFamily: 'Inter',
+    fontSize: 15,
     color: '#0F172A',
     fontWeight: '700',
   },
   list: {
-    gap: spacing.base,
+    gap: 12,
     paddingBottom: 40,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: spacing.md,
-    gap: spacing.sm,
-    ...shadows.sm,
+    padding: 16,
+    gap: 12,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -526,22 +541,22 @@ const styles = StyleSheet.create({
   labelRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 8,
   },
   cardLabel: {
+    fontFamily: 'Manrope',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#0F172A',
   },
   defaultBadge: {
     backgroundColor: '#EFF6FF',
     paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: '#BFDBFE',
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   defaultBadgeText: {
+    fontFamily: 'Inter',
     fontSize: 10,
     color: '#2563EB',
     fontWeight: '700',
@@ -549,28 +564,29 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 12,
   },
   actionIconBtn: {
-    padding: 4,
+    padding: 2,
   },
   cardAddress: {
-    fontSize: 14,
-    color: '#475569',
+    fontFamily: 'Inter',
+    fontSize: 13,
+    color: '#0F172A',
     lineHeight: 20,
-    fontWeight: '500',
+    fontWeight: '400',
   },
   cardPincode: {
-    fontSize: 13,
+    fontFamily: 'Inter',
+    fontSize: 12,
     color: '#64748B',
     fontWeight: '600',
-    marginTop: 2,
   },
   empty: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: 8,
     paddingBottom: 80,
   },
   emptyTitle: {
@@ -582,7 +598,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     textAlign: 'center',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     lineHeight: 18,
   },
 
@@ -606,9 +622,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
     maxHeight: '90%',
     ...shadows.lg,
   },
@@ -618,10 +634,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
     borderRadius: radius.full,
     alignSelf: 'center',
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetHeader: {
-    marginBottom: spacing.xs,
+    marginBottom: 8,
   },
   sheetTitleRow: {
     flexDirection: 'row',
@@ -638,11 +654,11 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   formContainer: {
-    gap: spacing.base,
-    paddingBottom: spacing.xl,
+    gap: 16,
+    paddingBottom: 24,
   },
   field: {
-    gap: spacing.xs,
+    gap: 6,
   },
   label: {
     fontSize: 12,
@@ -707,16 +723,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   statusCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
     borderRadius: radius.xl,
-    padding: spacing.xl,
+    padding: 24,
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 16,
     ...shadows.lg,
   },
   successIconOuter: {
@@ -726,7 +742,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   successIconInner: {
     width: 56,
@@ -745,7 +761,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 4,
   },
   statusDoneBtn: {
     backgroundColor: '#10B981',
@@ -754,7 +770,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   statusDoneBtnText: {
     fontSize: 14,
@@ -768,7 +784,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   deleteIconInner: {
     width: 56,
@@ -785,7 +801,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   deleteDoneBtnText: {
     fontSize: 14,

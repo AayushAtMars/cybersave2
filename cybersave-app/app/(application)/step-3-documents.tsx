@@ -7,6 +7,8 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -151,135 +153,141 @@ export default function Step3DocumentsScreen() {
 
   return (
     <View style={styles.flex}>
-      {/* Header block with 40% progress indicator */}
+      {/* Header Gradient */}
       <LinearGradient
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Upload Proofs</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>Upload Proofs</Text>
           <Text style={styles.headerStep}>Step 2/5</Text>
         </View>
+        {/* Progress track */}
         <View style={styles.progressContainer}>
           <View style={[styles.progressBar, { width: '40%' }]} />
         </View>
       </LinearGradient>
 
-      <ScrollView
+      <KeyboardAvoidingView
         style={styles.container}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Required Documents</Text>
+        {/* Main Floating Container */}
+        <View style={styles.whiteContainer}>
+          <ScrollView
+            style={styles.scroll}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text style={styles.sectionTitle}>Required Documents</Text>
 
-          <View style={styles.tilesList}>
-            {requiredDocs.map((doc, idx) => {
-              const file = files[doc.name];
-              const isConfirmed = !!docIds[doc.name];
-              const isUploading = !!file?.uploading;
-              const hasError = !!file?.error;
-              const isPicked = !!file && !isUploading;
+            <View style={styles.tilesList}>
+              {requiredDocs.map((doc, idx) => {
+                const file = files[doc.name];
+                const isConfirmed = !!docIds[doc.name];
+                const isUploading = !!file?.uploading;
+                const hasError = !!file?.error;
+                const isPicked = !!file && !isUploading;
 
-              return (
-                <View key={idx} style={styles.docField}>
-                  <View style={styles.docLabelRow}>
-                    <Text style={styles.docLabel}>
-                      {doc.name}
-                      {doc.mandatory && <Text style={styles.req}> *</Text>}
-                    </Text>
-                    {isConfirmed && (
-                      <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                    )}
-                    {isPicked && !isConfirmed && !hasError && (
-                      <Ionicons name="checkmark-circle-outline" size={16} color="#64748B" />
-                    )}
-                  </View>
-
-                  {file ? (
-                    <View>
-                      <View style={[
-                        styles.uploadedTile,
-                        isConfirmed && styles.uploadedTileConfirmed,
-                        hasError && styles.uploadedTileError,
-                      ]}>
-                        <Ionicons
-                          name="document-text"
-                          size={20}
-                          color={isConfirmed ? '#10B981' : hasError ? '#EF4444' : '#2563EB'}
-                        />
-                        <Text style={styles.fileName} numberOfLines={1}>
-                          {file.name}
-                        </Text>
-                        {isUploading ? (
-                          <ActivityIndicator color="#2563EB" size="small" />
-                        ) : (
-                          <TouchableOpacity onPress={() => handleRemove(doc.name)}>
-                            <Ionicons name="trash-outline" size={20} color="#EF4444" />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                      {/* Retry row for errored uploads */}
-                      {hasError && (
-                        <View style={styles.errorRow}>
-                          <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
-                          <Text style={styles.errorText}>{file.error}</Text>
-                          <TouchableOpacity onPress={() => handleRetry(doc.name)} style={styles.retryBtn}>
-                            <Text style={styles.retryText}>Retry</Text>
-                          </TouchableOpacity>
-                        </View>
-                      )}
-                      {/* Pending upload note */}
-                      {isPicked && !isConfirmed && !hasError && (
-                        <Text style={styles.pendingNote}>✓ Selected — will upload on Continue</Text>
+                return (
+                  <View key={idx} style={styles.docField}>
+                    <View style={styles.docLabelRow}>
+                      <Text style={styles.docLabel}>
+                        {doc.name}
+                        {doc.mandatory && <Text style={styles.req}> *</Text>}
+                      </Text>
+                      {(isConfirmed || isPicked) && (
+                        <Ionicons name="checkmark" size={16} color="#10B981" />
                       )}
                     </View>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.uploadCard}
-                      onPress={() => handlePick(doc.name)}
-                    >
-                      <Ionicons name="cloud-upload-outline" size={22} color="#64748B" />
-                      <Text style={styles.uploadText}>PDF, JPEG (Max 5MB)</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              );
-            })}
-          </View>
-        </View>
 
-        <TouchableOpacity
-          style={[
-            styles.continueBtn,
-            (!allMandatoryPicked || anyUploading) && styles.continueBtnDisabled,
-          ]}
-          onPress={handleNext}
-          disabled={!allMandatoryPicked || anyUploading || saveStep.isPending}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.continueText}>
-            {anyUploading ? 'Uploading...' : saveStep.isPending ? 'Saving...' : 'Continue'}
-          </Text>
-        </TouchableOpacity>
-      </ScrollView>
+                    {file ? (
+                      <View>
+                        <View style={[
+                          styles.uploadedTile,
+                          hasError && styles.uploadedTileError,
+                        ]}>
+                          <Ionicons
+                            name="document-text"
+                            size={20}
+                            color="#2563EB"
+                          />
+                          <Text style={styles.fileName} numberOfLines={1}>
+                            {file.name}
+                          </Text>
+                          {isUploading ? (
+                            <ActivityIndicator color="#2563EB" size="small" />
+                          ) : (
+                            <TouchableOpacity onPress={() => handleRemove(doc.name)}>
+                              <Ionicons name="trash-outline" size={18} color="#EF4444" />
+                            </TouchableOpacity>
+                          )}
+                        </View>
+                        {/* Retry row for errored uploads */}
+                        {hasError && (
+                          <View style={styles.errorRow}>
+                            <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
+                            <Text style={styles.errorText}>{file.error}</Text>
+                            <TouchableOpacity onPress={() => handleRetry(doc.name)} style={styles.retryBtn}>
+                              <Text style={styles.retryText}>Retry</Text>
+                            </TouchableOpacity>
+                          </View>
+                        )}
+                        {/* Pending upload note */}
+                        {isPicked && !isConfirmed && !hasError && (
+                          <Text style={styles.pendingNote}>✓ Selected — will upload on Continue</Text>
+                        )}
+                      </View>
+                    ) : (
+                      <TouchableOpacity
+                        style={styles.uploadCard}
+                        onPress={() => handlePick(doc.name)}
+                      >
+                        <Ionicons name="cloud-upload-outline" size={18} color="#64748B" />
+                        <Text style={styles.uploadText}>{doc.description || 'PDF, JPEG (Max 2MB)'}</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.continueBtn,
+                (!allMandatoryPicked || anyUploading) && styles.continueBtnDisabled,
+              ]}
+              onPress={handleNext}
+              disabled={!allMandatoryPicked || anyUploading || saveStep.isPending}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.continueText}>
+                {anyUploading ? 'Uploading...' : saveStep.isPending ? 'Saving...' : 'Continue'}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1, backgroundColor: '#F8FAFC' },
-  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F8FAFC' },
   container: { flex: 1 },
   header: {
-    paddingBottom: spacing.md,
-    paddingHorizontal: spacing.base,
+    paddingBottom: 24,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -289,112 +297,119 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: spacing.xs,
-    marginBottom: spacing.md,
+    marginBottom: 16,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
+    fontFamily: 'System',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     flex: 1,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 12,
   },
   headerStep: {
-    fontSize: 12,
+    fontFamily: 'System',
+    fontSize: 13,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   progressContainer: {
-    height: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: 2,
+    height: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 3,
     overflow: 'hidden',
-    marginTop: spacing.xs,
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 2,
+    borderRadius: 3,
   },
+  scroll: { flex: 1 },
   scrollContent: {
-    padding: spacing.base,
-    gap: spacing.base,
+    padding: 20,
+    gap: 20,
     paddingBottom: 40,
   },
-  sectionCard: {
+  whiteContainer: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    gap: spacing.md,
-    ...shadows.sm,
+    borderRadius: 20,
+    marginHorizontal: 24,
+    marginTop: -12,
   },
   sectionTitle: {
-    fontSize: 14,
+    fontFamily: 'System',
+    fontSize: 18,
     fontWeight: '800',
     color: '#0F172A',
+    lineHeight: 25,
   },
-  tilesList: { gap: spacing.base },
-  docField: { gap: spacing.xs },
+  tilesList: { gap: 16 },
+  docField: { gap: 8 },
   docLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   docLabel: {
-    fontSize: 12,
+    fontFamily: 'System',
+    fontSize: 13,
     fontWeight: '700',
-    color: '#334155',
+    color: '#0F172A',
+    lineHeight: 18,
   },
   req: { color: '#EF4444' },
   uploadCard: {
     borderWidth: 1.5,
     borderStyle: 'dashed',
-    borderColor: '#CBD5E1',
-    borderRadius: radius.lg,
-    paddingVertical: 18,
+    borderColor: '#E2E8F0',
+    borderRadius: 12,
+    height: 68,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
+    flexDirection: 'column',
     gap: 4,
   },
   uploadText: {
-    fontSize: 11,
+    fontFamily: 'System',
+    fontSize: 12,
     color: '#64748B',
-    fontWeight: '600',
   },
   uploadedTile: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#EFF6FF',
     borderWidth: 1,
-    borderColor: '#BFDBFE',
-    borderRadius: radius.lg,
-    padding: 12,
-    gap: 12,
+    borderColor: '#2563EB',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    height: 52,
+    gap: 8,
   },
   fileName: {
     flex: 1,
-    fontSize: 13,
-    color: '#1E3A8A',
-    fontWeight: '600',
+    fontFamily: 'System',
+    fontSize: 14,
+    color: '#0F172A',
   },
   continueBtn: {
     backgroundColor: '#2563EB',
-    paddingVertical: 14,
-    borderRadius: radius.xl,
+    height: 50,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+    marginTop: 8,
   },
   continueBtnDisabled: {
     backgroundColor: '#94A3B8',
@@ -402,8 +417,10 @@ const styles = StyleSheet.create({
   },
   continueText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'System',
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
   },
   uploadedTileConfirmed: {
     backgroundColor: '#F0FDF4',
@@ -422,6 +439,7 @@ const styles = StyleSheet.create({
   },
   errorText: {
     flex: 1,
+    fontFamily: 'System',
     fontSize: 11,
     color: '#EF4444',
     fontWeight: '600',
@@ -433,11 +451,13 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   retryText: {
+    fontFamily: 'System',
     fontSize: 11,
     color: '#FFFFFF',
     fontWeight: '800',
   },
   pendingNote: {
+    fontFamily: 'System',
     fontSize: 11,
     color: '#64748B',
     fontWeight: '600',

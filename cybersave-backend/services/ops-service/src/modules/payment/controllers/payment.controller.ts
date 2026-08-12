@@ -77,19 +77,17 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
     }
   }
 
-  const event = JSON.parse(body) as {
-    event: string;
-    payload: {
-      payment: {
-        entity: {
-          id: string;
-          order_id: string;
-          amount: number;
-          notes: { applicationId?: string; citizenId: string; type?: string; serviceName?: string };
-        };
-      };
-    };
-  };
+  let event: any;
+  if (typeof req.body === 'object' && req.body !== null && Object.keys(req.body).length > 0) {
+    event = req.body;
+  } else {
+    try {
+      event = JSON.parse(body);
+    } catch (e) {
+      res.status(400).json({ success: false, error: 'Invalid JSON payload' });
+      return;
+    }
+  }
 
   if (event.event === 'payment.captured') {
     const payment = event.payload.payment.entity;

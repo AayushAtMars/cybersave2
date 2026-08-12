@@ -12,6 +12,8 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { useVerifyOtp, useSendOtp } from '../../src/api/auth';
 import { apiClient } from '../../src/api/client';
 import { useAuthStore } from '../../src/store/authStore';
@@ -172,30 +174,33 @@ export default function OtpScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <StatusBar barStyle="light-content" backgroundColor="#1A4DB5" />
+      <StatusBar barStyle="light-content" backgroundColor="#1E3A8A" />
 
       {/* Blue gradient header */}
       <LinearGradient
-        colors={['#1A4DB5', '#2B6FE6']}
+        colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Verify Mobile</Text>
+        <SafeAreaView edges={['top']} style={{ flex: 0 }} />
+        <View style={styles.headerRow}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Verify Mobile</Text>
+          <View style={{ width: 48 }} />
+        </View>
       </LinearGradient>
 
       {/* White card */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Verify Your Number</Text>
         <Text style={styles.cardSub}>
-          We have sent a 6-digit One-Time Password (OTP) to the mobile number ending in{'\n'}
-          <Text style={styles.maskedPhone}>{maskedPhone}</Text>
+          We have sent a {OTP_LENGTH}-digit One-Time Password (OTP) to the mobile number ending in ••••••{phone ? phone.slice(-4) : '7890'}
         </Text>
 
-        {/* Dev-mode banner: shown only when server returned devOtp (no SMS key configured) */}
+        {/* Dev-mode banner */}
         {!!devOtp && (
           <View style={styles.devBanner}>
             <Text style={styles.devBannerLabel}>🔧 Dev Mode — OTP auto-filled</Text>
@@ -225,9 +230,8 @@ export default function OtpScreen() {
         {/* Resend + Change Number row */}
         <View style={styles.resendRow}>
           <TouchableOpacity onPress={handleResend} disabled={timer > 0}>
-            <Text style={[styles.resendText, timer > 0 && styles.resendDisabled]}>
-              Resend OTP in{' '}
-              <Text style={styles.resendTimer}>{timerDisplay}</Text>
+            <Text style={styles.resendText}>
+              Resend OTP in <Text style={styles.resendTimer}>{timerDisplay}</Text>
             </Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.back()}>
@@ -248,12 +252,13 @@ export default function OtpScreen() {
       {/* Spacer */}
       <View style={styles.spacer} />
 
-      {/* Verify & Proceed button — pinned to bottom */}
+      {/* Verify & Proceed button */}
       <View style={styles.footer}>
         <TouchableOpacity
           onPress={() => handleVerify()}
           disabled={!otp.every(Boolean) || verifyOtp.isPending}
           activeOpacity={0.85}
+          style={{ width: '100%' }}
         >
           <LinearGradient
             colors={otp.every(Boolean) ? ['#1E3A8A', '#2563EB'] : ['#94A3B8', '#94A3B8']}
@@ -269,11 +274,7 @@ export default function OtpScreen() {
 
         {/* Secured footer */}
         <View style={styles.securedRow}>
-          {/* Lock icon using View */}
-          <View style={styles.lockIcon}>
-            <View style={styles.lockBody} />
-            <View style={styles.lockArch} />
-          </View>
+          <Ionicons name="lock-closed" size={14} color="#10B981" />
           <Text style={styles.securedText}>Secured by National Identity Vault (NiDV)</Text>
         </View>
       </View>
@@ -282,76 +283,86 @@ export default function OtpScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#F5F7FA' },
+  flex: { flex: 1, backgroundColor: '#FFFFFF' },
 
   // Header
   header: {
-    paddingTop: 60,
     paddingBottom: 40,
     paddingHorizontal: 24,
-    gap: 16,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    zIndex: 1,
   },
-  backBtn: {},
-  backIcon: { fontSize: 22, color: '#FFFFFF' },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  backBtn: {
+    width: 48,
+    height: 48,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
+    fontFamily: 'System',
     textAlign: 'center',
-    marginTop: -28,
   },
 
   // Card
   card: {
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -28,
-    paddingTop: 28,
+    borderRadius: 20,
+    marginTop: -32,
+    marginHorizontal: 20,
     paddingHorizontal: 24,
-    paddingBottom: 28,
-    ...shadows.lg,
+    paddingTop: 24,
+    paddingBottom: 24,
+    zIndex: 2,
   },
   cardTitle: {
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 26,
+    fontWeight: '800',
     color: '#0F172A',
-    marginBottom: 10,
+    marginBottom: 8,
+    fontFamily: 'System',
   },
   cardSub: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#64748B',
-    lineHeight: 21,
-    marginBottom: 28,
-  },
-  maskedPhone: {
-    fontWeight: '600',
-    color: '#0F172A',
-    letterSpacing: 1,
+    lineHeight: 22,
+    marginBottom: 32,
+    fontFamily: 'System',
   },
 
   // OTP
   otpRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 20,
+    gap: 12,
+    marginBottom: 16,
     justifyContent: 'center',
   },
   otpBox: {
-    width: 44,
-    height: 52,
-    borderRadius: 10,
-    borderWidth: 1.5,
+    width: 46,
+    height: 56,
+    borderRadius: 16,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
     textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: '800',
     color: '#0F172A',
     backgroundColor: '#F8FAFC',
+    fontFamily: 'System',
   },
   otpBoxFilled: {
     borderColor: '#2563EB',
     backgroundColor: '#EFF6FF',
+    borderWidth: 2,
   },
 
   // Resend row
@@ -360,20 +371,23 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    paddingHorizontal: 4,
   },
   resendText: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#64748B',
+    fontWeight: '500',
+    fontFamily: 'System',
   },
-  resendDisabled: { color: '#94A3B8' },
   resendTimer: {
     fontWeight: '700',
     color: '#0F172A',
   },
   changeNumber: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#2563EB',
-    fontWeight: '600',
+    fontWeight: '700',
+    fontFamily: 'System',
   },
 
   // Error
@@ -389,50 +403,36 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-    paddingHorizontal: 24,
-    paddingBottom: 32,
-    paddingTop: 16,
-    backgroundColor: '#F5F7FA',
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: '#FFFFFF',
+    gap: 20,
   },
   ctaBtn: {
-    paddingVertical: 17,
-    borderRadius: 14,
+    height: 56,
+    borderRadius: 20,
     alignItems: 'center',
-    marginBottom: 16,
+    justifyContent: 'center',
   },
-  ctaText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700' },
+  ctaText: { 
+    color: '#FFFFFF', 
+    fontSize: 16, 
+    fontWeight: '700',
+    fontFamily: 'System',
+  },
 
   // Secured strip
   securedRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-  },
-  lockIcon: { width: 14, height: 14, alignItems: 'center', justifyContent: 'flex-end' },
-  lockBody: {
-    width: 10,
-    height: 8,
-    borderRadius: 2,
-    backgroundColor: '#16A34A',
-    position: 'absolute',
-    bottom: 0,
-  },
-  lockArch: {
-    width: 8,
-    height: 6,
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-    borderWidth: 2,
-    borderColor: '#16A34A',
-    borderBottomWidth: 0,
-    position: 'absolute',
-    bottom: 6,
+    gap: 8,
   },
   securedText: {
-    fontSize: 12,
-    color: '#16A34A',
-    fontWeight: '500',
+    fontSize: 13,
+    color: '#10B981',
+    fontWeight: '600',
+    fontFamily: 'System',
   },
 
   // Dev mode banner

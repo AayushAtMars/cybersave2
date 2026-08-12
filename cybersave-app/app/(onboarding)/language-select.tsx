@@ -4,14 +4,15 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
-  Dimensions,
+  FlatList,
   StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-
-const { width } = Dimensions.get('window');
+import { shadows } from '../../src/theme';
+import { useAuthStore } from '../../src/store/authStore';
 
 const LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
@@ -30,98 +31,80 @@ const LANGUAGES = [
 
 export default function LanguageSelect() {
   const [selected, setSelected] = useState('en');
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const handleContinue = () => {
-    router.replace('/(auth)/login');
+    if (isAuthenticated) {
+      if (router.canGoBack()) {
+        router.back();
+      } else {
+        router.replace('/(tabs)/profile');
+      }
+    } else {
+      router.replace('/(auth)/login');
+    }
   };
 
   return (
     <View style={styles.root}>
-      <StatusBar barStyle="light-content" backgroundColor="#1A4DB5" />
+      <StatusBar barStyle="light-content" backgroundColor="#1E3A8A" />
 
       {/* Blue gradient header */}
       <LinearGradient
-        colors={['#1A4DB5', '#2563EB']}
+        colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
-        <Text style={styles.headerTitle}>Choose Your Language</Text>
+        <SafeAreaView edges={['top']} style={{ flex: 0 }} />
+        <View style={styles.headerRow}>
+          {router.canGoBack() ? (
+            <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+              <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
+            </TouchableOpacity>
+          ) : (
+            <View style={{ width: 40 }} />
+          )}
+          <Text style={styles.headerTitle}>Choose Your Language</Text>
+          <View style={{ width: 40 }} />
+        </View>
       </LinearGradient>
 
-      {/* White card */}
+      {/* White container card */}
       <View style={styles.card}>
-        {/* Dashed border hint text */}
-        <View style={styles.hintBox}>
-          <Text style={styles.hintText}>
-            Select your preferred language to customize the app interface and official services.
-          </Text>
-        </View>
-
-        {/* Language grid */}
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
+        <FlatList
+          data={LANGUAGES}
+          numColumns={2}
+          keyExtractor={(item) => item.code}
+          columnWrapperStyle={styles.columnWrapper}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-        >
-          {Array.from({ length: Math.ceil(LANGUAGES.length / 2) }).map((_, rowIdx) => {
-            const left = LANGUAGES[rowIdx * 2];
-            const right = LANGUAGES[rowIdx * 2 + 1];
+          ListHeaderComponent={
+            <Text style={styles.hintText}>
+              Select your preferred language to customize the app interface and official services.
+            </Text>
+          }
+          renderItem={({ item }) => {
+            const isSelected = selected === item.code;
             return (
-              <View key={rowIdx} style={styles.row}>
-                {[left, right].map((lang) =>
-                  lang ? (
-                    <TouchableOpacity
-                      key={lang.code}
-                      style={[
-                        styles.langCard,
-                        selected === lang.code && styles.langCardSelected,
-                      ]}
-                      onPress={() => setSelected(lang.code)}
-                      activeOpacity={0.75}
-                    >
-                      <View style={styles.langCardInner}>
-                        <View style={styles.langTexts}>
-                          <Text
-                            style={[
-                              styles.langNative,
-                              selected === lang.code && styles.langNativeSelected,
-                            ]}
-                          >
-                            {lang.native}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.langName,
-                              selected === lang.code && styles.langNameSelected,
-                            ]}
-                          >
-                            {lang.name}
-                          </Text>
-                        </View>
-                        {/* Radio */}
-                        <View
-                          style={[
-                            styles.radio,
-                            selected === lang.code && styles.radioSelected,
-                          ]}
-                        >
-                          {selected === lang.code && (
-                            <Text style={styles.checkmark}>✓</Text>
-                          )}
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  ) : (
-                    <View key="empty" style={styles.langCardEmpty} />
-                  )
-                )}
-              </View>
+              <TouchableOpacity
+                style={[styles.langCard, isSelected && styles.langCardSelected]}
+                onPress={() => setSelected(item.code)}
+                activeOpacity={0.85}
+              >
+                <View style={styles.langTexts}>
+                  <Text style={styles.langNative}>{item.native}</Text>
+                  <Text style={styles.langName}>{item.name}</Text>
+                </View>
+                <View style={[styles.checkbox, isSelected && styles.checkboxActive]}>
+                  {isSelected && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
+                </View>
+              </TouchableOpacity>
             );
-          })}
-        </ScrollView>
+          }}
+        />
 
-        {/* Continue button */}
+        {/* Continue button footer */}
         <View style={styles.footer}>
           <TouchableOpacity onPress={handleContinue} activeOpacity={0.85}>
             <LinearGradient
@@ -139,136 +122,132 @@ export default function LanguageSelect() {
   );
 }
 
-const CARD_WIDTH = (width - 48 - 10) / 2; // 24px padding each side, 10px gap
-
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: '#2563EB',
+    backgroundColor: '#F8FAFC',
   },
   header: {
-    paddingTop: 60,
-    paddingBottom: 28,
-    alignItems: 'center',
+    paddingBottom: 48,
     paddingHorizontal: 24,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    zIndex: 1,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 8,
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
     color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '700',
+    fontSize: 18,
+    fontWeight: '800',
     textAlign: 'center',
+    fontFamily: 'System',
+    flex: 1,
   },
   card: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 20,
-    paddingHorizontal: 24,
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginTop: -32,
+    paddingHorizontal: 20,
+    paddingTop: 24,
     paddingBottom: 0,
-  },
-  hintBox: {
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    borderStyle: 'dashed',
-    borderRadius: 10,
-    padding: 14,
-    marginBottom: 18,
+    zIndex: 2,
+    ...shadows.sm,
   },
   hintText: {
-    fontSize: 14,
-    color: '#475569',
+    fontSize: 16,
+    color: '#64748B',
     lineHeight: 20,
+    marginBottom: 20,
+    fontFamily: 'System',
   },
-  scroll: {
-    flex: 1,
+  listContent: {
+    paddingBottom: 24,
   },
-  scrollContent: {
-    gap: 10,
-    paddingBottom: 8,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 10,
+  columnWrapper: {
+    justifyContent: 'space-between',
+    marginBottom: 12,
   },
   langCard: {
-    width: CARD_WIDTH,
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    borderWidth: 1.5,
+    width: '48%',
+    height: 64,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: 12,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...shadows.sm,
   },
   langCardSelected: {
     borderColor: '#2563EB',
     backgroundColor: '#EFF6FF',
-  },
-  langCardEmpty: {
-    width: CARD_WIDTH,
-  },
-  langCardInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    borderWidth: 2,
   },
   langTexts: {
     flex: 1,
+    justifyContent: 'center',
+    gap: 2,
   },
   langNative: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#0F172A',
-    marginBottom: 2,
-  },
-  langNativeSelected: {
-    color: '#1E3A8A',
+    fontFamily: 'System',
   },
   langName: {
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '400',
+    fontWeight: '500',
+    color: '#64748B',
+    fontFamily: 'System',
   },
-  langNameSelected: {
-    color: '#2563EB',
-  },
-  radio: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    borderColor: '#CBD5E1',
-    backgroundColor: '#FFFFFF',
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    backgroundColor: '#FFFFFF',
   },
-  radioSelected: {
+  checkboxActive: {
     backgroundColor: '#2563EB',
     borderColor: '#2563EB',
-  },
-  checkmark: {
-    color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '700',
-    lineHeight: 16,
+    borderWidth: 0,
   },
   footer: {
     paddingVertical: 20,
     backgroundColor: '#FFFFFF',
   },
   continueBtn: {
-    paddingVertical: 18,
-    borderRadius: 16,
+    height: 56,
+    borderRadius: 20,
     alignItems: 'center',
-    shadowColor: '#1E3A8A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
+    justifyContent: 'center',
   },
   continueBtnText: {
     color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
+    fontFamily: 'System',
   },
 });

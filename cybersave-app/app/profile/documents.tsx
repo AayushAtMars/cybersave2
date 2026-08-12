@@ -224,81 +224,83 @@ export default function MyDocumentsScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>My Documents</Text>
-          <View style={{ width: 36 }} />
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
       {/* Main Body */}
       <View style={styles.whiteContainer}>
-        {/* Storage Bar Card */}
-        <View style={styles.storageCard}>
-          <View style={styles.storageHeader}>
-            <Text style={styles.storageTitle}>Storage Usage</Text>
-            <Text style={styles.storageLimitText}>{totalMb.toFixed(1)} MB / {LIMIT_MB} MB</Text>
+        <View style={styles.cardContainer}>
+          {/* Storage Bar Card */}
+          <View style={styles.storageCard}>
+            <View style={styles.storageHeader}>
+              <Text style={styles.storageTitle}>Storage Usage</Text>
+              <Text style={styles.storageLimitText}>{totalMb.toFixed(1)} MB / {LIMIT_MB} MB</Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View style={[styles.progressBar, { width: `${progressPct}%` }]} />
+            </View>
           </View>
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressBar, { width: `${progressPct}%` }]} />
+
+          {/* Chips row */}
+          <View style={styles.chipsContainer}>
+            <FlatList
+              data={CATEGORIES}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              keyExtractor={(item) => item.id}
+              contentContainerStyle={styles.chipsList}
+              renderItem={({ item }) => {
+                const active = selectedCategory === item.id;
+                return (
+                  <TouchableOpacity
+                    style={[styles.chip, active && styles.chipActive]}
+                    onPress={() => setSelectedCategory(item.id)}
+                  >
+                    <Text style={[styles.chipText, active && styles.chipTextActive]}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              }}
+            />
           </View>
+
+          {/* Upload Button */}
+          <TouchableOpacity style={styles.uploadBtn} onPress={handleUpload} activeOpacity={0.8}>
+            <Ionicons name="add" size={18} color="#2563EB" />
+            <Text style={styles.uploadBtnText}>Upload New Document</Text>
+          </TouchableOpacity>
+
+          {/* Document List */}
+          {isLoading ? (
+            <ActivityIndicator style={{ marginTop: 40 }} color="#2563EB" size="large" />
+          ) : filteredDocs?.length === 0 ? (
+            <View style={styles.empty}>
+              <Ionicons name="folder-open-outline" size={48} color="#94A3B8" />
+              <Text style={styles.emptyTitle}>Vault is empty</Text>
+              <Text style={styles.emptySub}>
+                Uploaded documents will show up here once you upload them or submit an application.
+              </Text>
+            </View>
+          ) : (
+            <FlatList
+              data={filteredDocs}
+              keyExtractor={(item) => item.id}
+              renderItem={renderItem}
+              contentContainerStyle={styles.list}
+              showsVerticalScrollIndicator={false}
+            />
+          )}
         </View>
-
-        {/* Chips row */}
-        <View style={styles.chipsContainer}>
-          <FlatList
-            data={CATEGORIES}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.chipsList}
-            renderItem={({ item }) => {
-              const active = selectedCategory === item.id;
-              return (
-                <TouchableOpacity
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setSelectedCategory(item.id)}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                    {item.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
-
-        {/* Upload Button */}
-        <TouchableOpacity style={styles.uploadBtn} onPress={handleUpload} activeOpacity={0.8}>
-          <Ionicons name="add" size={20} color="#2563EB" />
-          <Text style={styles.uploadBtnText}>Upload New Document</Text>
-        </TouchableOpacity>
-
-        {/* Document List */}
-        {isLoading ? (
-          <ActivityIndicator style={{ marginTop: 40 }} color="#2563EB" size="large" />
-        ) : filteredDocs?.length === 0 ? (
-          <View style={styles.empty}>
-            <Ionicons name="folder-open-outline" size={48} color="#94A3B8" />
-            <Text style={styles.emptyTitle}>Vault is empty</Text>
-            <Text style={styles.emptySub}>
-              Uploaded documents will show up here once you upload them or submit an application.
-            </Text>
-          </View>
-        ) : (
-          <FlatList
-            data={filteredDocs}
-            keyExtractor={(item) => item.id}
-            renderItem={renderItem}
-            contentContainerStyle={styles.list}
-            showsVerticalScrollIndicator={false}
-          />
-        )}
       </View>
 
       {/* Premium Category Picker Modal (Bottom Sheet style) */}
@@ -315,8 +317,8 @@ export default function MyDocumentsScreen() {
             onPress={() => setShowCategoryModal(false)} 
           />
           <View style={styles.bottomSheet}>
+            <View style={styles.dragIndicator} />
             <View style={styles.sheetHeader}>
-              <View style={styles.dragIndicator} />
               <View style={styles.sheetTitleRow}>
                 <Text style={styles.sheetTitle}>Select Document Type</Text>
                 <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setShowCategoryModal(false)}>
@@ -501,10 +503,12 @@ export default function MyDocumentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -513,22 +517,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
@@ -536,18 +546,27 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginHorizontal: 20,
+  },
+  scrollContent: {
+    paddingTop: 24,
+    paddingBottom: 40,
+  },
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    gap: 16,
+    flex: 1,
   },
   storageCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: spacing.md,
+    borderRadius: 16,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    gap: spacing.sm,
-    ...shadows.sm,
-    marginBottom: spacing.base,
+    gap: 8,
   },
   storageHeader: {
     flexDirection: 'row',
@@ -555,39 +574,40 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   storageTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
+    fontFamily: 'Inter',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0F172A',
   },
   storageLimitText: {
-    fontSize: 14,
+    fontFamily: 'Inter',
+    fontSize: 13,
     fontWeight: '700',
     color: '#0F172A',
   },
   progressTrack: {
     height: 8,
-    borderRadius: radius.full,
-    backgroundColor: '#F1F5F9',
+    borderRadius: 4,
+    backgroundColor: '#EFF6FF',
     overflow: 'hidden',
   },
   progressBar: {
     height: '100%',
     backgroundColor: '#2563EB',
-    borderRadius: radius.full,
+    borderRadius: 4,
   },
   chipsContainer: {
-    marginBottom: spacing.base,
+    marginBottom: 0,
   },
   chipsList: {
-    gap: spacing.xs,
-    paddingRight: 20,
+    gap: 8,
   },
   chip: {
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.full,
-    paddingVertical: 6,
-    paddingHorizontal: spacing.md,
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
   },
   chipActive: {
@@ -595,53 +615,54 @@ const styles = StyleSheet.create({
     borderColor: '#2563EB',
   },
   chipText: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
     fontWeight: '600',
   },
   chipTextActive: {
     color: '#FFFFFF',
+    fontWeight: '700',
   },
   uploadBtn: {
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: '#2563EB',
-    borderRadius: radius.xl,
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: 8,
     backgroundColor: '#EFF6FF',
-    marginBottom: spacing.base,
   },
   uploadBtnText: {
+    fontFamily: 'Inter',
     fontSize: 14,
     color: '#2563EB',
     fontWeight: '700',
   },
   list: {
-    gap: spacing.base,
+    gap: 12,
     paddingBottom: 40,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: spacing.md,
-    gap: spacing.sm,
-    ...shadows.sm,
+    padding: 16,
+    gap: 12,
   },
   cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
   },
   iconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: radius.lg,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
@@ -651,30 +672,32 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   docName: {
+    fontFamily: 'Manrope',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#0F172A',
   },
   docMeta: {
+    fontFamily: 'Inter',
     fontSize: 11,
     color: '#64748B',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   categoryBadge: {
-    backgroundColor: '#F1F5F9',
-    paddingVertical: 3,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.sm,
+    backgroundColor: '#F8FAFC',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   categoryText: {
+    fontFamily: 'Inter',
     fontSize: 10,
-    color: '#475569',
-    fontWeight: '700',
+    color: '#64748B',
+    fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
-    marginVertical: 4,
+    backgroundColor: '#E2E8F0',
   },
   cardActions: {
     flexDirection: 'row',
@@ -685,13 +708,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingVertical: 4,
-    paddingHorizontal: spacing.sm,
   },
   actionText: {
-    fontSize: 13,
+    fontFamily: 'Inter',
+    fontSize: 12,
     color: '#64748B',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   deleteBtn: {
     marginLeft: 'auto',
@@ -700,20 +722,19 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: 8,
     paddingBottom: 80,
   },
   emptyTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: '#0F172A',
-    marginTop: spacing.xs,
   },
   emptySub: {
     fontSize: 12,
     color: '#64748B',
     textAlign: 'center',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     lineHeight: 18,
   },
 
@@ -734,9 +755,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.lg,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
     ...shadows.lg,
   },
   dragIndicator: {
@@ -745,10 +766,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
     borderRadius: radius.full,
     alignSelf: 'center',
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetHeader: {
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetTitleRow: {
     flexDirection: 'row',
@@ -770,8 +791,8 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   sheetOptions: {
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+    gap: 8,
+    marginTop: 4,
   },
   optionCard: {
     flexDirection: 'row',
@@ -812,20 +833,20 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.6)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   loaderCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 320,
     borderRadius: radius.xl,
-    padding: spacing.xl,
+    padding: 24,
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 8,
     ...shadows.lg,
   },
   loaderIcon: {
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   loaderTitle: {
     fontSize: 16,
@@ -836,7 +857,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '800',
     color: '#2563EB',
-    marginVertical: spacing.xs,
+    marginVertical: 4,
   },
   loaderProgressTrack: {
     height: 6,
@@ -844,7 +865,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     borderRadius: radius.full,
     overflow: 'hidden',
-    marginBottom: spacing.sm,
+    marginBottom: 8,
   },
   loaderProgressBar: {
     height: '100%',
@@ -864,16 +885,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   successCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
     borderRadius: radius.xl,
-    padding: spacing.xl,
+    padding: 24,
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 16,
     ...shadows.lg,
   },
   successIconOuter: {
@@ -883,7 +904,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   successIconInner: {
     width: 56,
@@ -902,7 +923,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 4,
   },
   successDoneBtn: {
     backgroundColor: '#10B981',
@@ -911,7 +932,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   successDoneBtnText: {
     fontSize: 14,
@@ -927,7 +948,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEE2E2',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   deleteIconInner: {
     width: 56,
@@ -947,7 +968,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 4,
   },
   deleteDoneBtn: {
     backgroundColor: '#EF4444',
@@ -956,7 +977,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   deleteDoneBtnText: {
     fontSize: 14,
@@ -972,7 +993,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF3C7',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   warningIconInner: {
     width: 56,
@@ -985,8 +1006,8 @@ const styles = StyleSheet.create({
   modalActionRow: {
     flexDirection: 'row',
     width: '100%',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
+    gap: 12,
+    marginTop: 4,
   },
   modalCancelBtn: {
     flex: 1,

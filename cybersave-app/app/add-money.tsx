@@ -204,15 +204,15 @@ export default function AddMoneyScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Add Money</Text>
-          <View style={{ width: 36 }} />
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
@@ -238,7 +238,7 @@ export default function AddMoneyScreen() {
                 value={amount}
                 onChangeText={setAmount}
                 placeholder="0"
-                placeholderTextColor="#94A3B8"
+                placeholderTextColor="#64748B"
               />
             </View>
           </View>
@@ -318,10 +318,12 @@ export default function AddMoneyScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#1E3A8A' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -330,115 +332,127 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
+    fontFamily: 'Manrope',
+    fontSize: 18,
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
+    marginHorizontal:20
   },
   scrollContent: {
-    padding: spacing.base,
-    paddingTop: spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 24,
     paddingBottom: 40,
-    gap: spacing.lg,
+    gap: 16,
   },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#F8FAFC',
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: '#EFF6FF',
-    padding: spacing.base,
-    ...shadows.sm,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 16,
+    padding: 16,
   },
   balanceLabel: {
+    fontFamily: 'Inter',
     fontSize: 14,
     color: '#2563EB',
     fontWeight: '600',
   },
   balanceValue: {
-    fontSize: 18,
+    fontFamily: 'Inter',
+    fontSize: 16,
     fontWeight: '800',
     color: '#2563EB',
   },
   section: {
-    gap: spacing.sm,
+    gap: 8,
   },
   sectionLabel: {
+    fontFamily: 'Inter',
     fontSize: 14,
-    fontWeight: '700',
-    color: '#334155',
+    fontWeight: '600',
+    color: '#0F172A',
   },
   amountInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#2563EB',
-    borderRadius: radius.lg,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
+    borderRadius: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 8,
+    backgroundColor: '#FFFFFF',
   },
   currencySymbol: {
+    fontFamily: 'Manrope',
     fontSize: 28,
     fontWeight: '800',
     color: '#2563EB',
   },
   amountInput: {
     flex: 1,
+    fontFamily: 'Inter',
     fontSize: 28,
     fontWeight: '800',
     color: '#0F172A',
+    padding: 0,
   },
   chipsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: spacing.sm,
+    gap: 8,
   },
   chip: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: radius.md,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   chipActive: {
     backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   chipLabel: {
+    fontFamily: 'Inter',
     fontSize: 13,
-    color: '#475569',
+    color: '#0F172A',
     fontWeight: '700',
   },
   chipLabelActive: {
     color: '#FFFFFF',
   },
   sourceList: {
-    gap: spacing.sm,
+    gap: 8,
   },
   sourceCard: {
     flexDirection: 'row',
@@ -446,18 +460,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.lg,
-    padding: spacing.base,
+    borderRadius: 16,
+    padding: 16,
     backgroundColor: '#FFFFFF',
-    ...shadows.sm,
   },
   sourceCardActive: {
+    borderWidth: 2,
     borderColor: '#2563EB',
   },
   sourceLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
   },
   sourceIconBg: {
     width: 40,
@@ -471,23 +485,26 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
   },
   sourceMeta: {
-    gap: 3,
+    gap: 2,
   },
   sourceName: {
-    fontSize: 15,
+    fontFamily: 'Inter',
+    fontSize: 14,
     fontWeight: '700',
     color: '#0F172A',
   },
   sourceDesc: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   radioCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#CBD5E1',
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -496,20 +513,17 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB',
   },
   radioDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FFFFFF',
+    width: 0,
+    height: 0,
   },
   submitBtn: {
     backgroundColor: '#2563EB',
-    paddingVertical: spacing.base,
-    borderRadius: radius.lg,
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: 'center',
-    marginTop: spacing.sm,
-    ...shadows.md,
   },
   submitBtnText: {
+    fontFamily: 'Inter',
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '700',
@@ -520,7 +534,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
     justifyContent: 'space-between',
-    padding: spacing.xl,
+    padding: 24,
   },
   successContent: {
     flex: 1,
@@ -562,18 +576,18 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xl,
-    marginTop: spacing.sm,
+    paddingHorizontal: 24,
+    marginTop: 12,
   },
   receiptBox: {
     width: '100%',
     backgroundColor: '#F8FAFC',
-    borderRadius: radius.xl,
+    borderRadius: 24,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: spacing.lg,
-    marginTop: spacing['2xl'],
-    gap: spacing.md,
+    padding: 20,
+    marginTop: 32,
+    gap: 16,
   },
   receiptRow: {
     flexDirection: 'row',
@@ -581,7 +595,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
-    paddingBottom: spacing.sm,
+    paddingBottom: 12,
   },
   receiptLabel: {
     fontSize: 13,
@@ -601,7 +615,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DCFCE7',
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: radius.full,
+    borderRadius: 20,
     gap: 6,
   },
   statusDot: {
@@ -617,8 +631,8 @@ const styles = StyleSheet.create({
   },
   doneBtn: {
     backgroundColor: '#2563EB',
-    paddingVertical: spacing.base,
-    borderRadius: radius.lg,
+    paddingVertical: 16,
+    borderRadius: 16,
     alignItems: 'center',
     width: '100%',
     ...shadows.md,
@@ -629,3 +643,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+

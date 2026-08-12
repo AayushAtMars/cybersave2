@@ -107,136 +107,134 @@ export default function CreateTicketScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Raise a Ticket</Text>
-          <View style={{ width: 36 }} />
+          <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
 
       {/* Form Container */}
       <ScrollView 
-        style={styles.whiteContainer} 
+        style={styles.scrollContainer} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Support Category Selector */}
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Support Category</Text>
-          <TouchableOpacity 
-            style={styles.dropdownInput} 
-            onPress={() => setShowCategoryPicker(true)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.dropdownText}>{category}</Text>
-            <Ionicons name="chevron-down" size={18} color="#64748B" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Ticket Subject */}
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Ticket Subject</Text>
-          <TextInput
-            style={styles.textInput}
-            value={subject}
-            onChangeText={setSubject}
-            placeholder="Enter subject of your issue"
-            placeholderTextColor="#94A3B8"
-          />
-        </View>
-
-        {/* Detailed Description */}
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Detailed Description</Text>
-          <TextInput
-            style={styles.textarea}
-            value={description}
-            onChangeText={setDescription}
-            placeholder="Explain your issue in detail..."
-            placeholderTextColor="#94A3B8"
-            multiline
-            numberOfLines={4}
-          />
-        </View>
-
-        {/* Priority Level Selectors */}
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Priority Level</Text>
-          <View style={styles.radioRow}>
-            {(['low', 'medium', 'high'] as const).map((level) => {
-              const isSelected = priority === level;
-              return (
-                <TouchableOpacity 
-                  key={level} 
-                  style={[styles.radioItem, isSelected && styles.radioItemSelected]}
-                  onPress={() => setPriority(level)}
-                  activeOpacity={0.7}
-                >
-                  <Ionicons 
-                    name={isSelected ? 'radio-button-on' : 'radio-button-off'} 
-                    size={16} 
-                    color={isSelected ? '#2563EB' : '#94A3B8'} 
-                  />
-                  <Text style={[styles.radioLabel, isSelected && styles.radioLabelSelected]}>
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
+        <View style={styles.whiteCardContainer}>
+          {/* Support Category Selector */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Support Category</Text>
+            <TouchableOpacity 
+              style={styles.dropdownInput} 
+              onPress={() => setShowCategoryPicker(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.dropdownText}>{category}</Text>
+              <Ionicons name="chevron-down" size={16} color="#64748B" />
+            </TouchableOpacity>
           </View>
-        </View>
 
-        {/* Upload Screenshots */}
-        <View style={styles.field}>
-          <Text style={styles.fieldLabel}>Upload Screenshots</Text>
+          {/* Ticket Subject */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Ticket Subject</Text>
+            <TextInput
+              style={styles.textInput}
+              value={subject}
+              onChangeText={setSubject}
+              placeholder="Enter subject of your issue"
+              placeholderTextColor="#64748B"
+            />
+          </View>
+
+          {/* Detailed Description */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Detailed Description</Text>
+            <TextInput
+              style={styles.textarea}
+              value={description}
+              onChangeText={setDescription}
+              placeholder="Explain your issue in detail..."
+              placeholderTextColor="#64748B"
+              multiline
+              numberOfLines={4}
+            />
+          </View>
+
+          {/* Priority Level Selectors */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Priority Level</Text>
+            <View style={styles.radioRow}>
+              {(['low', 'medium', 'high'] as const).map((level) => {
+                const isSelected = priority === level;
+                return (
+                  <TouchableOpacity 
+                    key={level} 
+                    style={[styles.radioItem, isSelected && styles.radioItemSelected]}
+                    onPress={() => setPriority(level)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.radioDot, isSelected && styles.radioDotSelected]} />
+                    <Text style={[styles.radioLabel, isSelected && styles.radioLabelSelected]}>
+                      {level.charAt(0).toUpperCase() + level.slice(1)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Upload Screenshots */}
+          <View style={styles.field}>
+            <Text style={styles.fieldLabel}>Upload Screenshots</Text>
+            <TouchableOpacity 
+              style={styles.uploadCard} 
+              onPress={handlePickDocument}
+              activeOpacity={0.7}
+              disabled={uploading}
+            >
+              {uploading ? (
+                <ActivityIndicator color="#2563EB" size="small" />
+              ) : attachmentName ? (
+                <View style={styles.attachmentSuccessRow}>
+                  <Ionicons name="document-attach-outline" size={24} color="#10B981" />
+                  <Text style={styles.attachmentNameText} numberOfLines={1}>{attachmentName}</Text>
+                </View>
+              ) : (
+                <>
+                  <Ionicons name="cloud-upload-outline" size={24} color="#2563EB" />
+                  <Text style={styles.uploadCardTitle}>Choose files or drag here</Text>
+                  <Text style={styles.uploadCardSub}>PNG, JPG, PDF up to 5MB</Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Submit Button */}
           <TouchableOpacity 
-            style={styles.uploadCard} 
-            onPress={handlePickDocument}
-            activeOpacity={0.7}
-            disabled={uploading}
+            style={styles.submitBtn} 
+            onPress={handleSubmit} 
+            disabled={loading || uploading}
+            activeOpacity={0.8}
           >
-            {uploading ? (
-              <ActivityIndicator color="#2563EB" size="small" />
-            ) : attachmentName ? (
-              <View style={styles.attachmentSuccessRow}>
-                <Ionicons name="document-attach-outline" size={24} color="#10B981" />
-                <Text style={styles.attachmentNameText} numberOfLines={1}>{attachmentName}</Text>
-              </View>
+            {loading ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <>
-                <Ionicons name="cloud-upload-outline" size={26} color="#2563EB" />
-                <Text style={styles.uploadCardTitle}>Choose files or drag here</Text>
-                <Text style={styles.uploadCardSub}>PNG, JPG, PDF up to 5MB</Text>
-              </>
+              <Text style={styles.submitBtnText}>Submit Support Ticket</Text>
             )}
           </TouchableOpacity>
-        </View>
 
-        {/* Submit Button */}
-        <TouchableOpacity 
-          style={styles.submitBtn} 
-          onPress={handleSubmit} 
-          disabled={loading || uploading}
-          activeOpacity={0.8}
-        >
-          {loading ? (
-            <ActivityIndicator color="#FFFFFF" size="small" />
-          ) : (
-            <Text style={styles.submitBtnText}>Submit Support Ticket</Text>
-          )}
-        </TouchableOpacity>
-
-        {/* FAQ Tip Banner */}
-        <View style={styles.faqBanner}>
-          <Ionicons name="information-circle" size={18} color="#2563EB" />
-          <Text style={styles.faqBannerText}>
-            Check FAQ before raising. Most issues resolve instantly!
-          </Text>
+          {/* FAQ Tip Banner */}
+          <View style={styles.faqBanner}>
+            <Ionicons name="information-circle-outline" size={18} color="#2563EB" />
+            <Text style={styles.faqBannerText}>
+              Check FAQ before raising. Most issues resolve instantly!
+            </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -283,10 +281,15 @@ export default function CreateTicketScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { 
+    flex: 1, 
+    backgroundColor: '#F8FAFC' 
+  },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -295,143 +298,174 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    paddingTop: 16,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    lineHeight: 25,
   },
-  whiteContainer: {
+  scrollContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginHorizontal: 24,
   },
   scrollContent: {
     paddingBottom: 40,
-    gap: spacing.base,
+  },
+  whiteCardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    gap: 16,
+    width: '100%',
   },
   field: {
-    gap: spacing.xs,
+    gap: 6,
+    alignSelf: 'stretch',
   },
   fieldLabel: {
+    fontFamily: 'Inter',
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#0F172A',
+    lineHeight: 16,
   },
   dropdownInput: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
-    ...shadows.sm,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 41,
   },
   dropdownText: {
+    fontFamily: 'Inter',
     fontSize: 14,
     color: '#0F172A',
-    fontWeight: '600',
+    fontWeight: '400',
+    lineHeight: 17,
   },
   textInput: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 12,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 41,
     fontSize: 14,
     color: '#0F172A',
-    ...shadows.sm,
+    fontFamily: 'Inter',
   },
   textarea: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    padding: spacing.md,
+    borderRadius: 12,
+    padding: 12,
     fontSize: 14,
     color: '#0F172A',
     height: 100,
     textAlignVertical: 'top',
-    ...shadows.sm,
+    fontFamily: 'Inter',
   },
   radioRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: spacing.sm,
+    gap: 12,
+    alignSelf: 'stretch',
   },
   radioItem: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    paddingVertical: 12,
-    ...shadows.sm,
+    borderRadius: 12,
+    height: 36,
   },
   radioItemSelected: {
     backgroundColor: '#EFF6FF',
-    borderColor: '#3B82F6',
+    borderColor: '#2563EB',
+  },
+  radioDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+  },
+  radioDotSelected: {
+    backgroundColor: '#2563EB',
+    borderColor: '#E2E8F0',
   },
   radioLabel: {
+    fontFamily: 'Inter',
     fontSize: 13,
-    color: '#64748B',
+    color: '#0F172A',
     fontWeight: '700',
+    lineHeight: 16,
   },
   radioLabelSelected: {
     color: '#2563EB',
   },
   uploadCard: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#2563EB',
     borderStyle: 'dashed',
-    borderRadius: radius.xl,
-    paddingVertical: 24,
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    ...shadows.sm,
+    gap: 8,
+    height: 109,
+    alignSelf: 'stretch',
   },
   uploadCardTitle: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#2563EB',
-    fontWeight: '800',
+    fontWeight: '600',
+    lineHeight: 16,
   },
   uploadCardSub: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#64748B',
+    fontWeight: '400',
+    lineHeight: 13,
   },
   attachmentSuccessRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    paddingHorizontal: spacing.md,
+    gap: 8,
+    paddingHorizontal: 12,
   },
   attachmentNameText: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#0F172A',
     fontWeight: '700',
@@ -439,31 +473,36 @@ const styles = StyleSheet.create({
   submitBtn: {
     backgroundColor: '#2563EB',
     paddingVertical: 14,
-    borderRadius: radius.xl,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
-    ...shadows.sm,
+    height: 46,
+    alignSelf: 'stretch',
   },
   submitBtnText: {
+    fontFamily: 'Inter',
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    fontSize: 15,
+    fontWeight: '700',
+    lineHeight: 18,
   },
   faqBanner: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#EFF6FF',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    gap: spacing.xs,
+    borderRadius: 12,
+    padding: 12,
+    gap: 10,
+    height: 54,
+    alignSelf: 'stretch',
   },
   faqBannerText: {
     flex: 1,
-    fontSize: 11,
+    fontFamily: 'Inter',
+    fontSize: 12,
     color: '#2563EB',
-    fontWeight: '700',
-    lineHeight: 16,
+    fontWeight: '600',
+    lineHeight: 15,
   },
 
   // Dropdown bottom sheet modal
@@ -483,21 +522,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.xl,
-    ...shadows.lg,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   dragIndicator: {
     width: 38,
     height: 4,
     backgroundColor: '#E2E8F0',
-    borderRadius: radius.full,
+    borderRadius: 99,
     alignSelf: 'center',
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetHeader: {
-    marginBottom: spacing.md,
+    marginBottom: 12,
   },
   sheetTitle: {
     fontSize: 16,
@@ -505,13 +543,13 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   sheetOptions: {
-    gap: spacing.sm,
+    gap: 8,
   },
   sheetOptionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },

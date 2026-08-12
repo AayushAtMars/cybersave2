@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -11,7 +11,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useService } from '../../src/api/applications';
+import { useService, useCreateApplication } from '../../src/api/applications';
+import { useDraftStore } from '../../src/store/draftApplicationStore';
 import { colors, spacing, radius, shadows } from '../../src/theme';
 
 export default function ServiceDetailScreen() {
@@ -19,6 +20,9 @@ export default function ServiceDetailScreen() {
 
   // Fetch live service configuration from MongoDB
   const { data: service, isLoading } = useService(serviceId ?? '');
+  const createApp = useCreateApplication();
+  const setDraft = useDraftStore((s) => s.setDraft);
+  const [isCreating, setIsCreating] = useState(false);
 
   if (isLoading) {
     return (
@@ -43,6 +47,28 @@ export default function ServiceDetailScreen() {
   const processingDays = Math.ceil(service.slaHours / 24);
   const totalFeeInRupees = (service.totalFee ?? (service.govtFee + service.convenienceFee)) / 100;
 
+  const handleApplyNow = async () => {
+    try {
+      setIsCreating(true);
+      const app = await createApp.mutateAsync(serviceId ?? '');
+      setDraft({
+        id: app._id,
+        applicationRefNo: app.applicationRefNo,
+        serviceId: app.serviceId,
+        serviceName: app.serviceName,
+        totalAmount: app.totalAmount,
+        govtFee: app.govtFee,
+        convenienceFee: app.convenienceFee,
+        currentStep: 1,
+      });
+      router.push('/(application)/step-1-personal');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <View style={styles.flex}>
       {/* Header Gradient */}
@@ -50,123 +76,152 @@ export default function ServiceDetailScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle} numberOfLines={1}>{service.name}</Text>
-          <View style={{ width: 36 }} />
+          <View style={styles.placeholderWidth} />
         </View>
       </LinearGradient>
 
-      {/* Main Container */}
-      <ScrollView
-        style={styles.whiteContainer}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Official Registry Card banner */}
-        <View style={styles.registryCard}>
-          <View style={styles.registryIconBox}>
-            <Ionicons name="ribbon" size={24} color="#FFFFFF" />
-          </View>
-          <View style={styles.registryInfo}>
-            <Text style={styles.registryTitle}>Official {service.name} Registry</Text>
-            <Text style={styles.registrySubtitle}>
-              Legally certified document issued by the {service.department}.
-            </Text>
-          </View>
-        </View>
-
-        {/* About This Service */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About This Service</Text>
-          <Text style={styles.sectionDesc}>
-            {service.description || `Apply for official ${service.name} processing. Crucial for legal validations, passport processes, and central identification registers.`}
-          </Text>
-        </View>
-
-        {/* Eligibility criteria list */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Eligibility</Text>
-          {(service.eligibility && service.eligibility.length > 0) ? (
-            service.eligibility.map((el, index) => (
-              <View key={index} style={styles.eligibilityRow}>
-                <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-                <Text style={styles.eligibilityText}>{el}</Text>
-              </View>
-            ))
-          ) : (
-            <View style={styles.eligibilityRow}>
-              <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-              <Text style={styles.eligibilityText}>Citizen of India</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Documents Required */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Documents Required</Text>
-          {service.requiredDocuments && service.requiredDocuments.length > 0 ? (
-            service.requiredDocuments.map((doc, index) => (
-              <View key={index} style={styles.bulletRow}>
-                <View style={styles.bulletPoint} />
-                <Text style={styles.bulletText}>{doc.name}</Text>
-              </View>
-            ))
-          ) : (
-            <View style={styles.bulletRow}>
-              <View style={styles.bulletPoint} />
-              <Text style={styles.bulletText}>Aadhaar Card</Text>
-            </View>
-          )}
-        </View>
-
-        {/* Fee & SLA duration cards */}
-        <View style={styles.metaRow}>
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Government Fee</Text>
-            <Text style={styles.metaValue}>₹{totalFeeInRupees.toFixed(0)}</Text>
-          </View>
-          <View style={styles.metaCard}>
-            <Text style={styles.metaLabel}>Processing Time</Text>
-            <Text style={styles.metaValue}>
-              {processingDays === 1 ? '1 Day' : `${processingDays} Days`}
-            </Text>
-          </View>
-        </View>
-
-        {/* Apply Now Button */}
-        <TouchableOpacity
-          style={styles.applyBtn}
-          activeOpacity={0.8}
-          onPress={() =>
-            router.push({
-              pathname: '/(application)/start',
-              params: { serviceId: service._id },
-            })
-          }
+      {/* Main Floating Container */}
+      <View style={styles.whiteContainer}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={styles.applyBtnText}>Apply Now</Text>
-        </TouchableOpacity>
-      </ScrollView>
+          {/* Official Registry Card Banner */}
+          <View style={styles.registryCard}>
+            <View style={styles.registryInfo}>
+              <Text style={styles.registryTitle}>Official {service.name} Registry</Text>
+              <Text style={styles.registrySubtitle}>
+                Legally certified document by the {service.department || 'Municipal Registrar of Births and Deaths'}.
+              </Text>
+            </View>
+            <View style={styles.registryIconBox}>
+              <Ionicons name="ribbon-outline" size={32} color="#FFFFFF" />
+            </View>
+          </View>
+
+          {/* Details Stack */}
+          <View style={styles.detailsStack}>
+            {/* About This Service */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>About This Service</Text>
+              <Text style={styles.sectionDesc}>
+                {service.description || `Get official ${service.name} Certificates issued by state/central bodies. Crucial for school admissions, passport applications, and identity proofs.`}
+              </Text>
+            </View>
+
+            {/* Eligibility */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Eligibility</Text>
+              {(service.eligibility && service.eligibility.length > 0) ? (
+                service.eligibility.map((el, index) => (
+                  <View key={index} style={styles.row}>
+                    <Ionicons name="checkmark" size={16} color="#10B981" />
+                    <Text style={styles.rowText}>{el}</Text>
+                  </View>
+                ))
+              ) : (
+                <>
+                  <View style={styles.row}>
+                    <Ionicons name="checkmark" size={16} color="#10B981" />
+                    <Text style={styles.rowText}>Citizen of India</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Ionicons name="checkmark" size={16} color="#10B981" />
+                    <Text style={styles.rowText}>Birth occurred within state limits</Text>
+                  </View>
+                  <View style={styles.row}>
+                    <Ionicons name="checkmark" size={16} color="#10B981" />
+                    <Text style={styles.rowText}>Registered within 21 days (Standard fee)</Text>
+                  </View>
+                </>
+              )}
+            </View>
+
+            {/* Documents Required */}
+            <View style={styles.sectionCard}>
+              <Text style={styles.sectionTitle}>Documents Required</Text>
+              {service.requiredDocuments && service.requiredDocuments.length > 0 ? (
+                service.requiredDocuments.map((doc, index) => (
+                  <View key={index} style={styles.bulletRow}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.rowText}>{doc.name}</Text>
+                  </View>
+                ))
+              ) : (
+                <>
+                  <View style={styles.bulletRow}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.rowText}>Proof of Birth from Hospital</Text>
+                  </View>
+                  <View style={styles.bulletRow}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.rowText}>ID Proof of Parents (Aadhaar/PAN)</Text>
+                  </View>
+                  <View style={styles.bulletRow}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.rowText}>Marriage Certificate of Parents</Text>
+                  </View>
+                  <View style={styles.bulletRow}>
+                    <View style={styles.bulletPoint} />
+                    <Text style={styles.rowText}>Address Proof (Utility Bill)</Text>
+                  </View>
+                </>
+              )}
+            </View>
+
+            {/* Fee & SLA Duration Cards */}
+            <View style={styles.metaRow}>
+              <View style={styles.metaCard}>
+                <Text style={styles.metaLabel}>Government Fee</Text>
+                <Text style={styles.feeValue}>₹{totalFeeInRupees.toFixed(0)}</Text>
+              </View>
+              <View style={styles.metaCard}>
+                <Text style={styles.metaLabel}>Processing Time</Text>
+                <Text style={styles.metaValue}>
+                  {processingDays === 1 ? '1 Day' : `${processingDays === 0 ? '7-15' : processingDays} Days`}
+                </Text>
+              </View>
+            </View>
+
+            {/* Apply Now Button */}
+            <TouchableOpacity
+              style={[styles.applyBtn, isCreating && { opacity: 0.7 }]}
+              activeOpacity={0.8}
+              onPress={handleApplyNow}
+              disabled={isCreating}
+            >
+              {isCreating ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.applyBtnText}>Apply Now</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   center: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     padding: spacing.xl,
   },
   errorText: {
+    fontFamily: 'System',
     fontSize: 14,
     color: '#EF4444',
     fontWeight: '700',
@@ -180,13 +235,16 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   backLinkText: {
+    fontFamily: 'System',
     fontSize: 13,
     color: '#2563EB',
     fontWeight: '700',
   },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -198,152 +256,168 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontFamily: 'System',
+    fontSize: 20,
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
-    flex: 1,
-    paddingHorizontal: spacing.sm,
+  },
+  placeholderWidth: {
+    width: 40,
   },
   whiteContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginTop: -24,
+    marginBottom: 16,
+    paddingVertical: 20,
+    borderWidth: 0,
+    overflow: 'hidden',
   },
   scrollContent: {
+    paddingHorizontal: 24,
     paddingBottom: 40,
-    gap: spacing.base,
   },
   registryCard: {
-    backgroundColor: '#3B82F6',
-    borderRadius: radius.xl,
-    padding: spacing.md,
+    backgroundColor: '#2563EB',
+    borderRadius: 20,
+    padding: 20,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.xs,
-    ...shadows.sm,
+    gap: 12,
+    marginBottom: 16,
   },
   registryIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.125)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   registryInfo: {
     flex: 1,
-    gap: 2,
+    gap: 6,
   },
   registryTitle: {
-    fontSize: 14,
+    fontFamily: 'System',
+    fontSize: 18,
     fontWeight: '800',
     color: '#FFFFFF',
+    lineHeight: 25,
   },
   registrySubtitle: {
-    fontSize: 11,
-    color: '#EFF6FF',
-    lineHeight: 14,
-    fontWeight: '600',
+    fontFamily: 'System',
+    fontSize: 12,
+    color: '#FFFFFF',
+    opacity: 0.8,
+    lineHeight: 16,
   },
-  section: {
+  detailsStack: {
+    gap: 16,
+  },
+  sectionCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    gap: spacing.sm,
-    ...shadows.sm,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontFamily: 'System',
+    fontSize: 15,
     fontWeight: '800',
     color: '#0F172A',
+    lineHeight: 20,
   },
   sectionDesc: {
-    fontSize: 12,
-    color: '#475569',
-    lineHeight: 18,
-    fontWeight: '600',
+    fontFamily: 'System',
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 20,
   },
-  eligibilityRow: {
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-  },
-  eligibilityText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '700',
+    gap: 8,
   },
   bulletRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 8,
   },
   bulletPoint: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
     backgroundColor: '#2563EB',
   },
-  bulletText: {
-    fontSize: 12,
-    color: '#475569',
-    fontWeight: '700',
+  rowText: {
+    fontFamily: 'System',
+    fontSize: 13,
+    color: '#64748B',
+    lineHeight: 16,
   },
   metaRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    gap: 12,
   },
   metaCard: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    alignItems: 'flex-start',
+    borderRadius: 16,
+    padding: 14,
     gap: 4,
-    ...shadows.sm,
   },
   metaLabel: {
+    fontFamily: 'System',
     fontSize: 11,
     color: '#64748B',
-    fontWeight: '600',
+    lineHeight: 13,
+  },
+  feeValue: {
+    fontFamily: 'System',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2563EB',
+    lineHeight: 23,
   },
   metaValue: {
-    fontSize: 16,
+    fontFamily: 'System',
+    fontSize: 15,
     fontWeight: '800',
-    color: '#2563EB',
+    color: '#0F172A',
+    lineHeight: 20,
   },
   applyBtn: {
     backgroundColor: '#2563EB',
     paddingVertical: 14,
-    borderRadius: radius.xl,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
-    ...shadows.sm,
   },
   applyBtnText: {
     color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'System',
+    fontSize: 16,
+    fontWeight: '700',
+    lineHeight: 22,
   },
 });
+

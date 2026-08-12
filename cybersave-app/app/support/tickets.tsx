@@ -112,97 +112,105 @@ export default function SupportTicketsScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Help & Support</Text>
-          <View style={{ width: 36 }} />
+          <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
 
       {/* Main Body */}
       <ScrollView 
-        style={styles.whiteContainer} 
+        style={styles.scrollContainer} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Search help articles */}
-        <View style={styles.searchBarRow}>
-          <Ionicons name="search-outline" size={20} color="#94A3B8" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search help articles..."
-            placeholderTextColor="#94A3B8"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-        </View>
-
-        {/* Open Ticket Button */}
-        <TouchableOpacity 
-          style={styles.openTicketCard} 
-          activeOpacity={0.8}
-          onPress={() => setShowTicketsModal(true)}
-        >
-          <View style={styles.ticketIconOuter}>
-            <Ionicons name="mail-outline" size={26} color="#EF4444" />
+        <View style={styles.whiteCardContainer}>
+          {/* Search box */}
+          <View style={styles.searchBarRow}>
+            <Ionicons name="search-outline" size={18} color="#64748B" />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search help articles..."
+              placeholderTextColor="#64748B"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
           </View>
-          <Text style={styles.ticketCardTitle}>Open Ticket</Text>
-          <Text style={styles.ticketCardSub}>Track issues</Text>
-        </TouchableOpacity>
 
-        {/* Popular Help Topics */}
-        <Text style={styles.sectionHeader}>Popular Help Topics</Text>
-        <View style={styles.topicsCard}>
-          {filteredTopics.length === 0 ? (
-            <Text style={styles.noResultsText}>No matching help topics found.</Text>
-          ) : (
-            filteredTopics.map((topic, index) => (
-              <View key={topic.id}>
-                {index > 0 && <View style={styles.divider} />}
-                <TouchableOpacity 
-                  style={styles.topicRow} 
-                  activeOpacity={0.7}
-                  onPress={() => setSelectedTopic(topic)}
-                >
-                  <Text style={styles.topicText}>{topic.title}</Text>
-                  <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-                </TouchableOpacity>
+          {/* Open Ticket Button */}
+          <TouchableOpacity 
+            style={styles.openTicketCard} 
+            activeOpacity={0.8}
+            onPress={() => setShowTicketsModal(true)}
+          >
+            <View style={styles.ticketIconOuter}>
+              <Ionicons name="mail" size={18} color="#EF4444" />
+            </View>
+            <Text style={styles.ticketCardTitle}>Open Ticket</Text>
+            <Text style={styles.ticketCardSub}>Track issues</Text>
+          </TouchableOpacity>
+
+          {/* Popular Help Topics */}
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionHeader}>Popular Help Topics</Text>
+          </View>
+          <View style={styles.topicsCard}>
+            {filteredTopics.length === 0 ? (
+              <Text style={styles.noResultsText}>No matching help topics found.</Text>
+            ) : (
+              filteredTopics.map((topic, index) => (
+                <View key={topic.id} style={styles.topicRowWrapper}>
+                  <TouchableOpacity 
+                    style={styles.topicRow} 
+                    activeOpacity={0.7}
+                    onPress={() => setSelectedTopic(topic)}
+                  >
+                    <Text style={styles.topicText}>{topic.title}</Text>
+                    <Ionicons name="chevron-forward" size={14} color="#64748B" />
+                  </TouchableOpacity>
+                  {index < filteredTopics.length - 1 && <View style={styles.divider} />}
+                </View>
+              ))
+            )}
+          </View>
+
+          {/* National Helpline Numbers */}
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionHeader}>National Helpline Numbers</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.emergencyCard} 
+            activeOpacity={0.8}
+            onPress={handleCallEmergency}
+          >
+            <View style={styles.emergencyLeft}>
+              <View style={styles.emergencyIconBox}>
+                <Ionicons name="call" size={16} color="#FFFFFF" />
               </View>
-            ))
-          )}
+              <View style={styles.emergencyInfo}>
+                <Text style={styles.emergencyTitle}>National Emergency</Text>
+                <Text style={styles.emergencySubtitle}>Single Emergency helpline response</Text>
+              </View>
+            </View>
+            <Text style={styles.emergencyNumber}>112</Text>
+          </TouchableOpacity>
+
+          {/* Share App Feedback Button */}
+          <TouchableOpacity 
+            style={styles.feedbackBtn} 
+            activeOpacity={0.8}
+            onPress={() => router.push('/support/feedback')}
+          >
+            <Ionicons name="chatbubble-outline" size={16} color="#2563EB" />
+            <Text style={styles.feedbackBtnText}>Share App Feedback</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* National Helpline Numbers */}
-        <Text style={styles.sectionHeader}>National Helpline Numbers</Text>
-        <TouchableOpacity 
-          style={styles.emergencyCard} 
-          activeOpacity={0.8}
-          onPress={handleCallEmergency}
-        >
-          <View style={styles.emergencyIconBox}>
-            <Ionicons name="call" size={22} color="#FFFFFF" />
-          </View>
-          <View style={styles.emergencyInfo}>
-            <Text style={styles.emergencyTitle}>National Emergency</Text>
-            <Text style={styles.emergencySubtitle}>Single Emergency helpline response</Text>
-          </View>
-          <Text style={styles.emergencyNumber}>112</Text>
-        </TouchableOpacity>
-
-        {/* Share App Feedback Button */}
-        <TouchableOpacity 
-          style={styles.feedbackBtn} 
-          activeOpacity={0.8}
-          onPress={() => router.push('/support/feedback')}
-        >
-          <Ionicons name="chatbubble-outline" size={18} color="#2563EB" />
-          <Text style={styles.feedbackBtnText}>Share App Feedback</Text>
-        </TouchableOpacity>
       </ScrollView>
 
       {/* Ticket List Modal (Bottom Sheet style) */}
@@ -297,7 +305,7 @@ export default function SupportTicketsScreen() {
         onRequestClose={() => setSelectedTopic(null)}
       >
         <View style={styles.topicOverlay}>
-          <View style={styles.topicCard}>
+          <View style={styles.topicDetailsCard}>
             <View style={styles.topicHeaderRow}>
               <Text style={styles.topicHeaderTitle}>{selectedTopic?.title}</Text>
               <TouchableOpacity onPress={() => setSelectedTopic(null)}>
@@ -385,10 +393,15 @@ export default function SupportTicketsScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { 
+    flex: 1, 
+    backgroundColor: '#F8FAFC' 
+  },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -397,35 +410,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    paddingTop: 16,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    lineHeight: 25,
   },
-  whiteContainer: {
+  scrollContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginHorizontal: 18,
   },
   scrollContent: {
     paddingBottom: 40,
-    gap: spacing.base,
+  },
+  whiteCardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingTop: 17,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    gap: 16,
+    width: '100%',
   },
   searchBarRow: {
     flexDirection: 'row',
@@ -433,100 +453,120 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    gap: spacing.sm,
-    ...shadows.sm,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    height: 42,
+    gap: 10,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
-    color: '#0F172A',
+    color: '#64748B',
+    fontFamily: 'Inter',
+    padding: 0,
   },
   openTicketCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    padding: spacing.md,
-    alignItems: 'center',
-    gap: 4,
-    ...shadows.sm,
-  },
-  ticketIconOuter: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: '#FFE4E6',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+    gap: 8,
+    alignSelf: 'stretch',
+  },
+  ticketIconOuter: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   ticketCardTitle: {
-    fontSize: 14,
-    fontWeight: '800',
+    fontFamily: 'Inter',
+    fontSize: 11,
+    fontWeight: '700',
     color: '#0F172A',
+    textAlign: 'center',
   },
   ticketCardSub: {
-    fontSize: 11,
-    color: '#94A3B8',
-    fontWeight: '600',
+    fontFamily: 'Inter',
+    fontSize: 8,
+    color: '#64748B',
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  sectionHeaderContainer: {
+    alignSelf: 'stretch',
   },
   sectionHeader: {
-    fontSize: 14,
+    fontFamily: 'Manrope',
+    fontSize: 15,
     fontWeight: '800',
     color: '#0F172A',
-    marginTop: spacing.xs,
+    lineHeight: 20,
   },
   topicsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    borderRadius: 16,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingVertical: spacing.xs,
-    ...shadows.sm,
+    padding: 8,
+    alignSelf: 'stretch',
+  },
+  topicRowWrapper: {
+    alignSelf: 'stretch',
   },
   topicRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    padding: 12,
   },
   topicText: {
-    fontSize: 14,
-    color: '#334155',
-    fontWeight: '600',
+    fontFamily: 'Inter',
+    fontSize: 13,
+    color: '#0F172A',
+    fontWeight: '500',
     flex: 1,
-    marginRight: spacing.sm,
+    marginRight: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: spacing.md,
+    backgroundColor: '#E2E8F0',
   },
   noResultsText: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: 12,
   },
   emergencyCard: {
-    backgroundColor: '#FFE4E6',
-    borderRadius: radius.xl,
-    borderWidth: 1.5,
-    borderColor: '#FCA5A5',
-    padding: spacing.md,
+    backgroundColor: '#FEE2E2',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    ...shadows.sm,
+    justifyContent: 'space-between',
+    alignSelf: 'stretch',
+  },
+  emergencyLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    marginRight: 8,
   },
   emergencyIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
@@ -536,36 +576,45 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   emergencyTitle: {
+    fontFamily: 'Manrope',
     fontSize: 14,
     fontWeight: '800',
     color: '#EF4444',
+    lineHeight: 19,
   },
   emergencySubtitle: {
-    fontSize: 11,
-    color: '#991B1B',
-    fontWeight: '600',
+    fontFamily: 'Inter',
+    fontSize: 12,
+    color: '#7F1D1D',
+    fontWeight: '400',
+    lineHeight: 15,
   },
   emergencyNumber: {
-    fontSize: 22,
+    fontFamily: 'Manrope',
+    fontSize: 20,
     fontWeight: '800',
     color: '#EF4444',
+    lineHeight: 27,
   },
   feedbackBtn: {
-    borderWidth: 1.5,
-    borderColor: '#3B82F6',
-    borderRadius: radius.xl,
-    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#2563EB',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-    gap: spacing.xs,
+    gap: 8,
     backgroundColor: '#EFF6FF',
-    marginTop: spacing.xs,
+    alignSelf: 'stretch',
   },
   feedbackBtnText: {
+    fontFamily: 'Inter',
     fontSize: 14,
     color: '#2563EB',
     fontWeight: '700',
+    lineHeight: 17,
   },
 
   // Modal styling (Bottom Sheet)
@@ -585,22 +634,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 24,
     maxHeight: '85%',
-    ...shadows.lg,
   },
   dragIndicator: {
     width: 38,
     height: 4,
     backgroundColor: '#E2E8F0',
-    borderRadius: radius.full,
+    borderRadius: 99,
     alignSelf: 'center',
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetHeader: {
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetTitleRow: {
     flexDirection: 'row',
@@ -613,23 +661,22 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   ticketListContent: {
-    gap: spacing.base,
-    paddingBottom: spacing.lg,
+    gap: 16,
+    paddingBottom: 24,
   },
   ticketCard: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    gap: spacing.xs,
-    ...shadows.sm,
+    borderRadius: 14,
+    padding: 16,
+    gap: 8,
   },
   ticketHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 8,
   },
   ticketSubject: {
     fontSize: 14,
@@ -639,8 +686,8 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.sm,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   statusText: {
     fontSize: 10,
@@ -661,7 +708,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 40,
-    gap: spacing.xs,
+    gap: 8,
   },
   emptyText: {
     fontSize: 14,
@@ -673,15 +720,15 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 18,
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 20,
   },
   createNewTicketBtn: {
     backgroundColor: '#2563EB',
     paddingVertical: 14,
-    borderRadius: radius.xl,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.md,
+    marginTop: 16,
   },
   createNewTicketText: {
     color: '#FFFFFF',
@@ -695,22 +742,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
-  topicCard: {
+  topicDetailsCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-    ...shadows.lg,
+    borderRadius: 16,
+    padding: 24,
+    gap: 16,
   },
   topicHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 16,
   },
   topicHeaderTitle: {
     fontSize: 15,
@@ -726,10 +772,10 @@ const styles = StyleSheet.create({
   topicDismissBtn: {
     backgroundColor: '#2563EB',
     paddingVertical: 10,
-    borderRadius: radius.lg,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
   topicDismissText: {
     color: '#FFFFFF',
@@ -743,16 +789,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   feedbackCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-    ...shadows.lg,
+    borderRadius: 16,
+    padding: 24,
+    gap: 16,
   },
   feedbackHeaderRow: {
     flexDirection: 'row',
@@ -767,8 +812,8 @@ const styles = StyleSheet.create({
   feedbackInput: {
     borderWidth: 1.5,
     borderColor: '#E2E8F0',
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: 8,
+    padding: 12,
     fontSize: 13,
     color: '#0F172A',
     backgroundColor: '#F8FAFC',
@@ -778,7 +823,7 @@ const styles = StyleSheet.create({
   feedbackSubmitBtn: {
     backgroundColor: '#2563EB',
     paddingVertical: 12,
-    borderRadius: radius.xl,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -794,17 +839,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   successCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
+    borderRadius: 16,
+    padding: 24,
     alignItems: 'center',
-    gap: spacing.md,
-    ...shadows.lg,
+    gap: 16,
   },
   successIconOuter: {
     width: 72,
@@ -813,7 +857,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 8,
   },
   successIconInner: {
     width: 56,
@@ -832,16 +876,16 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 8,
   },
   successDoneBtn: {
     backgroundColor: '#10B981',
     width: '100%',
     paddingVertical: 12,
-    borderRadius: radius.xl,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
   successDoneBtnText: {
     fontSize: 14,
@@ -849,3 +893,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+

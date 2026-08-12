@@ -31,10 +31,10 @@ interface Message {
 }
 
 const QUICK_SUGGESTIONS = [
-  { label: '🏠 Update Address', text: 'How do I update my address on my Aadhaar card?' },
-  { label: '🔗 Link PAN Card', text: 'How do I link or apply for a PAN card?' },
-  { label: '📄 Pay Bills', text: 'How do I pay my electricity bill?' },
-  { label: '🏛️ View Schemes', text: 'Tell me about Government Schemes.' },
+  { label: 'Update Address', icon: 'home-outline', text: 'How do I update my address on my Aadhaar card?' },
+  { label: 'Link PAN Card', icon: 'link-outline', text: 'How do I link or apply for a PAN card?' },
+  { label: 'Pay Bills', icon: 'document-text-outline', text: 'How do I pay my electricity bill?' },
+  { label: 'View Schemes', icon: 'grid-outline', text: 'Tell me about Government Schemes.' },
 ];
 
 export default function BotScreen() {
@@ -233,21 +233,24 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
 
           <View style={styles.botProfile}>
             <View style={styles.avatarContainer}>
-              <Ionicons name="shield-checkmark" size={20} color="#2563EB" />
+              <Ionicons name="shield" size={24} color="#2563EB" />
             </View>
             <View style={styles.botMeta}>
               <Text style={styles.botName}>cyberbot</Text>
-              <Text style={styles.botStatus}>● Official Assistant • Online</Text>
+              <View style={styles.botStatusRow}>
+                <View style={styles.statusIndicator} />
+                <Text style={styles.botStatus}>Official Assistant • Online</Text>
+              </View>
             </View>
           </View>
 
@@ -278,9 +281,11 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
             const isUser = item.sender === 'user';
             return (
               <View key={item.id} style={[styles.msgRow, isUser ? styles.msgRowUser : styles.msgRowBot]}>
-                <Text style={styles.senderLabel}>{isUser ? 'You' : 'cyberbot'}</Text>
+                <Text style={[styles.senderLabel, isUser && styles.senderLabelUser]}>
+                  {isUser ? 'You' : 'cyberbot'}
+                </Text>
                 <View style={[styles.bubble, isUser ? styles.bubbleUser : styles.bubbleBot]}>
-                  <Text style={[styles.msgText, isUser ? styles.msgTextUser : styles.msgTextBot]}>
+                  <Text style={styles.msgText}>
                     {item.text}
                   </Text>
 
@@ -295,8 +300,11 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
                       <Ionicons name="chevron-forward-outline" size={14} color="#2563EB" />
                     </TouchableOpacity>
                   )}
+                  
+                  <View style={styles.timeRow}>
+                    <Text style={styles.timestamp}>{item.timestamp}</Text>
+                  </View>
                 </View>
-                <Text style={styles.timestamp}>{item.timestamp}</Text>
               </View>
             );
           })}
@@ -311,51 +319,64 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
           )}
         </ScrollView>
 
-        {/* Suggestion Chips */}
-        <View style={styles.chipsSection}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsScroll}
-          >
-            {QUICK_SUGGESTIONS.map((item) => (
-              <TouchableOpacity
-                key={item.label}
-                style={styles.suggestionChip}
-                onPress={() => handleSend(item.text)}
-              >
-                <Text style={styles.suggestionChipLabel}>{item.label}</Text>
+        {/* Footer Container */}
+        <View style={styles.footerContainer}>
+          {/* Suggestion Chips */}
+          <View style={styles.chipsSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chipsScroll}
+            >
+              {QUICK_SUGGESTIONS.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={styles.suggestionChip}
+                  onPress={() => handleSend(item.text)}
+                >
+                  <Ionicons name={item.icon as any} size={14} color="#2563EB" />
+                  <Text style={styles.suggestionChipLabel}>{item.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+
+          {/* Input Bar */}
+          <View style={styles.inputBarContainer}>
+            <View style={styles.inputField}>
+              <TouchableOpacity>
+                <Ionicons name="attach-outline" size={20} color="#64748B" />
               </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
 
-        {/* Input Bar */}
-        <View style={styles.inputBar}>
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="attach-outline" size={24} color="#94A3B8" />
-          </TouchableOpacity>
+              <TextInput
+                style={styles.textInput}
+                placeholder="Ask me about Aadhaar, PAN..."
+                placeholderTextColor="#64748B"
+                value={inputVal}
+                onChangeText={setInputVal}
+                onSubmitEditing={() => handleSend(inputVal)}
+              />
 
-          <TextInput
-            style={styles.textInput}
-            placeholder="Ask me about Aadhaar, PAN..."
-            placeholderTextColor="#94A3B8"
-            value={inputVal}
-            onChangeText={setInputVal}
-            onSubmitEditing={() => handleSend(inputVal)}
-          />
+              <TouchableOpacity>
+                <Ionicons name="mic-outline" size={20} color="#64748B" />
+              </TouchableOpacity>
+            </View>
 
-          <TouchableOpacity style={styles.iconButton}>
-            <Ionicons name="mic-outline" size={22} color="#94A3B8" />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.sendButton}
-            onPress={() => handleSend(inputVal)}
-            disabled={!inputVal.trim()}
-          >
-            <Ionicons name="arrow-forward-outline" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.sendBtnContainer}
+              onPress={() => handleSend(inputVal)}
+              disabled={!inputVal.trim()}
+            >
+              <LinearGradient
+                colors={['#1E3A8A', '#2563EB']}
+                style={styles.sendBtnGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="arrow-forward-outline" size={18} color="#FFFFFF" />
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </View>
@@ -363,10 +384,12 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#1E3A8A' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing.lg,
-    paddingHorizontal: spacing.base,
+    paddingBottom: 20,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
   },
   headerSafeArea: {
     flex: 0,
@@ -375,133 +398,151 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   botProfile: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    marginLeft: spacing.md,
-    gap: spacing.sm,
+    marginLeft: 12,
+    gap: 12,
   },
   avatarContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#FFFFFF',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   botMeta: {
-    gap: 1,
+    gap: 2,
   },
   botName: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
+  botStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  statusIndicator: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
   botStatus: {
-    fontSize: 11,
-    color: 'rgba(255, 255, 255, 0.85)',
-    fontWeight: '500',
+    fontFamily: 'Inter',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)',
+    fontWeight: '400',
   },
   optionsBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(255, 255, 255, 0.125)',
   },
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
   },
   scrollContent: {
-    padding: spacing.base,
-    gap: spacing.lg,
-    paddingBottom: 24,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    paddingBottom: 20,
+    gap: 20,
   },
   dateStampContainer: {
     alignItems: 'center',
-    marginVertical: spacing.xs,
   },
   dateStamp: {
-    backgroundColor: '#F1F5F9',
-    paddingHorizontal: spacing.md,
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 12,
     paddingVertical: 4,
-    borderRadius: radius.md,
+    borderRadius: 12,
   },
   dateStampText: {
+    fontFamily: 'Inter',
     fontSize: 11,
     color: '#64748B',
     fontWeight: '600',
-    letterSpacing: 0.5,
+    textTransform: 'uppercase',
   },
   msgRow: {
-    maxWidth: '80%',
-    gap: 4,
+    width: '100%',
+    gap: 6,
   },
   msgRowBot: {
-    alignSelf: 'flex-start',
     alignItems: 'flex-start',
   },
   msgRowUser: {
-    alignSelf: 'flex-end',
     alignItems: 'flex-end',
   },
   senderLabel: {
-    fontSize: 11,
+    fontFamily: 'Manrope',
+    fontSize: 12,
     fontWeight: '700',
     color: '#64748B',
-    marginLeft: 4,
-    marginBottom: 2,
+  },
+  senderLabelUser: {
+    color: '#2563EB',
   },
   bubble: {
-    borderRadius: 18,
+    borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 16,
-    ...shadows.sm,
+    maxWidth: 300,
   },
   bubbleBot: {
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    borderTopLeftRadius: 4,
+    borderColor: '#E2E8F0',
   },
   bubbleUser: {
     backgroundColor: '#EFF6FF',
-    borderTopRightRadius: 4,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
   },
   bubbleTyping: {
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    width: 60,
   },
   msgText: {
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  msgTextBot: {
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '400',
     color: '#0F172A',
+    lineHeight: 20,
   },
-  msgTextUser: {
-    color: '#1E3A8A',
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    marginTop: 4,
   },
   timestamp: {
+    fontFamily: 'Inter',
     fontSize: 10,
-    color: '#94A3B8',
-    marginTop: 2,
-    paddingHorizontal: 4,
+    color: '#64748B',
   },
   cardActionBtn: {
     flexDirection: 'row',
@@ -510,7 +551,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: radius.md,
+    borderRadius: 8,
     marginTop: 10,
     gap: 6,
     alignSelf: 'flex-start',
@@ -522,63 +563,70 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#2563EB',
   },
+  footerContainer: {
+    paddingVertical: 8,
+    paddingBottom: 12,
+    backgroundColor: '#F8FAFC',
+    gap: 16,
+  },
   chipsSection: {
-    borderTopWidth: 1,
-    borderColor: '#F1F5F9',
-    paddingVertical: spacing.sm,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'transparent',
   },
   chipsScroll: {
-    paddingHorizontal: spacing.base,
-    gap: spacing.sm,
+    paddingHorizontal: 20,
+    gap: 8,
   },
   suggestionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingVertical: 8,
     paddingHorizontal: 14,
-    borderRadius: radius.full,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    ...shadows.sm,
+    gap: 6,
   },
   suggestionChipLabel: {
+    fontFamily: 'Manrope',
     fontSize: 13,
-    color: '#334155',
+    color: '#0F172A',
     fontWeight: '600',
   },
-  inputBar: {
+  inputBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderTopWidth: 1,
-    borderColor: '#F1F5F9',
-    backgroundColor: '#FFFFFF',
-    gap: spacing.xs,
+    paddingHorizontal: 20,
   },
-  iconButton: {
-    padding: spacing.sm,
+  inputField: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    height: 60,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 24,
+    paddingHorizontal: 16,
+    gap: 12,
   },
   textInput: {
     flex: 1,
-    height: 44,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: radius.full,
-    paddingHorizontal: spacing.md,
+    fontFamily: 'Inter',
     fontSize: 15,
     color: '#0F172A',
+    padding: 0,
+    height: '100%',
   },
-  sendButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#2563EB',
+  sendBtnContainer: {
+    marginLeft: 8,
+  },
+  sendBtnGradient: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: spacing.xs,
   },
 });
+

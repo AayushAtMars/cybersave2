@@ -30,12 +30,12 @@ const fmtDate = (iso: string) =>
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   draft:        { label: 'Draft',       color: '#64748B', bg: '#F1F5F9' },
-  submitted:    { label: 'Pending',     color: '#D97706', bg: '#FEF3C7' },
-  under_review: { label: 'In Progress', color: '#2563EB', bg: '#EFF6FF' },
-  docs_pending: { label: 'In Progress', color: '#2563EB', bg: '#EFF6FF' },
-  processing:   { label: 'In Progress', color: '#2563EB', bg: '#EFF6FF' },
-  completed:    { label: 'Approved',    color: '#16A34A', bg: '#DCFCE7' },
-  rejected:     { label: 'Rejected',    color: '#DC2626', bg: '#FEE2E2' },
+  submitted:    { label: 'Pending',     color: '#3B82F6', bg: '#EFF6FF' },
+  under_review: { label: 'In Progress', color: '#F59E0B', bg: '#FEF3C7' },
+  docs_pending: { label: 'In Progress', color: '#F59E0B', bg: '#FEF3C7' },
+  processing:   { label: 'In Progress', color: '#F59E0B', bg: '#FEF3C7' },
+  completed:    { label: 'Approved',    color: '#10B981', bg: '#DCFCE7' },
+  rejected:     { label: 'Rejected',    color: '#EF4444', bg: '#FEE2E2' },
 };
 
 export default function ApplicationsScreen() {
@@ -63,26 +63,31 @@ export default function ApplicationsScreen() {
 
   return (
     <View style={styles.flex}>
-      <LinearGradient colors={['#1E3A8A', '#2563EB']} style={styles.header} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+      <LinearGradient 
+        colors={['#1E3A8A', '#2563EB']} 
+        style={styles.header} 
+        start={{ x: 0, y: 0 }} 
+        end={{ x: 1, y: 0 }}
+      >
         <SafeAreaView edges={['top']} />
         <Text style={styles.headerTitle}>My Applications</Text>
       </LinearGradient>
 
-      {/* White curved body */}
+      {/* Curved White Body Card */}
       <View style={styles.body}>
         {/* Search bar */}
         <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color="#94A3B8" />
+          <Ionicons name="search-outline" size={18} color="#64748B" />
           <TextInput
             style={styles.searchInput}
             placeholder="Search applications..."
-            placeholderTextColor="#94A3B8"
+            placeholderTextColor="#64748B"
             value={search}
             onChangeText={setSearch}
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={18} color="#94A3B8" />
+              <Ionicons name="close-circle" size={18} color="#64748B" />
             </TouchableOpacity>
           )}
         </View>
@@ -96,6 +101,7 @@ export default function ApplicationsScreen() {
                 key={f.label}
                 style={[styles.pill, active && styles.pillActive]}
                 onPress={() => setStatusFilter(f.value)}
+                activeOpacity={0.8}
               >
                 <Text style={[styles.pillText, active && styles.pillTextActive]}>{f.label}</Text>
               </TouchableOpacity>
@@ -116,7 +122,7 @@ export default function ApplicationsScreen() {
             hideHeader={true}
           />
         ) : apps.length === 0 ? (
-          <EmptyApplications onBrowse={() => router.push('/(tabs)/services')} />
+          <EmptyApplications onBrowse={() => router.push('/(tabs)/services')} style={{ marginTop: -60 }} />
         ) : (
           <FlatList
             data={apps}
@@ -136,34 +142,38 @@ export default function ApplicationsScreen() {
                   activeOpacity={0.82}
                 >
                   <View style={styles.cardRow}>
-                    {/* Icon */}
-                    <View style={styles.cardIcon}>
-                      <Ionicons name="document-text" size={22} color="#2563EB" />
+                    {/* Left side: Icon + Title Group */}
+                    <View style={styles.cardLeft}>
+                      <View style={styles.cardIcon}>
+                        <Ionicons name="document-text" size={20} color="#2563EB" />
+                      </View>
+
+                      <View style={styles.cardInfo}>
+                        <Text style={styles.cardTitle} numberOfLines={1}>{item.serviceName}</Text>
+                        <Text style={styles.cardMeta}>
+                          ID: {item.applicationRefNo} • Submitted {fmtDate(item.createdAt)}
+                        </Text>
+                      </View>
                     </View>
 
-                    {/* Info */}
-                    <View style={styles.cardInfo}>
-                      <View style={styles.cardTopRow}>
-                        <Text style={styles.cardTitle} numberOfLines={1}>{item.serviceName}</Text>
-                        <Text style={[styles.statusBadge, { color: s.color }]}>{s.label}</Text>
-                      </View>
-                      <Text style={styles.cardMeta}>
-                        ID: {item.applicationRefNo} • Submitted {fmtDate(item.createdAt)}
-                      </Text>
+                    {/* Right side: Badge */}
+                    <View style={[styles.statusBadge, { backgroundColor: s.bg }]}>
+                      <Text style={[styles.statusText, { color: s.color }]}>{s.label}</Text>
                     </View>
                   </View>
 
                   {/* Download Certificate — shown for approved */}
-                  {isApproved && item.certificateUrl && (
+                  {isApproved && (
                     <TouchableOpacity
                       style={styles.downloadRow}
                       onPress={(e) => {
                         e.stopPropagation?.();
                         router.push({ pathname: '/(application)/status', params: { id: item._id, showCert: '1' } });
                       }}
+                      activeOpacity={0.7}
                     >
-                      <Ionicons name="download-outline" size={14} color="#2563EB" />
                       <Text style={styles.downloadText}>Download Certificate</Text>
+                      <Ionicons name="download" size={14} color="#2563EB" />
                     </TouchableOpacity>
                   )}
 
@@ -184,99 +194,155 @@ export default function ApplicationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#2563EB' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
     paddingHorizontal: spacing.base,
     paddingBottom: 48,
   },
   headerTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
     paddingTop: spacing.sm,
     paddingBottom: spacing.md,
+    fontFamily: 'System',
   },
   body: {
     flex: 1,
-    backgroundColor: '#F1F5F9',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    marginTop: -28,
-    paddingTop: spacing.base,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 16,
+    marginTop: -32,
+    paddingTop: 20,
+    paddingBottom: 0,
   },
 
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    marginHorizontal: spacing.base,
-    paddingHorizontal: spacing.md,
-    paddingVertical: 10,
-    gap: spacing.sm,
-    ...shadows.sm,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginHorizontal: 20,
+    paddingHorizontal: 12,
+    height: 42,
+    gap: 12,
   },
   searchInput: {
     flex: 1,
     fontSize: 14,
     color: '#0F172A',
+    fontFamily: 'System',
   },
 
   filtersRow: {
     flexDirection: 'row',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.base,
-    marginTop: spacing.md,
-    marginBottom: spacing.sm,
+    gap: 8,
+    paddingHorizontal: 20,
+    marginTop: 16,
+    marginBottom: 16,
   },
   pill: {
-    paddingVertical: 7,
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    borderRadius: radius.full,
+    borderRadius: 20,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    ...shadows.sm,
   },
   pillActive: {
     backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
-  pillText: { fontSize: 13, fontWeight: '700', color: '#475569' },
-  pillTextActive: { color: '#FFFFFF' },
+  pillText: { 
+    fontSize: 13, 
+    fontWeight: '600', 
+    color: '#64748B',
+    fontFamily: 'System',
+  },
+  pillTextActive: { 
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
 
-  list: { padding: spacing.base, gap: spacing.sm, paddingBottom: 100 },
+  list: { 
+    paddingHorizontal: 20, 
+    gap: 12, 
+    paddingBottom: 100,
+  },
 
   card: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    padding: spacing.base,
-    gap: spacing.sm,
-    ...shadows.sm,
+    borderRadius: 20,
+    padding: 16,
   },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  cardRow: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    width: '100%',
+  },
+  cardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    marginRight: 12,
+  },
   cardIcon: {
-    width: 44,
-    height: 44,
+    width: 40,
+    height: 40,
     borderRadius: 12,
     backgroundColor: '#EFF6FF',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  cardInfo: { flex: 1, gap: 3 },
-  cardTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  cardTitle: { fontSize: 14, fontWeight: '800', color: '#0F172A', flex: 1, marginRight: 8 },
-  statusBadge: { fontSize: 12, fontWeight: '800' },
-  cardMeta: { fontSize: 11, color: '#94A3B8', fontWeight: '600' },
+  cardInfo: { 
+    marginLeft: 12,
+    flex: 1,
+    gap: 2,
+  },
+  cardTitle: { 
+    fontSize: 15, 
+    fontWeight: '800', 
+    color: '#0F172A',
+    fontFamily: 'System',
+  },
+  cardMeta: { 
+    fontSize: 12, 
+    color: '#64748B', 
+    fontWeight: '400',
+    fontFamily: 'System',
+  },
+  statusBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    alignSelf: 'flex-start',
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: 'System',
+  },
 
   downloadRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: 6,
-    paddingTop: 4,
+    marginTop: 12,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
-  downloadText: { fontSize: 13, fontWeight: '700', color: '#2563EB' },
+  downloadText: { 
+    fontSize: 13, 
+    fontWeight: '700', 
+    color: '#2563EB',
+    fontFamily: 'System',
+  },
 
   rejectionNote: {
     fontSize: 11,
@@ -285,6 +351,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2',
     borderRadius: 8,
     padding: spacing.sm,
+    marginTop: 12,
   },
 });
 

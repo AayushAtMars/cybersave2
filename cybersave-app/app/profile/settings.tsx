@@ -263,15 +263,15 @@ export default function SettingsScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Settings</Text>
-          <View style={{ width: 36 }} />
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
@@ -281,150 +281,158 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* ACCOUNT SECTION */}
-        <Text style={styles.sectionHeader}>ACCOUNT</Text>
-        <View style={styles.sectionCard}>
-          {/* Option: Language */}
-          <TouchableOpacity 
-            style={styles.optionRow} 
-            activeOpacity={0.7} 
-            onPress={() => setShowLanguageModal(true)}
-          >
-            <View style={styles.optionLeft}>
-              <Ionicons name="globe-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Language</Text>
-            </View>
-            <View style={styles.optionRight}>
-              <Text style={styles.optionValue}>{selectedLanguage}</Text>
-              <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-            </View>
-          </TouchableOpacity>
+        <View style={styles.cardContainer}>
+          {/* ACCOUNT SECTION */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Account</Text>
+            <View style={styles.sectionCard}>
+              {/* Option: Language */}
+              <TouchableOpacity 
+                style={styles.optionRow} 
+                activeOpacity={0.7} 
+                onPress={() => setShowLanguageModal(true)}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons name="globe" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Language</Text>
+                </View>
+                <View style={styles.optionRight}>
+                  <Text style={styles.optionValue}>{selectedLanguage}</Text>
+                  <Ionicons name="chevron-forward" size={14} color="#64748B" />
+                </View>
+              </TouchableOpacity>
 
-          <View style={styles.divider} />
+              <View style={styles.divider} />
 
-          {/* Option: Notifications */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionLeft}>
-              <Ionicons name="notifications-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Notifications</Text>
-            </View>
-            <View style={styles.optionRight}>
-              <Text style={styles.optionValue}>All Active</Text>
-              <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
+              {/* Option: Notifications */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <Ionicons name="notifications" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Notifications</Text>
+                </View>
+                <View style={styles.optionRight}>
+                  <Text style={styles.optionValue}>All Active</Text>
+                  <Ionicons name="chevron-forward" size={14} color="#64748B" />
+                </View>
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Option: Biometric Login */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <Ionicons name="finger-print" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Biometric Login</Text>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={handleBiometricToggle}
+                  trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Option: Auto-pay */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <Ionicons name="repeat" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Auto-pay</Text>
+                </View>
+                <Switch
+                  value={autopayEnabled}
+                  onValueChange={handleAutopayToggle}
+                  trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
             </View>
           </View>
 
-          <View style={styles.divider} />
+          {/* SECURITY SECTION */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Security</Text>
+            <View style={styles.sectionCard}>
+              {/* Option: Change MPIN */}
+              <TouchableOpacity 
+                style={styles.optionRow} 
+                activeOpacity={0.7} 
+                onPress={() => setShowMpinModal(true)}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons name="lock-closed" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Change MPIN</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color="#64748B" />
+              </TouchableOpacity>
 
-          {/* Option: Biometric Login */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionLeft}>
-              <Ionicons name="finger-print-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Biometric Login</Text>
+              <View style={styles.divider} />
+
+              {/* Option: Two-Factor Auth */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <Ionicons name="shield-checkmark" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Two-Factor Auth</Text>
+                </View>
+                <Switch
+                  value={twoFactorEnabled}
+                  onValueChange={handle2FactorToggle}
+                  trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+                  thumbColor="#FFFFFF"
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Option: Login History */}
+              <TouchableOpacity 
+                style={styles.optionRow} 
+                activeOpacity={0.7} 
+                onPress={() => setShowHistoryModal(true)}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons name="time" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Login History</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color="#64748B" />
+              </TouchableOpacity>
             </View>
-            <Switch
-              value={biometricEnabled}
-              onValueChange={handleBiometricToggle}
-              trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
-              thumbColor={biometricEnabled ? '#2563EB' : '#F1F5F9'}
-            />
           </View>
 
-          <View style={styles.divider} />
+          {/* DATA SECTION */}
+          <View style={styles.section}>
+            <Text style={styles.sectionHeader}>Data</Text>
+            <View style={styles.sectionCard}>
+              {/* Option: Clear Cache */}
+              <TouchableOpacity 
+                style={styles.optionRow} 
+                activeOpacity={0.7} 
+                onPress={handleClearCache}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons name="trash" size={18} color="#2563EB" />
+                  <Text style={styles.optionLabel}>Clear Cache</Text>
+                </View>
+                <Text style={styles.optionValue}>{cacheSize}</Text>
+              </TouchableOpacity>
 
-          {/* Option: Auto-pay */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionLeft}>
-              <Ionicons name="swap-horizontal-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Auto-pay</Text>
+              <View style={styles.divider} />
+
+              {/* Option: Delete Account */}
+              <TouchableOpacity 
+                style={styles.optionRow} 
+                activeOpacity={0.7} 
+                onPress={handleDeleteAccount}
+              >
+                <View style={styles.optionLeft}>
+                  <Ionicons name="warning" size={18} color="#EF4444" />
+                  <Text style={[styles.optionLabel, { color: '#EF4444' }]}>Delete Account</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={14} color="#EF4444" />
+              </TouchableOpacity>
             </View>
-            <Switch
-              value={autopayEnabled}
-              onValueChange={handleAutopayToggle}
-              trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
-              thumbColor={autopayEnabled ? '#2563EB' : '#F1F5F9'}
-            />
           </View>
-        </View>
-
-        {/* SECURITY SECTION */}
-        <Text style={styles.sectionHeader}>SECURITY</Text>
-        <View style={styles.sectionCard}>
-          {/* Option: Change MPIN */}
-          <TouchableOpacity 
-            style={styles.optionRow} 
-            activeOpacity={0.7} 
-            onPress={() => setShowMpinModal(true)}
-          >
-            <View style={styles.optionLeft}>
-              <Ionicons name="lock-closed-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Change MPIN</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          {/* Option: Two-Factor Auth */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionLeft}>
-              <Ionicons name="shield-checkmark-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Two-Factor Auth</Text>
-            </View>
-            <Switch
-              value={twoFactorEnabled}
-              onValueChange={handle2FactorToggle}
-              trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
-              thumbColor={twoFactorEnabled ? '#2563EB' : '#F1F5F9'}
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Option: Login History */}
-          <TouchableOpacity 
-            style={styles.optionRow} 
-            activeOpacity={0.7} 
-            onPress={() => setShowHistoryModal(true)}
-          >
-            <View style={styles.optionLeft}>
-              <Ionicons name="time-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Login History</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
-          </TouchableOpacity>
-        </View>
-
-        {/* DATA SECTION */}
-        <Text style={styles.sectionHeader}>DATA</Text>
-        <View style={styles.sectionCard}>
-          {/* Option: Clear Cache */}
-          <TouchableOpacity 
-            style={styles.optionRow} 
-            activeOpacity={0.7} 
-            onPress={handleClearCache}
-          >
-            <View style={styles.optionLeft}>
-              <Ionicons name="trash-outline" size={20} color="#2563EB" />
-              <Text style={styles.optionLabel}>Clear Cache</Text>
-            </View>
-            <Text style={styles.optionValue}>{cacheSize}</Text>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          {/* Option: Delete Account */}
-          <TouchableOpacity 
-            style={styles.optionRow} 
-            activeOpacity={0.7} 
-            onPress={handleDeleteAccount}
-          >
-            <View style={styles.optionLeft}>
-              <Ionicons name="warning-outline" size={20} color="#EF4444" />
-              <Text style={[styles.optionLabel, { color: '#EF4444' }]}>Delete Account</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#EF4444" />
-          </TouchableOpacity>
         </View>
       </ScrollView>
 
@@ -638,10 +646,12 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -650,22 +660,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
@@ -673,42 +689,52 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginHorizontal: 20,
   },
   scrollContent: {
+    paddingTop: 24,
     paddingBottom: 40,
   },
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    gap: 16,
+  },
+  section: {
+    gap: 8,
+  },
   sectionHeader: {
-    fontSize: 11,
+    fontFamily: 'Inter',
+    fontSize: 12,
     fontWeight: '700',
     color: '#64748B',
-    letterSpacing: 1.5,
-    marginTop: spacing.lg,
-    marginBottom: spacing.xs,
-    paddingLeft: spacing.xs,
+    textTransform: 'uppercase',
+    paddingHorizontal: 4,
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingVertical: spacing.xs,
-    ...shadows.sm,
+    padding: 8,
+    gap: 2,
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
   },
   optionLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
   },
   optionLabel: {
+    fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '600',
     color: '#0F172A',
@@ -716,17 +742,18 @@ const styles = StyleSheet.create({
   optionRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
+    gap: 8,
   },
   optionValue: {
-    fontSize: 14,
+    fontFamily: 'Inter',
+    fontSize: 13,
     color: '#64748B',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   divider: {
     height: 1,
     backgroundColor: '#F1F5F9',
-    marginHorizontal: spacing.md,
+    marginHorizontal: 12,
   },
 
   // Modal Overlay
@@ -746,9 +773,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.base,
-    paddingBottom: spacing.xl,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
     ...shadows.lg,
   },
   dragIndicator: {
@@ -757,10 +784,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#E2E8F0',
     borderRadius: radius.full,
     alignSelf: 'center',
-    marginBottom: spacing.base,
+    marginBottom: 16,
   },
   sheetHeader: {
-    marginBottom: spacing.md,
+    marginBottom: 12,
   },
   sheetTitleRow: {
     flexDirection: 'row',
@@ -773,13 +800,13 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   sheetOptions: {
-    gap: spacing.sm,
+    gap: 8,
   },
   sheetOptionRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.md,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
   },
@@ -795,15 +822,15 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   mpinCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
     borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
+    padding: 24,
+    gap: 16,
     ...shadows.lg,
   },
   mpinHeader: {
@@ -817,10 +844,10 @@ const styles = StyleSheet.create({
     color: '#0F172A',
   },
   mpinInputs: {
-    gap: spacing.sm,
+    gap: 12,
   },
   field: {
-    gap: spacing.xs,
+    gap: 6,
   },
   fieldLabel: {
     fontSize: 12,
@@ -832,7 +859,7 @@ const styles = StyleSheet.create({
     borderColor: '#E2E8F0',
     borderRadius: radius.lg,
     paddingVertical: 8,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 24,
     fontSize: 14,
     color: '#0F172A',
     backgroundColor: '#F8FAFC',
@@ -845,7 +872,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   mpinSaveText: {
     color: '#FFFFFF',
@@ -855,15 +882,15 @@ const styles = StyleSheet.create({
 
   // Login History List
   historyList: {
-    gap: spacing.md,
-    marginTop: spacing.xs,
-    paddingBottom: spacing.lg,
+    gap: 12,
+    marginTop: 4,
+    paddingBottom: 24,
   },
   historyRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
-    paddingVertical: spacing.xs,
+    gap: 12,
+    paddingVertical: 4,
   },
   historyInfo: {
     flex: 1,
@@ -886,16 +913,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   successCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
     borderRadius: radius.xl,
-    padding: spacing.xl,
+    padding: 24,
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 16,
     ...shadows.lg,
   },
   successIconOuter: {
@@ -905,7 +932,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 4,
   },
   successIconInner: {
     width: 56,
@@ -924,7 +951,7 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 4,
   },
   successDoneBtn: {
     backgroundColor: '#10B981',
@@ -933,7 +960,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 4,
   },
   successDoneBtnText: {
     fontSize: 14,
@@ -945,6 +972,6 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     textAlign: 'center',
     flex: 1,
-    paddingVertical: spacing.md,
+    paddingVertical: 12,
   },
 });

@@ -137,170 +137,172 @@ export default function PersonalInfoScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Personal Information</Text>
-          <View style={{ width: 36 }} />
+          <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
 
       {/* Body container */}
       <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView style={styles.whiteContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          {/* Avatar Section */}
-          <View style={styles.avatarSection}>
-            <View style={styles.avatar}>
-              {user?.avatar ? (
-                <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
-              ) : (
-                <Text style={styles.avatarText}>{initials}</Text>
-              )}
-            </View>
-            <TouchableOpacity style={styles.changePhotoBtn} onPress={handleChangePhoto}>
-              <Text style={styles.changePhotoText}>Change Photo</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Form Fields */}
-          <View style={styles.form}>
-            {/* Full Name */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Full Name</Text>
-              <TextInput 
-                style={[styles.input, styles.disabledInput]} 
-                value={name} 
-                onChangeText={setName}
-                editable={false} 
-              />
+          <View style={styles.cardContainer}>
+            {/* Avatar Section */}
+            <View style={styles.avatarSection}>
+              <View style={styles.avatar}>
+                {user?.avatar ? (
+                  <Image source={{ uri: user.avatar }} style={styles.avatarImage} />
+                ) : (
+                  <Text style={styles.avatarText}>{initials}</Text>
+                )}
+              </View>
+              <TouchableOpacity style={styles.changePhotoBtn} onPress={handleChangePhoto}>
+                <Text style={styles.changePhotoText}>Change Photo</Text>
+              </TouchableOpacity>
             </View>
 
-            {/* Phone */}
-            <View style={styles.field}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Phone</Text>
-                <View style={styles.verifiedBadge}>
-                  <Text style={styles.verifiedText}>Verified</Text>
+            {/* Form Fields */}
+            <View style={styles.form}>
+              {/* Full Name */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Full Name</Text>
+                <TextInput 
+                  style={[styles.input, styles.disabledInput]} 
+                  value={name} 
+                  onChangeText={setName}
+                  editable={false} 
+                />
+              </View>
+
+              {/* Phone */}
+              <View style={styles.field}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Phone</Text>
+                  <View style={styles.verifiedBadge}>
+                    <Text style={styles.verifiedText}>Verified</Text>
+                  </View>
+                </View>
+                <TextInput 
+                  style={[styles.input, styles.disabledInput]} 
+                  value={formattedPhone} 
+                  editable={false} 
+                />
+              </View>
+
+              {/* Email */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Email</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={email} 
+                  onChangeText={setEmail}
+                  placeholder="Enter email address"
+                  placeholderTextColor="#94A3B8"
+                />
+              </View>
+
+              {/* Date of Birth */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Date of Birth</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput 
+                    style={styles.input} 
+                    value={dob} 
+                    onChangeText={setDob}
+                    placeholder="e.g. 15 August 1988"
+                    placeholderTextColor="#94A3B8"
+                  />
+                  <Ionicons name="calendar-outline" size={16} color="#64748B" style={styles.inputIcon} />
                 </View>
               </View>
-              <TextInput 
-                style={[styles.input, styles.disabledInput]} 
-                value={formattedPhone} 
-                editable={false} 
-              />
-            </View>
 
-            {/* Email */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput 
-                style={styles.input} 
-                value={email} 
-                onChangeText={setEmail}
-                placeholder="Enter email address"
-                placeholderTextColor="#94A3B8"
-              />
-            </View>
-
-            {/* Date of Birth */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Date of Birth</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput 
-                  style={styles.input} 
-                  value={dob} 
-                  onChangeText={setDob}
-                  placeholder="e.g. 15 August 1988"
-                  placeholderTextColor="#94A3B8"
-                />
-                <Ionicons name="calendar-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
+              {/* Gender */}
+              <View style={styles.field}>
+                <Text style={styles.label}>Gender</Text>
+                <View style={styles.inputWrapper}>
+                  <TextInput 
+                    style={styles.input} 
+                    value={gender} 
+                    onChangeText={setGender}
+                    placeholder="Select gender"
+                    placeholderTextColor="#94A3B8"
+                  />
+                  <Ionicons name="chevron-down-outline" size={16} color="#64748B" style={styles.inputIcon} />
+                </View>
               </View>
-            </View>
 
-            {/* Gender */}
-            <View style={styles.field}>
-              <Text style={styles.label}>Gender</Text>
-              <View style={styles.inputWrapper}>
-                <TextInput 
-                  style={styles.input} 
-                  value={gender} 
-                  onChangeText={setGender}
-                  placeholder="Select gender"
-                  placeholderTextColor="#94A3B8"
-                />
-                <Ionicons name="chevron-down-outline" size={20} color="#94A3B8" style={styles.inputIcon} />
-              </View>
-            </View>
-
-            {/* Aadhaar (Masked) */}
-            <View style={styles.field}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>Aadhaar (Masked)</Text>
+              {/* Aadhaar (Masked) */}
+              <View style={styles.field}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>Aadhaar (Masked)</Text>
+                  <TouchableOpacity 
+                    onPress={() => !hasAadhaar && handleOpenLinkModal('aadhaar')}
+                    activeOpacity={hasAadhaar ? 1 : 0.7}
+                  >
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedText}>
+                        {hasAadhaar ? 'Linked' : 'Link now'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
                 <TouchableOpacity 
-                  onPress={() => !hasAadhaar && handleOpenLinkModal('aadhaar')}
-                  activeOpacity={hasAadhaar ? 1 : 0.7}
+                  onPress={() => !hasAadhaar && handleOpenLinkModal('aadhaar')} 
+                  disabled={hasAadhaar}
+                  activeOpacity={0.7}
                 >
-                  <View style={hasAadhaar ? styles.linkedBadge : styles.notLinkedBadge}>
-                    <Text style={hasAadhaar ? styles.linkedText : styles.notLinkedText}>
-                      {hasAadhaar ? 'Linked' : 'Link now'}
-                    </Text>
-                  </View>
+                  <TextInput 
+                    style={[styles.input, styles.disabledInput, !hasAadhaar && styles.notLinkedInput]} 
+                    value={aadhaarValue} 
+                    editable={false} 
+                    pointerEvents="none"
+                  />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity 
-                onPress={() => !hasAadhaar && handleOpenLinkModal('aadhaar')} 
-                disabled={hasAadhaar}
-                activeOpacity={0.7}
-              >
-                <TextInput 
-                  style={[styles.input, styles.disabledInput, !hasAadhaar && styles.notLinkedInput]} 
-                  value={aadhaarValue} 
-                  editable={false} 
-                  pointerEvents="none"
-                />
-              </TouchableOpacity>
-            </View>
 
-            {/* PAN (Masked) */}
-            <View style={styles.field}>
-              <View style={styles.labelRow}>
-                <Text style={styles.label}>PAN (Masked)</Text>
+              {/* PAN (Masked) */}
+              <View style={styles.field}>
+                <View style={styles.labelRow}>
+                  <Text style={styles.label}>PAN (Masked)</Text>
+                  <TouchableOpacity 
+                    onPress={() => !hasPan && handleOpenLinkModal('pan')}
+                    activeOpacity={hasPan ? 1 : 0.7}
+                  >
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedText}>
+                        {hasPan ? 'Linked' : 'Link now'}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                </View>
                 <TouchableOpacity 
-                  onPress={() => !hasPan && handleOpenLinkModal('pan')}
-                  activeOpacity={hasPan ? 1 : 0.7}
+                  onPress={() => !hasPan && handleOpenLinkModal('pan')} 
+                  disabled={hasPan}
+                  activeOpacity={0.7}
                 >
-                  <View style={hasPan ? styles.linkedBadge : styles.notLinkedBadge}>
-                    <Text style={hasPan ? styles.linkedText : styles.notLinkedText}>
-                      {hasPan ? 'Linked' : 'Link now'}
-                    </Text>
-                  </View>
+                  <TextInput 
+                    style={[styles.input, styles.disabledInput, !hasPan && styles.notLinkedInput]} 
+                    value={panValue} 
+                    editable={false} 
+                    pointerEvents="none"
+                  />
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity 
-                onPress={() => !hasPan && handleOpenLinkModal('pan')} 
-                disabled={hasPan}
-                activeOpacity={0.7}
-              >
-                <TextInput 
-                  style={[styles.input, styles.disabledInput, !hasPan && styles.notLinkedInput]} 
-                  value={panValue} 
-                  editable={false} 
-                  pointerEvents="none"
-                />
-              </TouchableOpacity>
             </View>
+
+            {/* Action Button */}
+            <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
+              <Text style={styles.saveBtnText}>Save Changes</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.timestamp}>Last updated: 12 May 2026, 4:32 PM</Text>
           </View>
-
-          {/* Action Button */}
-          <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
-            <Text style={styles.saveBtnText}>Save Changes</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.timestamp}>Last updated: 12 May 2026, 4:32 PM</Text>
         </ScrollView>
       </KeyboardAvoidingView>
 
@@ -350,10 +352,12 @@ export default function PersonalInfoScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -362,39 +366,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
+    marginHorizontal: 20,
   },
   scrollContent: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    paddingTop: 24,
     paddingBottom: 40,
-    gap: spacing.lg,
+  },
+  cardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 16,
   },
   avatarSection: {
     alignItems: 'center',
-    gap: spacing.sm,
+    gap: 12,
+    paddingVertical: 8,
   },
   avatar: {
     width: 80,
@@ -403,11 +420,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#2563EB',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   avatarText: {
+    fontFamily: 'Manrope',
     fontSize: 24,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
   },
   avatarImage: {
@@ -416,23 +433,24 @@ const styles = StyleSheet.create({
     borderRadius: 40,
   },
   changePhotoBtn: {
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#2563EB',
-    borderRadius: radius.full,
+    borderRadius: 100,
     paddingVertical: 6,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 16,
     backgroundColor: '#FFFFFF',
   },
   changePhotoText: {
     color: '#2563EB',
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
+    fontFamily: 'Inter',
   },
   form: {
-    gap: spacing.md,
+    gap: 16,
   },
   field: {
-    gap: 6,
+    gap: 8,
   },
   labelRow: {
     flexDirection: 'row',
@@ -440,9 +458,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   label: {
+    fontFamily: 'Inter',
     fontSize: 13,
-    fontWeight: '700',
-    color: '#334155',
+    fontWeight: '600',
+    color: '#0F172A',
   },
   inputWrapper: {
     position: 'relative',
@@ -451,53 +470,34 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.lg,
+    borderRadius: 12,
     paddingVertical: 12,
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: 12,
     fontSize: 14,
     color: '#0F172A',
     backgroundColor: '#FFFFFF',
+    fontFamily: 'Inter',
+    fontWeight: '400',
   },
   disabledInput: {
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
     borderColor: '#E2E8F0',
-    color: '#64748B',
+    color: '#0F172A',
   },
   inputIcon: {
     position: 'absolute',
-    right: spacing.md,
+    right: 12,
   },
   verifiedBadge: {
-    backgroundColor: '#DCFCE7',
+    backgroundColor: '#ECFDF5',
     paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.sm,
+    paddingHorizontal: 8,
+    borderRadius: 4,
   },
   verifiedText: {
+    fontFamily: 'Inter',
     fontSize: 10,
-    color: '#15803D',
-    fontWeight: '700',
-  },
-  linkedBadge: {
-    backgroundColor: '#EFF6FF',
-    paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.sm,
-  },
-  linkedText: {
-    fontSize: 10,
-    color: '#2563EB',
-    fontWeight: '700',
-  },
-  notLinkedBadge: {
-    backgroundColor: '#FFE4E6',
-    paddingVertical: 2,
-    paddingHorizontal: spacing.xs,
-    borderRadius: radius.sm,
-  },
-  notLinkedText: {
-    fontSize: 10,
-    color: '#E11D48',
+    color: '#10B981',
     fontWeight: '700',
   },
   notLinkedInput: {
@@ -506,22 +506,22 @@ const styles = StyleSheet.create({
   },
   saveBtn: {
     backgroundColor: '#2563EB',
-    paddingVertical: spacing.base,
-    borderRadius: radius.lg,
+    paddingVertical: 14,
+    borderRadius: 16,
     alignItems: 'center',
-    marginTop: spacing.md,
-    ...shadows.md,
   },
   saveBtnText: {
+    fontFamily: 'Inter',
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
   },
   timestamp: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#94A3B8',
-    marginTop: spacing.xs,
+    color: '#64748B',
+    fontFamily: 'Inter',
+    fontWeight: '400',
   },
 
   // Modal styling
@@ -530,14 +530,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
     width: '100%',
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
+    borderRadius: 20,
+    padding: 24,
+    gap: 16,
     ...shadows.lg,
   },
   modalHeader: {
@@ -558,20 +558,20 @@ const styles = StyleSheet.create({
   modalInput: {
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.lg,
+    borderRadius: 12,
     padding: 12,
     fontSize: 14,
     color: '#0F172A',
     backgroundColor: '#FFFFFF',
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
   modalActions: {
-    marginTop: spacing.sm,
+    marginTop: 8,
   },
   modalApplyBtn: {
     backgroundColor: '#2563EB',
-    paddingVertical: spacing.base,
-    borderRadius: radius.lg,
+    paddingVertical: 12,
+    borderRadius: 12,
     alignItems: 'center',
   },
   modalApplyBtnText: {

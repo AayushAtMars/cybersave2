@@ -363,6 +363,26 @@ export const updateApplicationStatus = async (req: Request, res: Response): Prom
   res.json({ success: true, data: { application } });
 };
 
+// Helper to get start and end of day in IST (UTC+5:30) for a given offset from today
+const getISTDayBounds = (daysOffset = 0) => {
+  const now = new Date();
+  // Get time in IST (UTC + 5.5 hours)
+  const istTime = new Date(now.getTime() + (5.5 * 60 * 60 * 1000));
+  if (daysOffset !== 0) {
+    istTime.setDate(istTime.getDate() + daysOffset);
+  }
+  
+  const startOfIstDay = new Date(istTime);
+  startOfIstDay.setUTCHours(0, 0, 0, 0);
+  const startOfDay = new Date(startOfIstDay.getTime() - (5.5 * 60 * 60 * 1000));
+  
+  const endOfIstDay = new Date(istTime);
+  endOfIstDay.setUTCHours(23, 59, 59, 999);
+  const endOfDay = new Date(endOfIstDay.getTime() - (5.5 * 60 * 60 * 1000));
+
+  return { startOfDay, endOfDay };
+};
+
 // ── GET /applications/admin/stats — admin stats aggregation ──────────────────
 export const getAdminStats = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -382,10 +402,7 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     const paidApps = await Application.find({ paymentStatus: 'paid' }).select('totalAmount');
     const totalRevenue = paidApps.reduce((acc, curr) => acc + (curr.totalAmount ?? 0), 0);
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const { startOfDay, endOfDay } = getISTDayBounds(0);
 
     const paidToday = await Application.find({
       paymentStatus: 'paid',
@@ -463,12 +480,7 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     const applicationTrends: any[] = [];
 
     for (let i = 6; i >= 0; i--) {
-      const d = new Date();
-      d.setDate(d.getDate() - i);
-      const start = new Date(d);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(d);
-      end.setHours(23, 59, 59, 999);
+      const { startOfDay: start, endOfDay: end } = getISTDayBounds(-i);
 
       const dayPaid = await Application.find({
         paymentStatus: 'paid',
@@ -489,13 +501,17 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
         updatedAt: { $gte: start, $lte: end }
       });
 
+      // Get the correct day of week label in IST
+      const labelDate = new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000) - (i * 24 * 60 * 60 * 1000));
+      const dayLabel = daysOfWeek[labelDate.getUTCDay()];
+
       revenueOverview.push({
-        day: daysOfWeek[d.getDay()],
+        day: dayLabel,
         revenue: dayRev / 100
       });
 
       applicationTrends.push({
-        day: daysOfWeek[d.getDay()],
+        day: dayLabel,
         completed: comp,
         pending: pend,
         rejected: rej
@@ -645,12 +661,7 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
       totalAmount: (item.totalAmount ?? 0) / 100
     }));
 
-    const totalApplications = await Application.countDocuments({ status: { $ne: ApplicationStatus.DRAFT } });
-
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
+    const { startOfDay, endOfDay } = getISTDayBounds(0);
     const todayReceived = await Application.countDocuments({
       status: { $ne: ApplicationStatus.DRAFT },
       createdAt: { $gte: startOfDay, $lte: endOfDay }

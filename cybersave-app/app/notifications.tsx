@@ -71,13 +71,13 @@ export default function NotificationsScreen() {
   const getIconConfig = (type: string) => {
     switch (type) {
       case 'application_update':
-        return { name: 'shield-checkmark-outline', color: '#10B981', bg: '#ECFDF5' };
+        return { name: 'shield-checkmark-outline', color: '#10B981' };
       case 'payment':
-        return { name: 'receipt-outline', color: '#3B82F6', bg: '#EFF6FF' };
+        return { name: 'receipt-outline', color: '#2563EB' };
       case 'system':
       case 'support':
       default:
-        return { name: 'cog-outline', color: '#F59E0B', bg: '#FFFBEB' };
+        return { name: 'settings-outline', color: '#F59E0B' };
     }
   };
 
@@ -89,12 +89,12 @@ export default function NotificationsScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Notifications</Text>
           <TouchableOpacity onPress={handleMarkAllRead}>
@@ -144,9 +144,10 @@ export default function NotificationsScreen() {
             contentContainerStyle={styles.listContent}
             renderItem={({ item }) => {
               const icon = getIconConfig(item.type);
+              const isUnread = !item.read;
               return (
-                <View style={[styles.notifCard, !item.read && styles.unreadCard]}>
-                  <View style={[styles.iconBg, { backgroundColor: icon.bg }]}>
+                <View style={[styles.notifCard, isUnread ? styles.unreadCard : styles.readCard]}>
+                  <View style={styles.iconBg}>
                     <Ionicons name={icon.name as any} size={20} color={icon.color} />
                   </View>
                   <View style={styles.notifContent}>
@@ -169,54 +170,60 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingTop: spacing.xs,
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingTop: 12,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
     flex: 1,
+    fontFamily: 'Manrope',
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
-    marginLeft: spacing.md,
+    marginLeft: 16,
   },
   markRead: {
-    fontSize: 14,
+    fontFamily: 'Inter',
+    fontSize: 13,
     color: '#FFFFFF',
-    fontWeight: '600',
-    opacity: 0.9,
+    fontWeight: '700',
   },
   whiteContainer: {
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
-    marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginTop: -28,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    marginHorizontal:20
   },
   segmentContainer: {
     flexDirection: 'row',
-    backgroundColor: '#F1F5F9',
+    backgroundColor: '#E2E8F0',
     borderRadius: 12,
     padding: 4,
-    marginBottom: spacing.md,
+    marginBottom: 24,
   },
   segmentBtn: {
     flex: 1,
@@ -226,85 +233,80 @@ const styles = StyleSheet.create({
   },
   segmentBtnActive: {
     backgroundColor: '#FFFFFF',
-    ...shadows.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   segmentText: {
+    fontFamily: 'Inter',
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '500',
     color: '#64748B',
   },
   segmentTextActive: {
+    fontFamily: 'Inter',
+    fontWeight: '700',
     color: '#0F172A',
   },
   listContent: {
     paddingBottom: 40,
-    gap: spacing.sm,
+    gap: 12,
   },
   notifCard: {
     flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
     borderRadius: 16,
-    padding: spacing.base,
-    alignItems: 'center',
-    ...shadows.sm,
+    padding: 16,
+    alignItems: 'flex-start',
   },
   unreadCard: {
+    borderWidth: 1,
+    borderLeftWidth: 4,
     borderColor: '#EFF6FF',
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#FFFFFF',
+  },
+  readCard: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
   },
   iconBg: {
     width: 40,
     height: 40,
     borderRadius: 20,
+    backgroundColor: '#F8FAFC',
     alignItems: 'center',
     justifyContent: 'center',
   },
   notifContent: {
     flex: 1,
-    marginLeft: spacing.md,
+    marginLeft: 12,
   },
   notifHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 6,
   },
   notifTitle: {
+    fontFamily: 'Manrope',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#0F172A',
     flex: 1,
+    marginRight: 8,
   },
   timeAgo: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#94A3B8',
-    marginLeft: spacing.sm,
+    color: '#64748B',
   },
   notifBody: {
-    fontSize: 13,
-    color: '#475569',
-    lineHeight: 18,
-    marginTop: 4,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingBottom: 80,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginTop: spacing.md,
-  },
-  emptySub: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
-    textAlign: 'center',
-    paddingHorizontal: spacing.xl,
     lineHeight: 18,
-    marginTop: spacing.xs,
   },
 });
+

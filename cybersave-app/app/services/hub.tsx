@@ -7,7 +7,6 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -74,7 +73,7 @@ export default function ServicesHubScreen() {
   } else if (category === 'pension') {
     headerTitle = 'Pension Schemes';
     headerSub = 'PFRDA Old Age Pension';
-    bannerText = 'Secure your retirement with monthly guaranteed government pension programs.';
+    bannerText = 'Secure your retirement with monthly government pension programs.';
     bannerIcon = 'people-outline';
   } else if (category === 'employment') {
     headerTitle = 'Employment Services';
@@ -103,16 +102,16 @@ export default function ServicesHubScreen() {
     bannerIcon = 'heart-outline';
   }
 
-  // Pre-configured mockup lists with styling to match the screenshot
+  // Pre-configured mockup lists
   const mockAadhaar: HubService[] = [
     { name: 'Update Address', sub: 'Change online with valid proof of address', icon: 'home-outline', iconBg: '#EFF6FF', iconColor: '#2563EB' },
     { name: 'Update Mobile', sub: 'Link your active number with bio verification', icon: 'call-outline', iconBg: '#ECFDF5', iconColor: '#059669' },
     { name: 'Update Name', sub: 'Correct name spelling errors securely', icon: 'person-outline', iconBg: '#FFFBEB', iconColor: '#D97706' },
     { name: 'Download e-Aadhaar', sub: 'Get a secure digitally signed copy', icon: 'download-outline', iconBg: '#F5F3FF', iconColor: '#7C3AED' },
-    { name: 'Check Status', sub: 'Track biometric or demographic updates', icon: 'time-outline', iconBg: '#FFF1F2', iconColor: '#E11D48' },
-    { name: 'Book Appointment', sub: 'Reserve slot at closest Seva Kendra', icon: 'calendar-outline', iconBg: '#ECFEFF', iconColor: '#0891B2' },
-    { name: 'Verify Aadhaar', sub: 'Validate any Aadhaar number online', icon: 'checkmark-circle-outline', iconBg: '#F0FDF4', iconColor: '#16A34A' },
-    { name: 'Link Bank Account', sub: 'Check status of NPCI mapping', icon: 'link-outline', iconBg: '#EEF2FF', iconColor: '#4F46E5' },
+    { name: 'Check Status', sub: 'Track biometric or demographic updates', icon: 'time-outline', iconBg: '#FDF2F8', iconColor: '#EC4899' },
+    { name: 'Book Appointment', sub: 'Reserve slot at closest Seva Kendra', icon: 'calendar-outline', iconBg: '#ECFEFF', iconColor: '#06B6D4' },
+    { name: 'Verify Aadhaar', sub: 'Validate any Aadhaar number online', icon: 'shield-outline', iconBg: '#F0FDF4', iconColor: '#10B981' },
+    { name: 'Link Bank Account', sub: 'Check status of NPCI mapping', icon: 'link-outline', iconBg: '#EFF6FF', iconColor: '#3B82F6' },
   ];
 
   const mockPan: HubService[] = [
@@ -228,19 +227,19 @@ export default function ServicesHubScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <View style={styles.headerTextGroup}>
-            <Text style={styles.headerTitle}>{headerTitle}</Text>
-            <Text style={styles.headerSubtitle}>{headerSub}</Text>
+            <Text style={styles.headerTitle} numberOfLines={1}>{headerTitle}</Text>
+            <Text style={styles.headerSubtitle} numberOfLines={1}>{headerSub}</Text>
           </View>
           <TouchableOpacity style={styles.helpBtn}>
-            <Ionicons name="help-circle-outline" size={22} color="#FFFFFF" />
+            <Ionicons name="help-circle-outline" size={22} color="#0F172A" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -275,11 +274,11 @@ export default function ServicesHubScreen() {
                   onPress={() => handlePressOption(item)}
                 >
                   <View style={[styles.iconBox, { backgroundColor: item.iconBg }]}>
-                    <Ionicons name={item.icon} size={22} color={item.iconColor} />
+                    <Ionicons name={item.icon} size={20} color={item.iconColor} />
                   </View>
                   <View style={styles.cardInfo}>
-                    <Text style={styles.cardName} numberOfLines={1}>{item.name}</Text>
-                    <Text style={styles.cardSub} numberOfLines={2}>{item.sub}</Text>
+                    <Text style={styles.cardName} numberOfLines={2}>{item.name}</Text>
+                    <Text style={styles.cardSub} numberOfLines={3}>{item.sub}</Text>
                   </View>
                 </TouchableOpacity>
               ))}
@@ -292,10 +291,12 @@ export default function ServicesHubScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -307,65 +308,79 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 15,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTextGroup: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     flex: 1,
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: 12,
   },
   headerTitle: {
-    fontSize: 16,
+    fontFamily: 'System',
+    fontSize: 20,
     fontWeight: '800',
     color: '#FFFFFF',
+    lineHeight: 27,
   },
   headerSubtitle: {
-    fontSize: 11,
-    color: '#93C5FD',
-    fontWeight: '600',
+    fontFamily: 'System',
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.6)',
+    fontWeight: '400',
+    lineHeight: 16,
     marginTop: 2,
   },
   helpBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
   whiteContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 20,
+    marginTop: -24,
+    marginBottom: 20,
+    paddingTop: 20,
+    paddingHorizontal: 24,
   },
   infoBanner: {
     flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    gap: spacing.xs,
-    marginBottom: spacing.base,
+    alignItems: 'flex-start',
+    borderRadius: 16,
+    padding: 16,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    marginBottom: 16,
   },
   infoBannerText: {
     flex: 1,
-    fontSize: 12,
-    fontWeight: '700',
+    fontFamily: 'System',
+    fontSize: 13,
+    fontWeight: '400',
     lineHeight: 18,
+    color: '#1E40AF',
   },
   sectionHeader: {
-    fontSize: 14,
+    fontFamily: 'System',
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
-    marginBottom: spacing.sm,
+    marginBottom: 16,
   },
   loader: {
     flex: 1,
@@ -379,39 +394,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    rowGap: 16,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    width: (Dimensions.get('window').width - spacing.base * 2 - spacing.md) / 2,
-    borderRadius: radius.xl,
-    padding: spacing.md,
+    width: '48%',
+    height: 138,
+    borderRadius: 20,
+    padding: 16,
     alignItems: 'flex-start',
-    gap: spacing.sm,
+    justifyContent: 'flex-start',
+    gap: 12,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    ...shadows.sm,
   },
   iconBox: {
     width: 44,
     height: 44,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
   cardInfo: {
-    gap: 2,
+    gap: 4,
     width: '100%',
   },
   cardName: {
-    fontSize: 13,
+    fontFamily: 'System',
+    fontSize: 14,
     fontWeight: '800',
     color: '#0F172A',
+    lineHeight: 19,
   },
   cardSub: {
-    fontSize: 11,
+    fontFamily: 'System',
+    fontSize: 10,
     color: '#64748B',
     lineHeight: 14,
-    fontWeight: '600',
+    fontWeight: '400',
   },
 });

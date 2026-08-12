@@ -124,129 +124,138 @@ export default function PrivacySecurityScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="chevron-back" size={20} color="#1E3A8A" />
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Privacy & Security</Text>
-          <View style={{ width: 36 }} />
+          <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
 
       {/* Main Container */}
       <ScrollView 
-        style={styles.whiteContainer} 
+        style={styles.scrollContainer} 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Security Shield Card */}
-        <View style={styles.shieldCard}>
-          <View style={styles.shieldIconBox}>
-            <Ionicons name="shield-outline" size={22} color="#10B981" />
-          </View>
-          <View style={styles.shieldInfo}>
-            <Text style={styles.shieldTitle}>Security Shield Active</Text>
-            <Text style={styles.shieldSub}>
-              Your digital assets and personal details are encrypted.
-            </Text>
-          </View>
-        </View>
-
-        {/* Consent Management Section */}
-        <Text style={styles.sectionHeader}>CONSENT MANAGEMENT</Text>
-        <View style={styles.sectionCard}>
-          {/* Option: Analytics */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Analytics Consent</Text>
-              <Text style={styles.optionDesc}>Allow anonymous diagnostic reports</Text>
+        <View style={styles.whiteCardContainer}>
+          {/* Security Shield Card */}
+          <View style={styles.shieldCard}>
+            <View style={styles.shieldIconBox}>
+              <Ionicons name="shield-checkmark" size={24} color="#10B981" />
             </View>
-            <Switch
-              value={analyticsConsent}
-              onValueChange={handleAnalyticsToggle}
-              trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
-              thumbColor={analyticsConsent ? '#2563EB' : '#F1F5F9'}
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Option: Third-Party Sharing */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text style={styles.optionTitle}>Third-Party Sharing</Text>
-              <Text style={styles.optionDesc}>Share verified tags with official departments</Text>
+            <View style={styles.shieldInfo}>
+              <Text style={styles.shieldTitle}>Security Shield Active</Text>
+              <Text style={styles.shieldSub}>
+                Your digital assets and personal details are encrypted.
+              </Text>
             </View>
-            <Switch
-              value={sharingConsent}
-              onValueChange={handleSharingToggle}
-              trackColor={{ false: '#CBD5E1', true: '#BFDBFE' }}
-              thumbColor={sharingConsent ? '#2563EB' : '#F1F5F9'}
-            />
           </View>
-        </View>
 
-        {/* Active Sessions Section */}
-        <Text style={styles.sectionHeader}>ACTIVE SESSIONS</Text>
-        <View style={styles.sectionCard}>
-          {loadingSessions ? (
-            <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: spacing.md }} />
-          ) : activeSessions.length === 0 ? (
+          {/* Consent Management Section */}
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionHeader}>Consent Management</Text>
+          </View>
+          <View style={styles.sectionCard}>
+            {/* Option: Analytics */}
             <View style={styles.optionRow}>
-              <Text style={styles.emptySessionText}>No active sessions found.</Text>
+              <View style={styles.optionInfo}>
+                <Text style={styles.optionTitle}>Analytics Consent</Text>
+                <Text style={styles.optionDesc}>Allow anonymous diagnostic reports</Text>
+              </View>
+              <Switch
+                value={analyticsConsent}
+                onValueChange={handleAnalyticsToggle}
+                trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+                thumbColor="#FFFFFF"
+              />
             </View>
-          ) : (
-            activeSessions.map((session, index) => {
-              const isCurrentDevice = index === 0;
-              const formattedDate = new Date(session.lastActive).toLocaleDateString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              });
 
-              return (
-                <View key={session.id || index}>
-                  {index > 0 && <View style={styles.divider} />}
-                  <View style={styles.optionRow}>
-                    <View style={styles.sessionInfo}>
-                      <Text style={styles.sessionDevice}>
+            <View style={styles.divider} />
+
+            {/* Option: Third-Party Sharing */}
+            <View style={styles.optionRow}>
+              <View style={styles.optionInfo}>
+                <Text style={styles.optionTitle}>Third-Party Sharing</Text>
+                <Text style={styles.optionDesc}>Share verified tags with official departments</Text>
+              </View>
+              <Switch
+                value={sharingConsent}
+                onValueChange={handleSharingToggle}
+                trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </View>
+
+          {/* Active Sessions Section */}
+          <View style={styles.sectionHeaderContainer}>
+            <Text style={styles.sectionHeader}>Active Sessions</Text>
+          </View>
+          <View style={styles.sessionsCard}>
+            {loadingSessions ? (
+              <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: 12 }} />
+            ) : activeSessions.length === 0 ? (
+              <View style={styles.emptySessionWrapper}>
+                <Text style={styles.emptySessionText}>No active sessions found.</Text>
+              </View>
+            ) : (
+              activeSessions.map((session, index) => {
+                const isCurrentDevice = index === 0;
+                const formattedDate = new Date(session.lastActive).toLocaleDateString('en-GB', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                });
+
+                return (
+                  <View 
+                    key={session.id || index} 
+                    style={[
+                      styles.sessionRow, 
+                      index > 0 && styles.sessionBorderTop
+                    ]}
+                  >
+                    <View style={styles.sessionRowTop}>
+                      <Text style={styles.sessionDevice} numberOfLines={1}>
                         {session.device} {isCurrentDevice ? '(This device)' : ''}
                       </Text>
-                      <Text style={styles.sessionLocation}>{session.location}</Text>
+                      <Text style={isCurrentDevice ? styles.activeLabel : styles.timeLabel}>
+                        {isCurrentDevice ? 'Active now' : formattedDate}
+                      </Text>
                     </View>
-                    <Text style={isCurrentDevice ? styles.activeLabel : styles.timeLabel}>
-                      {isCurrentDevice ? 'Active now' : formattedDate}
-                    </Text>
+                    <Text style={styles.sessionLocation}>{session.location}</Text>
                   </View>
-                </View>
-              );
-            })
-          )}
-        </View>
+                );
+              })
+            )}
+          </View>
 
-        {/* Buttons */}
-        <View style={styles.btnGroup}>
-          {/* Download Data */}
-          <TouchableOpacity 
-            style={styles.downloadBtn} 
-            activeOpacity={0.8}
-            onPress={handleDownloadData}
-          >
-            <Text style={styles.downloadBtnText}>Download My Digital Data</Text>
-          </TouchableOpacity>
+          {/* Buttons */}
+          <View style={styles.btnGroup}>
+            {/* Download Data */}
+            <TouchableOpacity 
+              style={styles.downloadBtn} 
+              activeOpacity={0.8}
+              onPress={handleDownloadData}
+            >
+              <Text style={styles.downloadBtnText}>Download My Digital Data</Text>
+            </TouchableOpacity>
 
-          {/* Deactivate Account */}
-          <TouchableOpacity 
-            style={styles.deactivateBtn} 
-            activeOpacity={0.8}
-            onPress={handleDeactivate}
-          >
-            <Text style={styles.deactivateBtnText}>Deactivate Account</Text>
-          </TouchableOpacity>
+            {/* Deactivate Account */}
+            <TouchableOpacity 
+              style={styles.deactivateBtn} 
+              activeOpacity={0.8}
+              onPress={handleDeactivate}
+            >
+              <Text style={styles.deactivateBtnText}>Deactivate Account</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
 
@@ -286,10 +295,15 @@ export default function PrivacySecurityScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { 
+    flex: 1, 
+    backgroundColor: '#F8FAFC' 
+  },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -298,47 +312,52 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    paddingTop: 16,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    lineHeight: 25,
   },
-  whiteContainer: {
+  scrollContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    marginHorizontal: 20,
   },
   scrollContent: {
     paddingBottom: 40,
-    gap: spacing.base,
+  },
+  whiteCardContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    gap: 16,
+    width: '100%',
   },
   shieldCard: {
     flexDirection: 'row',
     backgroundColor: '#ECFDF5',
-    borderWidth: 1.5,
-    borderColor: '#A7F3D0',
-    borderRadius: radius.xl,
-    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: '#10B981',
+    borderRadius: 20,
+    padding: 16,
     alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.xs,
-    ...shadows.sm,
+    gap: 16,
+    alignSelf: 'stretch',
   },
   shieldIconBox: {
     width: 44,
@@ -347,128 +366,172 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#D1FAE5',
   },
   shieldInfo: {
     flex: 1,
     gap: 2,
   },
   shieldTitle: {
+    fontFamily: 'Manrope',
     fontSize: 14,
     fontWeight: '800',
-    color: '#065F46',
+    color: '#0F172A',
+    lineHeight: 19,
   },
   shieldSub: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#047857',
-    fontWeight: '600',
+    color: '#64748B',
+    fontWeight: '400',
+    lineHeight: 13,
+  },
+  sectionHeaderContainer: {
+    alignSelf: 'stretch',
   },
   sectionHeader: {
-    fontSize: 11,
+    fontFamily: 'Inter',
+    fontSize: 12,
     fontWeight: '700',
     color: '#64748B',
-    letterSpacing: 1.5,
-    marginTop: spacing.sm,
-    marginBottom: -4,
-    paddingLeft: spacing.xs,
+    textTransform: 'uppercase',
+    lineHeight: 15,
   },
   sectionCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    paddingVertical: spacing.xs,
-    ...shadows.sm,
+    padding: 8,
+    alignSelf: 'stretch',
   },
   optionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
+    padding: 12,
   },
   optionInfo: {
     flex: 1,
-    marginRight: spacing.md,
+    marginRight: 16,
     gap: 2,
   },
   optionTitle: {
+    fontFamily: 'Inter',
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '600',
     color: '#0F172A',
+    lineHeight: 17,
   },
   optionDesc: {
+    fontFamily: 'Inter',
     fontSize: 11,
     color: '#64748B',
-    fontWeight: '500',
+    fontWeight: '400',
+    lineHeight: 13,
   },
   divider: {
     height: 1,
-    backgroundColor: '#F1F5F9',
-    marginHorizontal: spacing.md,
+    backgroundColor: '#E2E8F0',
+    marginHorizontal: 12,
   },
-  sessionInfo: {
-    flex: 1,
-    gap: 2,
+  sessionsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    alignSelf: 'stretch',
   },
-  sessionDevice: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  sessionLocation: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  activeLabel: {
-    fontSize: 12,
-    color: '#2563EB',
-    fontWeight: '700',
-  },
-  timeLabel: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
+  emptySessionWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
   },
   emptySessionText: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#94A3B8',
-    textAlign: 'center',
+  },
+  sessionRow: {
+    alignSelf: 'stretch',
+    gap: 4,
+  },
+  sessionBorderTop: {
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    marginTop: 12,
+    paddingTop: 12,
+  },
+  sessionRowTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  sessionDevice: {
+    fontFamily: 'Inter',
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+    lineHeight: 16,
     flex: 1,
+    marginRight: 8,
+  },
+  sessionLocation: {
+    fontFamily: 'Inter',
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '400',
+    lineHeight: 13,
+  },
+  activeLabel: {
+    fontFamily: 'Inter',
+    fontSize: 11,
+    color: '#2563EB',
+    fontWeight: '600',
+    lineHeight: 13,
+  },
+  timeLabel: {
+    fontFamily: 'Inter',
+    fontSize: 11,
+    color: '#64748B',
+    fontWeight: '600',
+    lineHeight: 13,
   },
   btnGroup: {
-    gap: spacing.base,
-    marginTop: spacing.xs,
+    gap: 12,
+    alignSelf: 'stretch',
   },
   downloadBtn: {
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.xl,
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#FFFFFF',
-    ...shadows.sm,
+    alignSelf: 'stretch',
   },
   downloadBtnText: {
-    fontSize: 14,
+    fontFamily: 'Inter',
+    fontSize: 15,
     color: '#0F172A',
-    fontWeight: '800',
+    fontWeight: '700',
+    lineHeight: 18,
   },
   deactivateBtn: {
     backgroundColor: '#EF4444',
-    borderRadius: radius.xl,
+    borderRadius: 16,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
+    alignSelf: 'stretch',
   },
   deactivateBtnText: {
-    fontSize: 14,
+    fontFamily: 'Inter',
+    fontSize: 15,
     color: '#FFFFFF',
-    fontWeight: '800',
+    fontWeight: '700',
+    lineHeight: 18,
   },
 
   // Success Modal styling
@@ -477,17 +540,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(15, 23, 42, 0.5)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   successCard: {
     backgroundColor: '#FFFFFF',
     width: '100%',
     maxWidth: 340,
-    borderRadius: radius.xl,
-    padding: spacing.xl,
+    borderRadius: 16,
+    padding: 24,
     alignItems: 'center',
-    gap: spacing.md,
-    ...shadows.lg,
+    gap: 16,
   },
   successIconOuter: {
     width: 72,
@@ -496,7 +558,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#D1FAE5',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
+    marginBottom: 8,
   },
   successIconInner: {
     width: 56,
@@ -515,16 +577,16 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 20,
-    paddingHorizontal: spacing.xs,
+    paddingHorizontal: 8,
   },
   successDoneBtn: {
     backgroundColor: '#10B981',
     width: '100%',
     paddingVertical: 12,
-    borderRadius: radius.xl,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
   successDoneBtnText: {
     fontSize: 14,

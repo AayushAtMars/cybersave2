@@ -52,16 +52,17 @@ export default function WalletScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
+          <View style={styles.headerSpacer} />
           <Text style={styles.headerTitle}>Wallet</Text>
           <TouchableOpacity
             style={styles.notifBtn}
             onPress={() => router.push('/notifications')}
           >
-            <Ionicons name="notifications-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="notifications-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -73,7 +74,7 @@ export default function WalletScreen() {
           colors={['#3B82F6', '#2563EB']}
           style={styles.balanceCard}
           start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
+          end={{ x: 1, y: 0 }}
         >
           <View style={styles.balanceCardTop}>
             <View>
@@ -91,7 +92,7 @@ export default function WalletScreen() {
             </TouchableOpacity>
           </View>
           <View style={styles.balanceCardBottom}>
-            <Ionicons name="lock-closed-outline" size={14} color="rgba(255,255,255,0.8)" />
+            <Ionicons name="lock-closed" size={14} color="#FFFFFF" style={{ opacity: 0.8 }} />
             <Text style={styles.securedText}>Secured by Cybersave Digital Trust</Text>
           </View>
         </LinearGradient>
@@ -136,7 +137,7 @@ export default function WalletScreen() {
                       ]}
                     >
                       <Ionicons
-                        name={isDebit ? 'document-text' : 'add-circle'}
+                        name={isDebit ? 'document-text-outline' : 'add-circle-outline'}
                         size={20}
                         color={isDebit ? '#F43F5E' : '#22C55E'}
                       />
@@ -152,7 +153,7 @@ export default function WalletScreen() {
                       { color: isDebit ? '#0F172A' : '#10B981' },
                     ]}
                   >
-                    {isDebit ? '-' : '+'}₹{(item.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    {isDebit ? '- ' : '+ '}₹{(item.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -183,10 +184,12 @@ export default function WalletScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#1E3A8A' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -195,24 +198,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
+  },
+  headerSpacer: {
+    width: 40,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 20,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     flex: 1,
     textAlign: 'center',
-    marginLeft: 40,
   },
   notifBtn: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   whiteContainer: {
     flex: 1,
@@ -220,14 +225,14 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 24,
+    marginHorizontal: 20
   },
   balanceCard: {
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.lg,
-    ...shadows.md,
+    borderRadius: 24,
+    padding: 24,
+    gap: 16,
   },
   balanceCardTop: {
     flexDirection: 'row',
@@ -235,11 +240,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   balanceLabel: {
+    fontFamily: 'Inter',
     fontSize: 14,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255, 255, 255, 0.85)',
     fontWeight: '500',
   },
   balanceAmount: {
+    fontFamily: 'Inter',
     fontSize: 32,
     fontWeight: '800',
     color: '#FFFFFF',
@@ -248,11 +255,10 @@ const styles = StyleSheet.create({
   addMoneyBtn: {
     width: 48,
     height: 48,
-    borderRadius: 14,
+    borderRadius: 24,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   balanceCardBottom: {
     flexDirection: 'row',
@@ -260,29 +266,32 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   securedText: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: 'rgba(255,255,255,0.85)',
+    color: 'rgba(255, 255, 255, 0.85)',
     fontWeight: '500',
   },
   sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: spacing.xl,
-    marginBottom: spacing.sm,
+    marginTop: 24,
+    marginBottom: 12,
   },
   sectionTitle: {
+    fontFamily: 'Manrope',
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
   },
   viewAll: {
+    fontFamily: 'Inter',
     fontSize: 14,
     color: '#2563EB',
     fontWeight: '600',
   },
   list: {
-    gap: spacing.sm,
+    gap: 12,
     paddingBottom: 110,
   },
   emptyList: {
@@ -292,19 +301,18 @@ const styles = StyleSheet.create({
   },
   txnCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: spacing.base,
+    borderColor: '#E2E8F0',
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    ...shadows.sm,
   },
   txnLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
     flex: 1,
   },
   txnIconBg: {
@@ -316,40 +324,42 @@ const styles = StyleSheet.create({
   },
   txnMeta: {
     flex: 1,
-    gap: 3,
+    gap: 4,
   },
   txnDesc: {
+    fontFamily: 'Manrope',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#0F172A',
   },
   txnDate: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   txnAmount: {
-    fontSize: 16,
+    fontFamily: 'Inter',
+    fontSize: 15,
     fontWeight: '700',
   },
   linkedSection: {
-    marginTop: spacing.xl,
-    gap: spacing.sm,
+    marginTop: 24,
+    gap: 12,
   },
   linkedCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: spacing.base,
+    borderColor: '#E2E8F0',
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    ...shadows.sm,
   },
   linkedLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
   },
   bankIconBg: {
     width: 40,
@@ -360,16 +370,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   linkedMeta: {
-    gap: 3,
+    gap: 4,
   },
   bankName: {
+    fontFamily: 'Manrope',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#0F172A',
   },
   bankDetail: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   emptyBox: {
     alignItems: 'center',
@@ -377,17 +389,20 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyTitle: {
+    fontFamily: 'Manrope',
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
-    marginTop: spacing.md,
+    marginTop: 16,
   },
   emptySub: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     lineHeight: 18,
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
 });
+

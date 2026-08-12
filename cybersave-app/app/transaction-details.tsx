@@ -61,6 +61,10 @@ export default function TransactionDetailsScreen() {
     Alert.alert('Share', 'Sharing options initiated.');
   };
 
+  const isFailed = status === 'failed';
+  const themeColor = isFailed ? '#EF4444' : '#10B981';
+  const themeBg = isFailed ? '#FEE2E2' : '#ECFDF5';
+
   return (
     <View style={styles.flex}>
       {/* Header Gradient (Extended over status bar) */}
@@ -68,16 +72,16 @@ export default function TransactionDetailsScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Transaction Details</Text>
           <TouchableOpacity style={styles.headerRightBtn} onPress={handleShare}>
-            <Ionicons name="share-social-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="share-social-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -86,26 +90,24 @@ export default function TransactionDetailsScreen() {
       <ScrollView style={styles.whiteContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Status Card */}
         <View style={styles.statusCard}>
-          <View style={[styles.successIconOuter, { backgroundColor: status === 'failed' ? '#FEE2E2' : '#DCFCE7' }]}>
-            <View style={[styles.successIconInner, { backgroundColor: status === 'failed' ? '#FFCDCD' : '#E8F5E9' }]}>
-              <Ionicons
-                name={status === 'failed' ? 'close' : 'checkmark'}
-                size={32}
-                color={status === 'failed' ? '#EF4444' : '#16A34A'}
-              />
-            </View>
+          <View style={[styles.successIconOuter, { backgroundColor: themeBg }]}>
+            <Ionicons
+              name={isFailed ? 'close-outline' : 'checkmark-outline'}
+              size={32}
+              color={themeColor}
+            />
           </View>
 
           <Text style={styles.statusText}>
-            {status === 'failed' ? 'Payment Failed' : 'Payment Successful'}
+            {isFailed ? 'Payment Failed' : 'Payment Successful'}
           </Text>
           
           <Text style={styles.amountText}>
             ₹{(amountVal / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
 
-          <View style={styles.refBadge}>
-            <Text style={styles.refBadgeText}>Ref: {shortRef}</Text>
+          <View style={[styles.refBadge, { backgroundColor: themeBg }]}>
+            <Text style={[styles.refBadgeText, { color: themeColor }]}>Ref: {shortRef}</Text>
           </View>
         </View>
 
@@ -139,7 +141,7 @@ export default function TransactionDetailsScreen() {
 
         {/* Download Receipt CTA */}
         <TouchableOpacity style={styles.downloadBtn} onPress={handleDownloadReceipt} activeOpacity={0.8}>
-          <Ionicons name="download-outline" size={20} color="#2563EB" style={{ marginRight: 8 }} />
+          <Ionicons name="download-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
           <Text style={styles.downloadBtnText}>Download Official Receipt</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -148,10 +150,12 @@ export default function TransactionDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#1E3A8A' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -160,115 +164,110 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerRightBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F8FAFC',
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
+    marginHorizontal:20
   },
   scrollContent: {
-    padding: spacing.base,
-    paddingTop: spacing.lg,
+    paddingHorizontal: 20,
+    paddingTop: 24,
     paddingBottom: 40,
-    gap: spacing.lg,
+    gap: 16,
   },
   statusCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: spacing.xl,
+    padding: 24,
     alignItems: 'center',
-    ...shadows.md,
   },
   successIconOuter: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.sm,
-  },
-  successIconInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   statusText: {
+    fontFamily: 'Inter',
     fontSize: 14,
     color: '#64748B',
-    fontWeight: '600',
-    marginTop: spacing.md,
+    fontWeight: '700',
+    marginTop: 12,
   },
   amountText: {
-    fontSize: 32,
+    fontFamily: 'Inter',
+    fontSize: 28,
     fontWeight: '800',
     color: '#0F172A',
-    marginTop: 6,
+    marginTop: 12,
   },
   refBadge: {
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: radius.md,
-    marginTop: spacing.sm,
+    borderRadius: 8,
+    marginTop: 12,
   },
   refBadgeText: {
+    fontFamily: 'Inter',
     fontSize: 12,
-    color: '#15803D',
     fontWeight: '700',
   },
   detailsCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.xl,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: spacing.lg,
-    gap: spacing.base,
-    ...shadows.sm,
+    borderColor: '#E2E8F0',
+    padding: 16,
+    gap: 12,
   },
   detailRow: {
     borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    paddingBottom: spacing.base,
+    borderBottomColor: '#E2E8F0',
+    paddingBottom: 12,
     gap: 4,
   },
   detailLabel: {
+    fontFamily: 'Inter',
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '600',
+    color: '#64748B',
+    fontWeight: '400',
   },
   detailValue: {
-    fontSize: 15,
+    fontFamily: 'Inter',
+    fontSize: 14,
     color: '#0F172A',
     fontWeight: '700',
   },
@@ -276,16 +275,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#2563EB',
-    borderRadius: radius.lg,
-    paddingVertical: spacing.base,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 16,
+    paddingVertical: 16,
     backgroundColor: '#FFFFFF',
-    ...shadows.sm,
   },
   downloadBtnText: {
+    fontFamily: 'Inter',
     color: '#2563EB',
     fontSize: 15,
     fontWeight: '700',
   },
 });
+

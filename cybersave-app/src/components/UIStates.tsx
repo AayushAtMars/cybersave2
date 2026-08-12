@@ -76,10 +76,11 @@ export const EmptyNotifications: React.FC<{ onBack?: () => void }> = ({
 );
 
 // ── 2. Empty Applications ─────────────────────────────────────────────────────
-export const EmptyApplications: React.FC<{ onBrowse?: () => void }> = ({
+export const EmptyApplications: React.FC<{ onBrowse?: () => void; style?: any }> = ({
   onBrowse,
+  style,
 }) => (
-  <View style={styles.center}>
+  <View style={[styles.center, style]}>
     <View style={styles.iconCircle}>
       <Ionicons name="folder-open-outline" size={36} color="#2563EB" />
     </View>

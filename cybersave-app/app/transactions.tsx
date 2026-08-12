@@ -178,16 +178,16 @@ export default function TransactionHistoryScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
-            <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Transaction History</Text>
           <TouchableOpacity style={styles.headerRightBtn} onPress={() => setShowDatePicker(true)}>
-            <Ionicons name="calendar-outline" size={20} color="#1E3A8A" />
+            <Ionicons name="calendar-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -197,7 +197,7 @@ export default function TransactionHistoryScreen() {
         {/* Date Selector Row */}
         <TouchableOpacity style={styles.dateSelectorBox} onPress={() => setShowDatePicker(true)}>
           <Text style={styles.dateSelectorLabel}>{getDateRangeLabel()}</Text>
-          <Ionicons name="calendar" size={18} color="#2563EB" />
+          <Ionicons name="calendar" size={16} color="#2563EB" />
         </TouchableOpacity>
 
         {/* Filter Pills list */}
@@ -249,7 +249,11 @@ export default function TransactionHistoryScreen() {
               // Extract service name from description — format: "ServiceName — Application Fee"
               const descParts = (item.description || '').split(' — ');
               const serviceName = isDebit && descParts.length >= 2 ? descParts[0] : null;
-              const subDesc = isDebit && descParts.length >= 2 ? descParts[1] : item.description;
+              
+              // Dynamic colors matching user's spec:
+              // Debits > 100 are red, <= 100 are black. Credits are green.
+              const isLargeDebit = isDebit && (item.amount / 100) > 100;
+              const amountColor = isDebit ? (isLargeDebit ? '#EF4444' : '#0F172A') : '#10B981';
 
               return (
                 <TouchableOpacity
@@ -261,48 +265,31 @@ export default function TransactionHistoryScreen() {
                       <View
                         style={[
                           styles.txnIconBg,
-                          { backgroundColor: isDebit ? '#EFF6FF' : isTopup ? '#DCFCE7' : '#F3F4F6' },
+                          { backgroundColor: isDebit ? '#FEE2E2' : '#ECFDF5' },
                         ]}
                       >
                         <Ionicons
-                          name={isDebit ? 'document-text' : isTopup ? 'wallet' : 'add-circle'}
+                          name={isDebit ? 'document-text-outline' : 'add-circle-outline'}
                           size={20}
-                          color={isDebit ? '#2563EB' : isTopup ? '#22C55E' : '#10B981'}
+                          color={isDebit ? '#EF4444' : '#10B981'}
                         />
                       </View>
                       <View style={styles.txnMeta}>
-                        {/* Primary line: service name (for debits) or description */}
                         <Text style={styles.txnDesc} numberOfLines={1}>
                           {serviceName ?? item.description}
                         </Text>
-                        {/* Secondary line: sub-description or ref */}
-                        {serviceName ? (
-                          <Text style={styles.txnSub} numberOfLines={1}>
-                            {subDesc} • {fmtTime(item.createdAt)}
-                          </Text>
-                        ) : (
-                          <Text style={styles.txnSub}>
-                            Ref: {shortRef} • {fmtTime(item.createdAt)}
-                          </Text>
-                        )}
-                        {/* Application ref badge for service payments */}
-                        {isDebit && item.applicationId && (
-                          <View style={styles.refBadge}>
-                            <Ionicons name="receipt-outline" size={10} color="#2563EB" />
-                            <Text style={styles.refBadgeText} numberOfLines={1}>
-                              {shortRef}
-                            </Text>
-                          </View>
-                        )}
+                        <Text style={styles.txnSub}>
+                          Ref: {shortRef} • {fmtTime(item.createdAt)}
+                        </Text>
                       </View>
                     </View>
                     <Text
                       style={[
                         styles.txnAmount,
-                        { color: isDebit ? '#EF4444' : '#10B981' },
+                        { color: amountColor },
                       ]}
                     >
-                      {isDebit ? '-' : '+'} ₹{(item.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                      {isDebit ? '- ' : '+ '}₹{(item.amount / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -410,10 +397,12 @@ export default function TransactionHistoryScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#1E3A8A' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
-    paddingHorizontal: spacing.base,
+    paddingBottom: 48,
+    paddingHorizontal: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
@@ -422,31 +411,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.xs,
+    marginTop: 8,
   },
   backBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerRightBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 12,
     backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.sm,
   },
   headerTitle: {
+    fontFamily: 'Manrope',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
+    flex: 1,
   },
   whiteContainer: {
     flex: 1,
@@ -454,7 +447,8 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     marginTop: -32,
-    paddingTop: spacing.lg,
+    paddingTop: 24,
+    marginHorizontal:20
   },
   dateSelectorBox: {
     flexDirection: 'row',
@@ -462,29 +456,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.md,
-    padding: spacing.base,
-    marginHorizontal: spacing.base,
+    borderRadius: 16,
+    padding: 12,
+    marginHorizontal: 20,
     backgroundColor: '#FFFFFF',
-    ...shadows.sm,
   },
   dateSelectorLabel: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
-    fontWeight: '600',
+    fontWeight: '400',
   },
   filtersWrapper: {
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    marginTop: 16,
+    marginBottom: 4,
   },
   filtersContainer: {
-    paddingHorizontal: spacing.base,
-    gap: spacing.sm,
+    paddingHorizontal: 20,
+    gap: 8,
   },
   pill: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: radius.full,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
@@ -496,11 +490,14 @@ const styles = StyleSheet.create({
     borderColor: '#2563EB',
   },
   pillText: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
-    fontWeight: '700',
+    fontWeight: '600',
   },
   pillTextActive: {
+    fontFamily: 'Inter',
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   loaderBox: {
@@ -509,35 +506,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   listContainer: {
-    paddingHorizontal: spacing.base,
-    paddingTop: spacing.md,
+    paddingHorizontal: 20,
+    paddingTop: 16,
     paddingBottom: 40,
-    gap: spacing.sm,
+    gap: 12,
   },
   sectionHeader: {
-    fontSize: 12,
-    fontWeight: '800',
+    fontFamily: 'Inter',
+    fontSize: 13,
+    fontWeight: '700',
     color: '#64748B',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
+    marginTop: 16,
+    marginBottom: 4,
   },
   txnCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: radius.lg,
+    borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
-    padding: spacing.base,
+    borderColor: '#E2E8F0',
+    padding: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    ...shadows.sm,
   },
   txnLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.md,
+    gap: 12,
     flex: 1,
   },
   txnIconBg: {
@@ -549,19 +545,22 @@ const styles = StyleSheet.create({
   },
   txnMeta: {
     flex: 1,
-    gap: 3,
+    gap: 2,
   },
   txnDesc: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontFamily: 'Inter',
+    fontSize: 14,
+    fontWeight: '700',
     color: '#0F172A',
   },
   txnSub: {
+    fontFamily: 'Inter',
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
   },
   txnAmount: {
-    fontSize: 16,
+    fontFamily: 'Inter',
+    fontSize: 14,
     fontWeight: '700',
   },
   refBadge: {
@@ -586,18 +585,20 @@ const styles = StyleSheet.create({
     paddingVertical: 60,
   },
   emptyTitle: {
+    fontFamily: 'Manrope',
     fontSize: 16,
     fontWeight: '700',
     color: '#0F172A',
-    marginTop: spacing.md,
+    marginTop: 16,
   },
   emptySub: {
+    fontFamily: 'Inter',
     fontSize: 13,
     color: '#64748B',
     textAlign: 'center',
-    paddingHorizontal: spacing.xl,
+    paddingHorizontal: 24,
     lineHeight: 18,
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
 
   // Modal styling
@@ -606,15 +607,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: spacing.xl,
+    padding: 24,
   },
   modalContent: {
     backgroundColor: '#FFFFFF',
     width: '100%',
-    borderRadius: radius.xl,
-    padding: spacing.xl,
-    gap: spacing.md,
-    ...shadows.lg,
+    borderRadius: 24,
+    padding: 24,
+    gap: 16,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -630,17 +630,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     color: '#334155',
-    marginTop: spacing.xs,
+    marginTop: 8,
   },
   presetRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.sm,
+    gap: 8,
   },
   presetChip: {
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: 16,
     paddingVertical: 8,
-    borderRadius: radius.md,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: '#E2E8F0',
     backgroundColor: '#FFFFFF',
@@ -660,8 +660,8 @@ const styles = StyleSheet.create({
   },
   customInputsWrapper: {
     flexDirection: 'row',
-    gap: spacing.md,
-    marginTop: spacing.xs,
+    gap: 16,
+    marginTop: 8,
   },
   inputCol: {
     flex: 1,
@@ -675,18 +675,18 @@ const styles = StyleSheet.create({
   dateInput: {
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.md,
+    borderRadius: 8,
     padding: 10,
     fontSize: 14,
     color: '#0F172A',
   },
   modalActions: {
-    marginTop: spacing.sm,
+    marginTop: 12,
   },
   applyBtn: {
     backgroundColor: '#2563EB',
-    paddingVertical: spacing.base,
-    borderRadius: radius.md,
+    paddingVertical: 16,
+    borderRadius: 8,
     alignItems: 'center',
   },
   applyBtnText: {
@@ -695,3 +695,4 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+

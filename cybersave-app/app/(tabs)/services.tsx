@@ -17,7 +17,7 @@ import { colors, spacing, radius, shadows } from '../../src/theme';
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - spacing.base * 2 - spacing.md) / 2;
 
-const FILTER_CHIPS = ['All', 'Popular', 'Government', 'Finance'];
+const FILTER_CHIPS = ['All', 'Popular', 'Government', 'Finance', 'Utility'];
 
 interface HubCard {
   label: string;
@@ -26,22 +26,129 @@ interface HubCard {
   iconBg: string;
   category: string;
   implemented: boolean;
+  tags: string[];
+  isCustomGovStyle?: boolean;
 }
 
 const HUB_CARDS: HubCard[] = [
-  { label: 'Aadhaar', icon: 'shield-outline', iconColor: '#2563EB', iconBg: '#EFF6FF', category: 'aadhaar', implemented: true },
-  { label: 'PAN Card', icon: 'card-outline', iconColor: '#059669', iconBg: '#ECFDF5', category: 'pan', implemented: true },
-  { label: 'Certificates', icon: 'ribbon-outline', iconColor: '#D97706', iconBg: '#FFFBEB', category: 'certificate', implemented: true },
-  { label: 'Utility Bills', icon: 'document-text-outline', iconColor: '#DC2626', iconBg: '#FEF2F2', category: 'utility', implemented: true },
-  { label: 'Banking (AEPS)', icon: 'business-outline', iconColor: '#7C3AED', iconBg: '#F5F3FF', category: 'banking', implemented: true },
-  { label: 'Insurance', icon: 'umbrella-outline', iconColor: '#0891B2', iconBg: '#ECFEFF', category: 'insurance', implemented: true },
-  { label: 'Education', icon: 'book-outline', iconColor: '#DB2777', iconBg: '#FDF2F8', category: 'education', implemented: true },
-  { label: 'Agriculture', icon: 'leaf-outline', iconColor: '#16A34A', iconBg: '#F0FDF4', category: 'agriculture', implemented: true },
-  { label: 'Health Services', icon: 'heart-outline', iconColor: '#E11D48', iconBg: '#FFF1F2', category: 'health', implemented: true },
-  { label: 'Gov. Scheme', icon: 'library-outline', iconColor: '#0F172A', iconBg: '#F8FAFC', category: 'gov_scheme', implemented: true },
-  { label: 'Pension Plan', icon: 'people-outline', iconColor: '#4F46E5', iconBg: '#EEF2FF', category: 'pension', implemented: true },
-  { label: 'Employment', icon: 'briefcase-outline', iconColor: '#0284C7', iconBg: '#F0F9FF', category: 'employment', implemented: true },
-  { label: 'Tax Services', icon: 'trending-up-outline', iconColor: '#1E293B', iconBg: '#F1F5F9', category: 'tax', implemented: true },
+  {
+    label: 'Aadhaar',
+    icon: 'shield-checkmark-outline',
+    iconColor: '#2563EB',
+    iconBg: '#EFF6FF',
+    category: 'aadhaar',
+    implemented: true,
+    tags: ['All', 'Popular', 'Government'],
+  },
+  {
+    label: 'PAN Card',
+    icon: 'card-outline',
+    iconColor: '#10B981',
+    iconBg: '#ECFDF5',
+    category: 'pan',
+    implemented: true,
+    tags: ['All', 'Popular', 'Government'],
+  },
+  {
+    label: 'Certificates',
+    icon: 'ribbon-outline',
+    iconColor: '#F59E0B',
+    iconBg: '#FEF3C7',
+    category: 'certificate',
+    implemented: true,
+    tags: ['All', 'Government'],
+  },
+  {
+    label: 'Utility Bills',
+    icon: 'receipt-outline',
+    iconColor: '#EF4444',
+    iconBg: '#FEE2E2',
+    category: 'utility',
+    implemented: true,
+    tags: ['All', 'Popular', 'Utility'],
+  },
+  {
+    label: 'Banking (AEPS)',
+    icon: 'business-outline',
+    iconColor: '#D97706',
+    iconBg: 'rgba(245, 158, 11, 0.1)',
+    category: 'banking',
+    implemented: true,
+    tags: ['All', 'Popular', 'Finance'],
+  },
+  {
+    label: 'Insurance',
+    icon: 'umbrella-outline',
+    iconColor: '#059669',
+    iconBg: 'rgba(16, 185, 129, 0.1)',
+    category: 'insurance',
+    implemented: true,
+    tags: ['All', 'Finance'],
+  },
+  {
+    label: 'Education',
+    icon: 'book-outline',
+    iconColor: '#7C3AED',
+    iconBg: 'rgba(139, 92, 246, 0.1)',
+    category: 'education',
+    implemented: true,
+    tags: ['All'],
+  },
+  {
+    label: 'Agriculture',
+    icon: 'leaf-outline',
+    iconColor: '#15803D',
+    iconBg: 'rgba(16, 185, 129, 0.1)',
+    category: 'agriculture',
+    implemented: true,
+    tags: ['All'],
+  },
+  {
+    label: 'Health Services',
+    icon: 'heart-outline',
+    iconColor: '#DC2626',
+    iconBg: 'rgba(239, 68, 68, 0.1)',
+    category: 'health',
+    implemented: true,
+    tags: ['All'],
+  },
+  {
+    label: 'Gov. Scheme',
+    icon: 'library-outline',
+    iconColor: '#2563EB',
+    iconBg: '#FFFFFF',
+    category: 'gov_scheme',
+    implemented: true,
+    tags: ['All', 'Popular', 'Government'],
+    isCustomGovStyle: true,
+  },
+  {
+    label: 'Pension Plan',
+    icon: 'people-outline',
+    iconColor: '#1D4ED8',
+    iconBg: 'rgba(59, 130, 246, 0.1)',
+    category: 'pension',
+    implemented: true,
+    tags: ['All', 'Government', 'Finance'],
+  },
+  {
+    label: 'Employment',
+    icon: 'briefcase-outline',
+    iconColor: '#4F46E5',
+    iconBg: 'rgba(99, 102, 241, 0.1)',
+    category: 'employment',
+    implemented: true,
+    tags: ['All', 'Government'],
+  },
+  {
+    label: 'Tax Services',
+    icon: 'analytics-outline',
+    iconColor: '#0F172A',
+    iconBg: 'rgba(0, 0, 0, 0.04)',
+    category: 'tax',
+    implemented: true,
+    tags: ['All', 'Finance'],
+  },
 ];
 
 export default function ServicesScreen() {
@@ -58,6 +165,8 @@ export default function ServicesScreen() {
     });
   };
 
+  const filteredCards = HUB_CARDS.filter((card) => card.tags.includes(selectedChip));
+
   return (
     <View style={styles.flex}>
       {/* Header Gradient */}
@@ -65,11 +174,15 @@ export default function ServicesScreen() {
         colors={['#1E3A8A', '#2563EB']}
         style={styles.header}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
+          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
+            <Ionicons name="chevron-back" size={20} color="#0F172A" />
+          </TouchableOpacity>
           <Text style={styles.headerTitle}>All Services</Text>
+          <View style={styles.placeholderWidth} />
         </View>
       </LinearGradient>
 
@@ -100,19 +213,28 @@ export default function ServicesScreen() {
           contentContainerStyle={styles.gridContainer}
         >
           <View style={styles.grid}>
-            {HUB_CARDS.map((card, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.card}
-                activeOpacity={0.8}
-                onPress={() => handlePressCard(card)}
-              >
-                <View style={[styles.iconBox, { backgroundColor: card.iconBg }]}>
-                  <Ionicons name={card.icon} size={24} color={card.iconColor} />
-                </View>
-                <Text style={styles.cardLabel}>{card.label}</Text>
-              </TouchableOpacity>
-            ))}
+            {filteredCards.map((card, idx) => {
+              const isCustomGov = card.isCustomGovStyle;
+              return (
+                <TouchableOpacity
+                  key={idx}
+                  style={[styles.card, isCustomGov && styles.customGovCard]}
+                  activeOpacity={0.8}
+                  onPress={() => handlePressCard(card)}
+                >
+                  <View
+                    style={[
+                      styles.iconBox,
+                      { backgroundColor: card.iconBg },
+                      isCustomGov && styles.customGovIconBox,
+                    ]}
+                  >
+                    <Ionicons name={card.icon} size={20} color={card.iconColor} />
+                  </View>
+                  <Text style={styles.cardLabel}>{card.label}</Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </ScrollView>
       </View>
@@ -121,53 +243,72 @@ export default function ServicesScreen() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1, backgroundColor: '#FFFFFF' },
+  flex: { flex: 1, backgroundColor: '#F8FAFC' },
   header: {
-    paddingBottom: spacing['4xl'],
+    paddingBottom: 48,
     paddingHorizontal: spacing.base,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerSafeArea: {
     flex: 0,
   },
   headerTop: {
     paddingTop: spacing.xs,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 15,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerTitle: {
+    fontFamily: 'System',
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#FFFFFF',
     textAlign: 'center',
   },
+  placeholderWidth: {
+    width: 40,
+  },
   whiteContainer: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    marginTop: -32,
-    paddingTop: spacing.lg,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    marginHorizontal: 14,
+    marginTop: -24,
+    marginBottom: 14,
+    paddingTop: spacing.md,
   },
   chipRow: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.sm,
   },
   chipScroll: {
-    paddingHorizontal: spacing.base,
-    gap: spacing.sm,
+    paddingHorizontal: 12,
+    gap: 8,
   },
   chip: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: '#E2E8F0',
-    borderRadius: radius.full,
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-    ...shadows.sm,
+    borderRadius: 100,
+    paddingVertical: 6,
+    paddingHorizontal: 16,
   },
   chipActive: {
     backgroundColor: '#2563EB',
     borderColor: '#2563EB',
   },
   chipText: {
+    fontFamily: 'System',
     fontSize: 13,
     color: '#64748B',
     fontWeight: '700',
@@ -176,38 +317,52 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   gridContainer: {
-    paddingHorizontal: spacing.base,
-    paddingBottom: 110,
+    paddingHorizontal: 12,
+    paddingBottom: 110, // Ensure scroll clearance for absolute floating tab bar
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    gap: spacing.md,
+    rowGap: 12,
   },
   card: {
     backgroundColor: '#FFFFFF',
-    width: COLUMN_WIDTH,
-    borderRadius: radius.xl,
-    paddingVertical: spacing.xl,
+    width: '48%', // Robust percentage width for two columns
+    height: 88,
+    borderRadius: 16,
+    padding: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: spacing.sm,
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  customGovCard: {
+    ...shadows.md,
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.08,
+  },
+  iconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  customGovIconBox: {
     borderWidth: 1,
     borderColor: '#E2E8F0',
     ...shadows.sm,
-  },
-  iconBox: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    alignItems: 'center',
-    justifyContent: 'center',
+    shadowColor: '#0F172A',
+    shadowOpacity: 0.07,
   },
   cardLabel: {
-    fontSize: 13,
+    fontFamily: 'System',
+    fontSize: 11,
     fontWeight: '700',
-    color: '#1E293B',
+    color: '#0F172A',
     textAlign: 'center',
   },
 });
+
