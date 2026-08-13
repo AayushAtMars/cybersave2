@@ -67,6 +67,15 @@ export const ServiceCategory = {
   AADHAAR: 'aadhaar',
   PAN: 'pan',
   CERTIFICATE: 'certificate',
+  UTILITY: 'utility',
+  BANKING: 'banking',
+  INSURANCE: 'insurance',
+  EDUCATION: 'education',
+  AGRICULTURE: 'agriculture',
+  HEALTH: 'health',
   GOV_SCHEME: 'gov_scheme',
+  PENSION: 'pension',
+  EMPLOYMENT: 'employment',
+  TAX: 'tax',
 } as const;
 export type ServiceCategory = (typeof ServiceCategory)[keyof typeof ServiceCategory];

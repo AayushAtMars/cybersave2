@@ -367,28 +367,7 @@ export default function ServicesPage() {
                       {group.items.length} Sub-services
                     </span>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddNewSubService(group);
-                      }}
-                      style={{
-                        padding: '4px 10px',
-                        backgroundColor: '#EFF6FF',
-                        color: '#2563EB',
-                        border: '1.5px solid #BFDBFE',
-                        borderRadius: '6px',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ marginRight: '2px' }}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Add Sub-service
-                    </button>
+
 
                     <span style={{
                       fontSize: '11.5px',

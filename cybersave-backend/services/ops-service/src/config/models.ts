@@ -86,7 +86,7 @@ const FormFieldSchema = new Schema(
   {
     key: { type: String, required: true },
     label: { type: String, required: true },
-    type: { type: String, enum: ['text', 'number', 'select', 'date', 'aadhaar'], required: true },
+    type: { type: String, enum: ['text', 'number', 'select', 'date', 'aadhaar', 'email', 'phone', 'file', 'checkbox', 'radio'], required: true },
     placeholder: { type: String },
     required: { type: Boolean, default: true },
     options: { type: [String] },

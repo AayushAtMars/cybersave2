@@ -43,10 +43,24 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
 
   // Step 1: Main Service State
   const [serviceName, setServiceName] = useState('');
+  const categoryMap: Record<string, string> = {
+    aadhaar: 'Aadhaar Services',
+    pan: 'PAN Card Services',
+    certificate: 'Certificates',
+    banking: 'Banking Services (AEPS)',
+    insurance: 'Subsidized Insurance',
+    scholarship: 'Scholarships & Education',
+    pension: 'Pension Schemes',
+    employment: 'Employment Services',
+    tax: 'Taxation Services',
+    utility: 'Utility Bills',
+    agriculture: 'Agriculture Schemes',
+    health: 'Health Services',
+    gov_scheme: 'Government Schemes'
+  };
+
   const [serviceCategory, setServiceCategory] = useState(
-    initialCategory === 'aadhaar' ? 'Aadhaar Services' :
-    initialCategory === 'pan' ? 'PAN Card Services' :
-    initialCategory === 'certificate' ? 'Certificates' : 'Government Schemes'
+    initialCategory ? (categoryMap[initialCategory] || 'Government Schemes') : 'Government Schemes'
   );
   const [serviceCode, setServiceCode] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -303,18 +317,22 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
   const handlePublish = async () => {
     setIsSubmitting(true);
     try {
-      // Map category
-      let cat = 'gov_scheme';
-      const catLower = serviceCategory.toLowerCase();
-      if (catLower.includes('aadhaar')) {
-        cat = 'aadhaar';
-      } else if (catLower.includes('pan')) {
-        cat = 'pan';
-      } else if (catLower.includes('certificate')) {
-        cat = 'certificate';
-      } else if (catLower.includes('scheme') || catLower.includes('gov')) {
-        cat = 'gov_scheme';
-      }
+      const reverseCategoryMap: Record<string, string> = {
+        'Aadhaar Services': 'aadhaar',
+        'PAN Card Services': 'pan',
+        'Certificates': 'certificate',
+        'Banking Services (AEPS)': 'banking',
+        'Subsidized Insurance': 'insurance',
+        'Scholarships & Education': 'scholarship',
+        'Pension Schemes': 'pension',
+        'Employment Services': 'employment',
+        'Taxation Services': 'tax',
+        'Utility Bills': 'utility',
+        'Agriculture Schemes': 'agriculture',
+        'Health Services': 'health',
+        'Government Schemes': 'gov_scheme'
+      };
+      const cat = reverseCategoryMap[serviceCategory] || 'gov_scheme';
 
       // Convert pricing convenience fee
       const computedGovtFee = serviceFee * 100;
@@ -566,6 +584,15 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
                   <option>Aadhaar Services</option>
                   <option>PAN Card Services</option>
                   <option>Certificates</option>
+                  <option>Banking Services (AEPS)</option>
+                  <option>Subsidized Insurance</option>
+                  <option>Scholarships & Education</option>
+                  <option>Pension Schemes</option>
+                  <option>Employment Services</option>
+                  <option>Taxation Services</option>
+                  <option>Utility Bills</option>
+                  <option>Agriculture Schemes</option>
+                  <option>Health Services</option>
                   <option>Government Schemes</option>
                 </select>
               </div>
