@@ -129,8 +129,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
         method: 'PUT',
         body: file,
         headers: {
-          'Content-Type': file.type || 'application/octet-stream',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': file.type || 'application/octet-stream'
         }
       });
       
@@ -373,7 +372,10 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
 
       onSave();
     } catch (err: any) {
-      alert('Error publishing service: ' + (err.response?.data?.error || err.message));
+      const details = err.response?.data?.details
+        ? '\n' + err.response.data.details.map((d: any) => `- ${d.field}: ${d.message}`).join('\n')
+        : '';
+      alert('Error publishing service: ' + (err.response?.data?.error || err.message) + details);
     } finally {
       setIsSubmitting(false);
     }
@@ -630,7 +632,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
                     <>
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
                       <span style={{ fontFamily: 'inherit', fontWeight: 600, fontSize: '14px', color: '#2563EB' }}>Click to upload icon file</span>
-                      <span style={{ fontFamily: 'inherit', fontWeight: 400, fontSize: '12px', color: '#6B7280' }}>SVG, PNG, JPG up to 1MB (Optimal size 48x48px)</span>
+                      <span style={{ fontFamily: 'inherit', fontWeight: 400, fontSize: '12px', color: '#6B7280' }}>PNG, JPG up to 1MB (Optimal size 48x48px)</span>
                     </>
                   )}
                 </div>

@@ -92,7 +92,7 @@ export type RequiredDocument = z.infer<typeof RequiredDocumentSchema>;
 export const FormFieldSchema = z.object({
   key: z.string(),
   label: z.string(),
-  type: z.enum(['text', 'number', 'select', 'date', 'aadhaar']),
+  type: z.enum(['text', 'number', 'select', 'date', 'aadhaar', 'email', 'phone', 'file', 'checkbox', 'radio']),
   placeholder: z.string().optional(),
   required: z.boolean().default(true),
   options: z.array(z.string()).optional(),

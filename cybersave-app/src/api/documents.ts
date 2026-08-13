@@ -40,7 +40,6 @@ export const putFileToStorage = async (
     httpMethod: 'PUT',
     headers: {
       'Content-Type': file.mimeType ?? 'application/octet-stream',
-      'Authorization': `Bearer ${token}`,
     },
     uploadType: FileSystemUploadType.BINARY_CONTENT,
   });

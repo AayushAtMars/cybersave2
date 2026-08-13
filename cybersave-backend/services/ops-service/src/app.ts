@@ -92,3 +92,4 @@ if (require.main === module) {
 }
 
 export default app;
+// Trigger reload after shared package update

@@ -77,8 +77,7 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
 
       await axios.put(uploadUrl, file, {
         headers: {
-          'Content-Type': file.type || 'application/octet-stream',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': file.type || 'application/octet-stream'
         }
       });
 

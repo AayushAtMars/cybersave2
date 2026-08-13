@@ -82,11 +82,10 @@ const authenticate = (
 // Mount directly on root '/' so Express never modifies req.url/req.originalUrl.
 // We filter and route dynamically using http-proxy-middleware filters.
 for (const [prefix, target] of Object.entries(services)) {
-  const isPublic = prefix === '/api/v1/auth' || prefix === '/api/v1/services';
-
   app.use(
     // Run auth middleware first if the route is NOT public
     (req, res, next) => {
+      const isPublic = prefix === '/api/v1/auth' || (prefix === '/api/v1/services' && req.method === 'GET');
       if (req.path.startsWith(prefix) && !isPublic) {
         authenticate(req, res, next);
       } else {

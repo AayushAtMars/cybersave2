@@ -109,8 +109,7 @@ export default function ApplicationVerifyDetailsPage() {
         method: 'PUT',
         body: selectedFile,
         headers: {
-          'Content-Type': selectedFile.type || 'application/octet-stream',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': selectedFile.type || 'application/octet-stream'
         }
       });
       
