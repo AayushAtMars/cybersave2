@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
 import { useApplications, useServices } from '../../src/api/applications';
 import { useAuthStore } from '../../src/store/authStore';
+import { apiClient } from '../../src/api/client';
 import { SkeletonScreen, NoInternet, SystemError } from '../../src/components/UIStates';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
@@ -116,6 +117,18 @@ const CATEGORIES_LIST = [
 
 export default function HomeScreen() {
   const user = useAuthStore((s) => s.user);
+  const updateUser = useAuthStore((s) => s.updateUser);
+
+  React.useEffect(() => {
+    apiClient.patch('/auth/profile', {})
+      .then((r) => {
+        if (r.data?.data?.user) {
+          updateUser(r.data.data.user);
+        }
+      })
+      .catch((e) => console.log('Error fetching user profile in HomeScreen:', e));
+  }, []);
+
   const { data: appData, isLoading: isAppLoading, isError: isAppError, refetch: refetchApps } = useApplications();
   const { data: servicesData, isLoading: isServicesLoading, isError: isServicesError, refetch: refetchServices } = useServices();
   const { isConnected } = useNetworkStatus();
@@ -143,8 +156,8 @@ export default function HomeScreen() {
   const electricityService = servicesData?.items?.find((s) => s.name.includes('Electricity'));
 
   const locationText =
-    user?.address?.city && user?.address?.state
-      ? `${user.address.city}, ${user.address.state}`
+    user?.district && user?.state
+      ? `${user.district}, ${user.state}`
       : 'New Delhi, India';
 
   return (

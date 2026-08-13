@@ -10,6 +10,8 @@ interface AuthUser {
   dob?: string;
   gender?: string;
   avatar?: string;
+  district?: string;
+  state?: string;
   address?: {
     line1: string;
     line2?: string;

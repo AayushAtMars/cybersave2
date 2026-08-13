@@ -8,6 +8,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { logout } from '../../src/api/auth';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
 import { Button } from '../../src/components/Button';
+import * as SecureStore from 'expo-secure-store';
 
 
 const MENU_ITEMS = [
@@ -190,6 +191,7 @@ export default function ProfileScreen() {
                   if (refreshToken) {
                     logout(refreshToken).catch(() => {});
                   }
+                  SecureStore.deleteItemAsync('user_session').catch(() => {});
                   clearAuth();
                   router.replace('/(onboarding)/splash');
                 }}

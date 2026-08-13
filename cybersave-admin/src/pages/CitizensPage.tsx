@@ -20,6 +20,7 @@ interface Citizen {
   aadhaarNumber?: string;
   aadhaarMasked?: string;
   district?: string;
+  state?: string;
   sessions?: UserSession[];
   createdAt: string;
   updatedAt: string;
@@ -234,8 +235,8 @@ export default function CitizensPage() {
       c.name,
       c.aadhaarNumber || c.aadhaarMasked || '—',
       c.phone,
-      c.district || 'Lucknow',
-      'Uttar Pradesh',
+      c.district || '—',
+      c.state || '—',
       c.isActive ? (c.isVerified ? 'Verified' : 'Pending') : 'Blocked',
       new Date(c.createdAt).toLocaleDateString()
     ]);
@@ -666,7 +667,7 @@ export default function CitizensPage() {
                         +91 {c.phone}
                       </td>
                       <td style={{ padding: '16px 12px', fontSize: '13.5px', color: '#475569', fontWeight: 600 }}>
-                        {c.district || 'Lucknow'}
+                        {c.district ? `${c.district}${c.state ? `, ${c.state}` : ''}` : '—'}
                       </td>
                       <td style={{ padding: '16px 12px', fontSize: '13px', fontWeight: 600, color: '#2563EB' }}>
                         {servicesUsedCount} {servicesUsedCount > 1 ? 'services' : 'service'}

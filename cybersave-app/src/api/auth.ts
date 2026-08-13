@@ -9,7 +9,7 @@ interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   isNewUser: boolean;
-  user: { id: string; name: string; role: string; isVerified: boolean };
+  user: { id: string; name: string; role: string; isVerified: boolean; district?: string; state?: string };
 }
 
 // ── API functions ─────────────────────────────────────────────────────────────
