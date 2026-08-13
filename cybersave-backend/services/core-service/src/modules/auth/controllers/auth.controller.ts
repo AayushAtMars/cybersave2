@@ -750,11 +750,6 @@ export const listCitizens = async (req: Request, res: Response): Promise<void> =
     const totalCitizens = await User.countDocuments({ role: 'citizen' });
     const activeCitizens = await User.countDocuments({ role: 'citizen', isActive: true });
     
-    console.log('--- DEBUG CITIZENS ---');
-    console.log('Mongoose Connection Ready State:', mongoose.connection.readyState);
-    console.log('Mongoose Connection DB Name:', mongoose.connection.name);
-    console.log('Total Documents in User Collection:', await User.countDocuments({}));
-    console.log('Total Citizens found:', totalCitizens);
     
     const startOfMonth = new Date();
     startOfMonth.setDate(1);
