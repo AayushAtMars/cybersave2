@@ -4,7 +4,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system/legacy';
 import { FileSystemUploadType } from 'expo-file-system/legacy';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+//Types
 export interface DocumentRecord {
   id: string;
   _id?: string; // Support direct Mongoose fallback
@@ -15,7 +15,7 @@ export interface DocumentRecord {
   createdAt: string;
 }
 
-// ── Pre-signed upload flow (rules.md §1, architecture.md §6) ─────────────────
+// ── Pre-signed upload flow 
 // Step 1: get signed URL
 // Step 2: PUT file directly to Supabase (no bytes through our server)
 // Step 3: confirm to document-service
@@ -40,6 +40,7 @@ export const putFileToStorage = async (
     httpMethod: 'PUT',
     headers: {
       'Content-Type': file.mimeType ?? 'application/octet-stream',
+      'Authorization': `Bearer ${token}`,
     },
     uploadType: FileSystemUploadType.BINARY_CONTENT,
   });
@@ -64,7 +65,7 @@ export const deleteDocument = (documentId: string) =>
     .delete(`/documents/${documentId}`)
     .then((r) => r.data);
 
-// ── Mutation: full upload pipeline ────────────────────────────────────────────
+// Mutation: full upload pipeline
 export const useUploadDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
