@@ -85,7 +85,7 @@ class NotificationService {
           subject: title,
           text: body,
           html: `<h3>${title}</h3><p>${body}</p>`
-        }).catch(err => console.error('Email send failed:', err));
+        }).catch((err: any) => console.error('Email send failed:', err));
       }
     }
   }
