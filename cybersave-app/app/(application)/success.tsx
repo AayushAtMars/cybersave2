@@ -12,8 +12,10 @@ import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function SuccessScreen() {
+    const { t } = useTranslation();
   const scale = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(0)).current;
 
@@ -71,7 +73,7 @@ export default function SuccessScreen() {
           <View style={[styles.progressBar, { width: '100%' }]} />
         </View>
 
-        <Text style={styles.stepLabel}>Step 5/5</Text>
+        <Text style={styles.stepLabel}>{t('success.step_5_5')}</Text>
 
         {/* Animated check badge */}
         <Animated.View style={[styles.checkBadge, { transform: [{ scale }] }]}>
@@ -80,10 +82,11 @@ export default function SuccessScreen() {
           </View>
         </Animated.View>
 
-        <Text style={styles.heroTitle}>Application Submitted!</Text>
+        <Text style={styles.heroTitle}>{t('success.application_submitted')}</Text>
         <Text style={styles.heroSubtitle}>
-          Your application has been received and is now in our processing queue.
-        </Text>
+          
+                            {t('success.your_application_has_been_rece')}
+                          </Text>
       </LinearGradient>
 
       {/* Details section */}
@@ -96,42 +99,45 @@ export default function SuccessScreen() {
           {/* Reference card */}
           <View style={styles.refCard}>
             <View style={styles.refRow}>
-              <Text style={styles.refLabel}>Reference No.</Text>
+              <Text style={styles.refLabel}>{t('success.reference_no')}</Text>
               <Text style={styles.refValue}>{refNo}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.refRow}>
-              <Text style={styles.refLabel}>Submitted On</Text>
+              <Text style={styles.refLabel}>{t('success.submitted_on')}</Text>
               <Text style={styles.refValue}>{submittedDate}</Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.refRow}>
-              <Text style={styles.refLabel}>Est. Completion</Text>
+              <Text style={styles.refLabel}>{t('success.est_completion')}</Text>
               <Text style={[styles.refValue, styles.greenText]}>{estimatedDate}</Text>
             </View>
           </View>
 
           {/* What's next */}
           <View style={styles.nextCard}>
-            <Text style={styles.nextTitle}>What happens next?</Text>
+            <Text style={styles.nextTitle}>{t('success.what_happens_next')}</Text>
             <View style={styles.nextList}>
               <View style={styles.nextItem}>
                 <View style={styles.nextDot} />
                 <Text style={styles.nextText}>
-                  Our operator will verify your documents within 24 hours
-                </Text>
+                  
+                                                    {t('success.our_operator_will_verify_your_')}
+                                                  </Text>
               </View>
               <View style={styles.nextItem}>
                 <View style={styles.nextDot} />
                 <Text style={styles.nextText}>
-                  You'll receive SMS and in-app notifications at every stage
-                </Text>
+                  
+                                                    {t('success.you_ll_receive_sms_and_in_app_')}
+                                                  </Text>
               </View>
               <View style={styles.nextItem}>
                 <View style={styles.nextDot} />
                 <Text style={styles.nextText}>
-                  Once processed, your certificate will be available to download
-                </Text>
+                  
+                                                    {t('success.once_processed_your_certificat')}
+                                                  </Text>
               </View>
             </View>
           </View>
@@ -143,7 +149,7 @@ export default function SuccessScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="location-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.primaryBtnText}>Track Application Status</Text>
+            <Text style={styles.primaryBtnText}>{t('success.track_application_status')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -155,7 +161,7 @@ export default function SuccessScreen() {
             activeOpacity={0.85}
           >
             <Ionicons name="download-outline" size={18} color="#2563EB" />
-            <Text style={styles.secondaryBtnText}>Download Receipt</Text>
+            <Text style={styles.secondaryBtnText}>{t('success.download_receipt')}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -163,7 +169,7 @@ export default function SuccessScreen() {
             onPress={() => router.replace('/(tabs)/home')}
             activeOpacity={0.85}
           >
-            <Text style={styles.ghostBtnText}>Back to Home</Text>
+            <Text style={styles.ghostBtnText}>{t('success.back_to_home')}</Text>
           </TouchableOpacity>
         </ScrollView>
       </Animated.View>

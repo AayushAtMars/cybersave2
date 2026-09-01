@@ -420,21 +420,21 @@ export default function DashboardHome() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                <span>Online Payments ({stats.revenueToday > 0 ? Math.round((stats.onlineRevenueToday / stats.revenueToday) * 100) : 66}%)</span>
+                <span>Online Payments ({stats.revenueToday > 0 ? Math.round((stats.onlineRevenueToday / stats.revenueToday) * 100) : 0}%)</span>
                 <span style={{ fontWeight: 700, color: '#0F172A' }}>{formatRupees(stats.onlineRevenueToday)}</span>
               </div>
               <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${stats.revenueToday > 0 ? (stats.onlineRevenueToday / stats.revenueToday) * 100 : 66}%`, backgroundColor: '#2563EB', borderRadius: '4px' }} />
+                <div style={{ height: '100%', width: `${stats.revenueToday > 0 ? (stats.onlineRevenueToday / stats.revenueToday) * 100 : 0}%`, backgroundColor: '#2563EB', borderRadius: '4px' }} />
               </div>
             </div>
 
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 600, color: '#475569', marginBottom: '6px' }}>
-                <span>Cash Collections ({stats.revenueToday > 0 ? Math.round((stats.cashRevenueToday / stats.revenueToday) * 100) : 34}%)</span>
+                <span>Cash Collections ({stats.revenueToday > 0 ? Math.round((stats.cashRevenueToday / stats.revenueToday) * 100) : 0}%)</span>
                 <span style={{ fontWeight: 700, color: '#0F172A' }}>{formatRupees(stats.cashRevenueToday)}</span>
               </div>
               <div style={{ height: '8px', backgroundColor: '#E2E8F0', borderRadius: '4px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${stats.revenueToday > 0 ? (stats.cashRevenueToday / stats.revenueToday) * 100 : 34}%`, backgroundColor: '#10B981', borderRadius: '4px' }} />
+                <div style={{ height: '100%', width: `${stats.revenueToday > 0 ? (stats.cashRevenueToday / stats.revenueToday) * 100 : 0}%`, backgroundColor: '#10B981', borderRadius: '4px' }} />
               </div>
             </div>
           </div>

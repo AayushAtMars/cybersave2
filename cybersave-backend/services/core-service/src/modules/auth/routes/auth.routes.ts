@@ -23,9 +23,11 @@ import {
   updateOperatorPassword,
   toggleOperator2FA,
   getCitizenDetail,
+  adminUpdateCitizenProfile,
   adminResetOperatorPassword,
   adminToggleOperator2FA,
   adminUpdateOperatorRBAC,
+  adminUpdateOperatorProfile,
 } from '../controllers/auth.controller';
 import { createAuditLog, listAuditLogs } from '../controllers/audit.controller';
 import { SendOtpSchema, VerifyOtpSchema, OperatorLoginSchema } from '@cybersave/shared';
@@ -33,7 +35,7 @@ import { z } from 'zod';
 
 const router = Router();
 
-// ── Rate limiting ─────────────────────────────────────────────────────────────
+// Rate limiting
 const otpSendLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
@@ -130,7 +132,7 @@ router.patch(
   updateAddress
 );
 
-// ── Admin management routes (require admin/super_admin) ────────────────────────
+// Admin management routes (require admin/super_admin)
 router.get('/admin/citizens', authenticate, listCitizens);
 router.post(
   '/admin/citizens',
@@ -164,31 +166,33 @@ router.post(
   ),
   createOperator
 );
+router.patch('/admin/citizens/:id', authenticate, adminUpdateCitizenProfile);
 router.patch('/admin/citizens/:id/block', authenticate, toggleCitizenStatus);
+router.patch('/admin/operators/:id', authenticate, adminUpdateOperatorProfile);
 router.patch('/admin/operators/:id/status', authenticate, updateOperatorStatus);
 router.patch('/admin/operators/:id/password', authenticate, adminResetOperatorPassword);
 router.patch('/admin/operators/:id/2fa', authenticate, adminToggleOperator2FA);
 router.put('/admin/operators/:id/rbac', authenticate, adminUpdateOperatorRBAC);
 
-// ── Operator / Admin login route (with Cloudflare Turnstile CAPTCHA validation) ─
+// Operator / Admin login route (with Cloudflare Turnstile CAPTCHA validation)
 router.post('/operator/login', loginLimiter, validate(OperatorLoginSchema), operatorLogin);
 
-// ── Settings / Profile routes (operator manages their own account) ────────────
+// Settings / Profile routes (operator manages their own account)
 router.get('/admin/me', authenticate, getMe);
 router.patch('/admin/me', authenticate, updateOperatorProfile);
 router.patch('/admin/me/password', authenticate, updateOperatorPassword);
 router.patch('/admin/me/2fa', authenticate, toggleOperator2FA);
 
-// ── Individual citizen detail ────────────────────────────────────────────────────
+// Individual citizen detail
 router.get('/admin/citizens/:id', authenticate, getCitizenDetail);
 
-// ── Audit Log routes ─────────────────────────────────────────────────────────
+// Audit Log routes
 // Internal: any service can POST a log entry (no auth header needed for internal calls)
 router.post('/audit/log', createAuditLog);
 // Admin: list/search/filter all audit logs
 router.get('/admin/audit-logs', authenticate, listAuditLogs);
 
-// ── Health check ──────────────────────────────────────────────────────────────
+// Health check
 router.get('/health', (_req, res) => res.json({ success: true, data: { service: 'auth-service', status: 'ok' } }));
 
 export default router;

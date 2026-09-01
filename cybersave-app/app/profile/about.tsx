@@ -13,10 +13,12 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { shadows, spacing, radius } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 
 export default function AboutScreen() {
+    const { t } = useTranslation();
   const handleItemPress = (label: string) => {
     Alert.alert(label, `${label} information will be opened.`);
   };
@@ -28,7 +30,7 @@ export default function AboutScreen() {
         <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
           <Ionicons name="arrow-back" size={20} color="#0F172A" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>About Cybersave</Text>
+        <Text style={styles.headerTitle}>{t('about.about_cybersave')}</Text>
         <View style={{ width: 36 }} />
       </View>
 
@@ -41,35 +43,36 @@ export default function AboutScreen() {
             resizeMode="contain"
           />
           <View style={styles.brandingText}>
-            <Text style={styles.appName}>Cybersave</Text>
-            <Text style={styles.appVersion}>Version 2.1.0 (Build 54)</Text>
+            <Text style={styles.appName}>{t('about.cybersave')}</Text>
+            <Text style={styles.appVersion}>{t('about.version_2_1_0_build_54')}</Text>
           </View>
         </View>
 
         {/* Platform Description */}
         <Text style={styles.description}>
-          CSC's flagship digital governance platform providing secure, encrypted instant access to certificates, address updates, and direct-to-citizen e-benefits under the Digital India Initiative.
-        </Text>
+          
+                            {t('about.csc_s_flagship_digital_governa')}
+                          </Text>
 
         {/* Menu list card */}
         <View style={styles.menuCard}>
           <TouchableOpacity style={styles.menuItem} onPress={() => handleItemPress('Terms of Service')}>
-            <Text style={styles.menuItemLabel}>Terms of Service</Text>
+            <Text style={styles.menuItemLabel}>{t('about.terms_of_service')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={() => handleItemPress('Privacy Policy')}>
-            <Text style={styles.menuItemLabel}>Privacy Policy</Text>
+            <Text style={styles.menuItemLabel}>{t('about.privacy_policy')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.menuItem} onPress={() => handleItemPress('Open Source Licenses')}>
-            <Text style={styles.menuItemLabel}>Open Source Licenses</Text>
+            <Text style={styles.menuItemLabel}>{t('about.open_source_licenses')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
 
           <TouchableOpacity style={[styles.menuItem, styles.lastItem]} onPress={() => handleItemPress('Rate this App')}>
-            <Text style={styles.menuItemLabel}>Rate this App</Text>
+            <Text style={styles.menuItemLabel}>{t('about.rate_this_app')}</Text>
             <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
           </TouchableOpacity>
         </View>
@@ -82,12 +85,12 @@ export default function AboutScreen() {
             <View style={[styles.flagStripe, { backgroundColor: '#FFFFFF' }]} />
             <View style={[styles.flagStripe, { backgroundColor: '#138808' }]} />
           </View>
-          <Text style={styles.indiaBadgeText}>MADE IN INDIA</Text>
+          <Text style={styles.indiaBadgeText}>{t('about.made_in_india')}</Text>
         </View>
 
         {/* Footer info */}
-        <Text style={styles.footerLabel}>Developed & Maintained by</Text>
-        <Text style={styles.footerValue}>CSC e-Governance Services India Limited</Text>
+        <Text style={styles.footerLabel}>{t('about.developed_maintained_by')}</Text>
+        <Text style={styles.footerValue}>{t('about.csc_e_governance_services_indi')}</Text>
       </ScrollView>
     </SafeAreaView>
   );

@@ -1,16 +1,8 @@
-/**
- * Central model registry for core-service.
- *
- * All models are registered on their respective named Mongoose connections
- * so each domain's data stays isolated in its own MongoDB database.
- * Call registerModels() once after connectAllDBs() resolves.
- */
-
 import mongoose, { Schema } from 'mongoose';
 import { dbAuth, dbNotification, dbSupport } from './db';
 import { UserRole } from '@cybersave/shared';
 
-// ── Auth-domain models ────────────────────────────────────────────────────────
+//auth-domain models
 
 const UserSchema = new Schema(
   {
@@ -54,6 +46,7 @@ const UserSchema = new Schema(
         device: { type: String, required: true },
         location: { type: String, required: true },
         ip: { type: String, required: true },
+        type: { type: String, enum: ['login', 'logout'], default: 'login' },
         lastActive: { type: Date, default: Date.now },
       },
     ],
@@ -81,6 +74,18 @@ const OperatorSchema = new Schema(
     },
     role: { type: String, enum: ['operator', 'admin', 'super_admin'], default: 'operator' },
     twoFaEnabled: { type: Boolean, default: false },
+    notificationPreferences: {
+      emailNotifications: { type: Boolean, default: true },
+      pushNotifications: { type: Boolean, default: false },
+      documentUploadAlerts: { type: Boolean, default: true },
+      expiryReminders: { type: Boolean, default: true },
+      systemUpdates: { type: Boolean, default: false },
+    },
+    localizationPreferences: {
+      language: { type: String, default: 'en-US' },
+      timezone: { type: String, default: 'Asia/Kolkata' },
+      colorTheme: { type: String, default: 'system' },
+    },
   },
   { timestamps: true }
 );
@@ -108,7 +113,7 @@ AuditLogSchema.index({ timestamp: -1 });
 AuditLogSchema.index({ userId: 1 });
 AuditLogSchema.index({ category: 1 });
 
-// ── Notification-domain model ─────────────────────────────────────────────────
+//notification-domain models
 
 const NotificationSchema = new Schema(
   {
@@ -129,12 +134,12 @@ const NotificationSchema = new Schema(
   { timestamps: true }
 );
 
-// ── Support-domain model ──────────────────────────────────────────────────────
+//support-domain models
 
 const MessageSchema = new Schema(
   {
     senderId: { type: String, required: true },
-    senderRole: { type: String, enum: ['citizen', 'operator', 'system'], required: true },
+    senderRole: { type: String, enum: ['citizen', 'operator', 'admin', 'super_admin', 'system'], required: true },
     message: { type: String, required: true },
     timestamp: { type: Date, default: Date.now },
   },
@@ -162,7 +167,7 @@ const TicketSchema = new Schema(
   { timestamps: true }
 );
 
-// ── Register on named connections ─────────────────────────────────────────────
+//register on named connections
 
 let User: mongoose.Model<any>;
 let Operator: mongoose.Model<any>;

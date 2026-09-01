@@ -35,6 +35,7 @@ interface AuthUser {
     location: string;
     ip: string;
     lastActive: string | Date;
+    type?: string;
   }>;
 }
 

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useWallet, useTransactions } from '../../src/api/applications';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const fmtDate = (iso: string) => {
   const date = new Date(iso);
@@ -36,6 +37,7 @@ const fmtDate = (iso: string) => {
 };
 
 export default function WalletScreen() {
+    const { t } = useTranslation();
   const { data: wallet, refetch: refetchWallet } = useWallet();
   const { data: txns, refetch: refetchTxns, isRefetching } = useTransactions();
 
@@ -57,7 +59,7 @@ export default function WalletScreen() {
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
           <View style={styles.headerSpacer} />
-          <Text style={styles.headerTitle}>Wallet</Text>
+          <Text style={styles.headerTitle}>{t('wallet.wallet')}</Text>
           <TouchableOpacity
             style={styles.notifBtn}
             onPress={() => router.push('/notifications')}
@@ -78,7 +80,7 @@ export default function WalletScreen() {
         >
           <View style={styles.balanceCardTop}>
             <View>
-              <Text style={styles.balanceLabel}>Available Balance</Text>
+              <Text style={styles.balanceLabel}>{t('wallet.available_balance')}</Text>
               <Text style={styles.balanceAmount}>
                 ₹{wallet?.balance ? wallet.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
               </Text>
@@ -93,15 +95,15 @@ export default function WalletScreen() {
           </View>
           <View style={styles.balanceCardBottom}>
             <Ionicons name="lock-closed" size={14} color="#FFFFFF" style={{ opacity: 0.8 }} />
-            <Text style={styles.securedText}>Secured by Cybersave Digital Trust</Text>
+            <Text style={styles.securedText}>{t('wallet.secured_by_cybersave_digital_t')}</Text>
           </View>
         </LinearGradient>
 
         {/* Transactions list */}
         <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent Transactions</Text>
+          <Text style={styles.sectionTitle}>{t('wallet.recent_transactions')}</Text>
           <TouchableOpacity onPress={() => router.push('/transactions')}>
-            <Text style={styles.viewAll}>View All</Text>
+            <Text style={styles.viewAll}>{t('wallet.view_all')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -115,10 +117,11 @@ export default function WalletScreen() {
           ListEmptyComponent={
             <View style={styles.emptyBox}>
               <Ionicons name="card-outline" size={48} color="#94A3B8" />
-              <Text style={styles.emptyTitle}>No Transactions Yet</Text>
+              <Text style={styles.emptyTitle}>{t('wallet.no_transactions_yet')}</Text>
               <Text style={styles.emptySub}>
-                Top-up your wallet or submit application forms to view transaction history here.
-              </Text>
+                
+                                      {t('wallet.top_up_your_wallet_or_submit_a')}
+                                    </Text>
             </View>
           }
           renderItem={({ item }) => {
@@ -162,15 +165,15 @@ export default function WalletScreen() {
           showsVerticalScrollIndicator={false}
           ListFooterComponent={
             <View style={styles.linkedSection}>
-              <Text style={styles.sectionTitle}>Linked Payment Methods</Text>
+              <Text style={styles.sectionTitle}>{t('wallet.linked_payment_methods')}</Text>
               <View style={styles.linkedCard}>
                 <View style={styles.linkedLeft}>
                   <View style={styles.bankIconBg}>
                     <Ionicons name="card-outline" size={20} color="#0F172A" />
                   </View>
                   <View style={styles.linkedMeta}>
-                    <Text style={styles.bankName}>State Bank of India</Text>
-                    <Text style={styles.bankDetail}>Primary Account • ***********1204</Text>
+                    <Text style={styles.bankName}>{t('wallet.state_bank_of_india')}</Text>
+                    <Text style={styles.bankDetail}>{t('wallet.primary_account_1204')}</Text>
                   </View>
                 </View>
                 <Ionicons name="checkmark-circle" size={22} color="#10B981" />

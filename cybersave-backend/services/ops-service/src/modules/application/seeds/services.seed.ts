@@ -4,7 +4,8 @@
  */
 import 'dotenv/config';
 import mongoose from 'mongoose';
-import { Service } from '../models/Service';
+import { getModels, registerModels } from '../../../config/models';
+import { connectAllDBs } from '../../../config/db';
 import { ServiceCategory } from '@cybersave/shared';
 
 const SERVICES = [
@@ -959,8 +960,10 @@ const SERVICES = [
 ];
 
 async function seed() {
-  await mongoose.connect(process.env.MONGO_URI!);
+  await connectAllDBs();
+  registerModels();
   console.log('Connected to MongoDB');
+  const { Service } = getModels();
 
   for (const service of SERVICES) {
     await Service.findOneAndUpdate(

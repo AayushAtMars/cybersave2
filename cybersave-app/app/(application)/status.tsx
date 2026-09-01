@@ -25,6 +25,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useApplication } from '../../src/api/applications';
 import { shadows, spacing, radius } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 const fmtDate = (iso?: string) => {
@@ -110,6 +111,7 @@ function ScreenHeader({ title, onShare }: { title: string; onShare?: () => void 
 
 // ── Main component ─────────────────────────────────────────────────────────────
 export default function ApplicationStatusScreen() {
+    const { t } = useTranslation();
   const { id, showCert: showCertParam } = useLocalSearchParams<{ id: string; showCert?: string }>();
   const { data: app, isLoading, refetch, isRefetching } = useApplication(id);
   const [showCert, setShowCert] = useState(showCertParam === '1');
@@ -131,9 +133,9 @@ export default function ApplicationStatusScreen() {
         <ScreenHeader title="Application Status" />
         <View style={styles.center}>
           <Ionicons name="alert-circle-outline" size={48} color="#94A3B8" />
-          <Text style={styles.emptyTitle}>Application Not Found</Text>
+          <Text style={styles.emptyTitle}>{t('status.application_not_found')}</Text>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={{ color: '#2563EB', fontWeight: '700' }}>← Go back</Text>
+            <Text style={{ color: '#2563EB', fontWeight: '700' }}>{t('status.go_back')}</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -153,15 +155,15 @@ export default function ApplicationStatusScreen() {
               {/* Certificate preview card */}
               <View style={styles.certPreviewBox}>
                 <Ionicons name="document-text" size={60} color="#2563EB" />
-                <Text style={styles.certGovtText}>GOVERNMENT OF INDIA</Text>
-                <Text style={styles.certWatermarkText}>{app.serviceName} Certified Watermark</Text>
+                <Text style={styles.certGovtText}>{t('status.government_of_india')}</Text>
+                <Text style={styles.certWatermarkText}>{app.serviceName}  {t('status.certified_watermark')}</Text>
               </View>
 
               {/* Holder info */}
               <View style={{ alignItems: 'center', gap: 8 }}>
                 <Text style={styles.certHolderName}>{app.applicantName}</Text>
-                <Text style={styles.certRefNo}>Certificate No: {app.applicationRefNo}</Text>
-                <Text style={styles.certDateText}>Issued on: {fmtDate(app.completedAt)}</Text>
+                <Text style={styles.certRefNo}>{t('status.certificate_no')} {app.applicationRefNo}</Text>
+                <Text style={styles.certDateText}>{t('status.issued_on')} {fmtDate(app.completedAt)}</Text>
               </View>
 
               {/* Actions */}
@@ -172,7 +174,7 @@ export default function ApplicationStatusScreen() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="download-outline" size={18} color="#FFFFFF" />
-                  <Text style={styles.rejectedReapplyText}>Download PDF</Text>
+                  <Text style={styles.rejectedReapplyText}>{t('status.download_pdf')}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -183,7 +185,7 @@ export default function ApplicationStatusScreen() {
                   activeOpacity={0.85}
                 >
                   <Ionicons name="share-social-outline" size={18} color="#0F172A" />
-                  <Text style={styles.rejectedAppealText}>Share Certificate</Text>
+                  <Text style={styles.rejectedAppealText}>{t('status.share_certificate')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -223,7 +225,7 @@ export default function ApplicationStatusScreen() {
                   <Ionicons name="close" size={16} color="#FFFFFF" />
                 </View>
                 <View style={styles.rejectedHeaderTexts}>
-                  <Text style={styles.rejectedHeaderTitle}>Application Rejected</Text>
+                  <Text style={styles.rejectedHeaderTitle}>{t('status.application_rejected')}</Text>
                   <Text style={styles.rejectedHeaderSubtitle}>
                     {app.serviceName} • {app.applicationRefNo}
                   </Text>
@@ -234,7 +236,7 @@ export default function ApplicationStatusScreen() {
               <View style={styles.rejectedCardBody}>
                 {/* 1. Rejection Reason card */}
                 <View style={styles.reasonCardBox}>
-                  <Text style={styles.reasonCardTitle}>Rejection Reason</Text>
+                  <Text style={styles.reasonCardTitle}>{t('status.rejection_reason')}</Text>
                   <Text style={styles.reasonCardText}>
                     {app.rejectionReason || 
                       "Document mismatch. The signature on the submitted Aadhaar Card does not match the signature on the self-declaration form. Please re-submit with clear signatures."}
@@ -243,35 +245,35 @@ export default function ApplicationStatusScreen() {
 
                 {/* 2. Summary Card */}
                 <View style={styles.summaryCardBox}>
-                  <Text style={styles.summaryCardTitle}>Summary</Text>
+                  <Text style={styles.summaryCardTitle}>{t('status.summary')}</Text>
                   
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Service</Text>
+                    <Text style={styles.summaryLabel}>{t('status.service')}</Text>
                     <Text style={styles.summaryValue}>{app.serviceName}</Text>
                   </View>
 
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Submitted Date</Text>
+                    <Text style={styles.summaryLabel}>{t('status.submitted_date')}</Text>
                     <Text style={styles.summaryValue}>{fmtDate(app.createdAt)}</Text>
                   </View>
 
                   <View style={[styles.summaryRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-                    <Text style={styles.summaryLabel}>Department</Text>
+                    <Text style={styles.summaryLabel}>{t('status.department')}</Text>
                     <Text style={styles.summaryValue}>{app.department || 'Revenue Department'}</Text>
                   </View>
                 </View>
 
                 {/* 3. Submitted Documents Card */}
                 <View style={styles.docsCardBox}>
-                  <Text style={styles.docsCardTitle}>Submitted Documents</Text>
+                  <Text style={styles.docsCardTitle}>{t('status.submitted_documents')}</Text>
                   
                   <View style={styles.docItemRow}>
                     <View style={styles.docThumbIcon}>
                       <Ionicons name="document-text" size={20} color="#2563EB" />
                     </View>
                     <View style={styles.docTextGroup}>
-                      <Text style={styles.docFilename} numberOfLines={1}>Aadhaar_Card.pdf</Text>
-                      <Text style={styles.docFilesize}>840 KB</Text>
+                      <Text style={styles.docFilename} numberOfLines={1}>{t('status.aadhaar_card_pdf')}</Text>
+                      <Text style={styles.docFilesize}>{t('status.840_kb')}</Text>
                     </View>
                   </View>
                 </View>
@@ -283,7 +285,7 @@ export default function ApplicationStatusScreen() {
                     onPress={handleReapply}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.rejectedReapplyText}>Re-Apply Application</Text>
+                    <Text style={styles.rejectedReapplyText}>{t('status.re_apply_application')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -291,7 +293,7 @@ export default function ApplicationStatusScreen() {
                     onPress={handleAppeal}
                     activeOpacity={0.85}
                   >
-                    <Text style={styles.rejectedAppealText}>Appeal Rejection</Text>
+                    <Text style={styles.rejectedAppealText}>{t('status.appeal_rejection')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -326,7 +328,7 @@ export default function ApplicationStatusScreen() {
                 <Ionicons name="sync" size={16} color="#FFFFFF" />
               </View>
               <View style={styles.statusBannerText}>
-                <Text style={styles.statusBannerTitle}>Application In Progress</Text>
+                <Text style={styles.statusBannerTitle}>{t('status.application_in_progress')}</Text>
                 <Text style={styles.statusBannerSub}>
                   {app.serviceName} • {app.applicationRefNo}
                 </Text>
@@ -380,7 +382,8 @@ export default function ApplicationStatusScreen() {
                       )}
                       {current && app.slaDeadline && (
                         <Text style={styles.timelineEst}>
-                          Est. Completion: {fmtDate(app.slaDeadline)}
+                          
+                                                              {t('status.est_completion')} {fmtDate(app.slaDeadline)}
                         </Text>
                       )}
                     </View>
@@ -420,7 +423,7 @@ export default function ApplicationStatusScreen() {
 
             {/* Applicant Information */}
             <View style={[styles.summaryCardBox, { borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopWidth: 1, borderTopColor: '#E2E8F0', borderRadius: 0, paddingHorizontal: 0, paddingBottom: 0, gap: 14 }]}>
-              <Text style={styles.summaryCardTitle}>Applicant Information</Text>
+              <Text style={styles.summaryCardTitle}>{t('status.applicant_information')}</Text>
               <DetailRow label="Full Name" value={app.applicantName} />
               <DetailRow label="Phone Number" value={app.applicantPhone} />
               {app.applicantAddress && (
@@ -443,7 +446,7 @@ export default function ApplicationStatusScreen() {
 
             {/* Process Info */}
             <View style={[styles.summaryCardBox, { borderLeftWidth: 0, borderRightWidth: 0, borderBottomWidth: 0, borderTopWidth: 1, borderTopColor: '#E2E8F0', borderRadius: 0, paddingHorizontal: 0, paddingBottom: 0, gap: 14 }]}>
-              <Text style={styles.summaryCardTitle}>Process Info</Text>
+              <Text style={styles.summaryCardTitle}>{t('status.process_info')}</Text>
               <DetailRow
                 label="Fee Paid"
                 value={`₹${(app.totalAmount / 100).toFixed(2)} (Success)`}
@@ -467,7 +470,7 @@ export default function ApplicationStatusScreen() {
               onPress={() => Alert.alert('Download Started', 'Your receipt is downloading...')}
               activeOpacity={0.85}
             >
-              <Text style={styles.rejectedAppealText}>Download Payment Receipt</Text>
+              <Text style={styles.rejectedAppealText}>{t('status.download_payment_receipt')}</Text>
             </TouchableOpacity>
 
             {/* View / Download Certificate — completed */}
@@ -477,7 +480,7 @@ export default function ApplicationStatusScreen() {
                 onPress={() => setShowCert(true)}
                 activeOpacity={0.85}
               >
-                <Text style={styles.rejectedReapplyText}>View Certificate</Text>
+                <Text style={styles.rejectedReapplyText}>{t('status.view_certificate')}</Text>
               </TouchableOpacity>
             )}
           </View>

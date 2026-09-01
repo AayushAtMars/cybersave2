@@ -13,8 +13,7 @@ const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',');
 app.use(helmet());
 app.use(
   cors({
-    // In development: allow all origins (mobile apps don't send an Origin header).
-    // In production: restrict to known origins via env var.
+    
     origin: process.env.NODE_ENV === 'production'
       ? (origin, cb) => {
           if (!origin || allowedOrigins.includes(origin)) cb(null, true);
@@ -26,7 +25,7 @@ app.use(
 );
 
 
-// Global rate limit — individual service routes add tighter limits
+//rate limit
 const globalLimiter = rateLimit({
   windowMs: 1 * 60 * 1000,
   max: 200,
@@ -36,12 +35,12 @@ const globalLimiter = rateLimit({
 });
 app.use(globalLimiter);
 
-// ── Health ────────────────────────────────────────────────────────────────────
+
 app.get('/health', (_req, res) =>
   res.json({ success: true, data: { service: 'gateway', status: 'ok' } })
 );
 
-// ── Route map ─────────────────────────────────────────────────────────────────
+
 const services: Record<string, string> = {
   '/api/v1/auth': process.env.CORE_SERVICE_URL!,
   '/api/v1/users': process.env.CORE_SERVICE_URL!,
@@ -53,23 +52,30 @@ const services: Record<string, string> = {
   '/api/v1/support': process.env.CORE_SERVICE_URL!,
 };
 
-// ── Auth middleware (verifies JWT, attaches x-user-id and x-user-role headers) ─
+// auth middleware
 const authenticate = (
   req: express.Request,
   res: express.Response,
   next: express.NextFunction
 ): void => {
+  let token = '';
   const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (authHeader?.startsWith('Bearer ')) {
+    token = authHeader.slice(7);
+  } else if (req.query.token && typeof req.query.token === 'string') {
+    token = req.query.token;
+  }
+
+  if (!token) {
     res.status(401).json({ success: false, error: 'Unauthorized', errorCode: 'UNAUTHORIZED' });
     return;
   }
   try {
-    const payload = jwt.verify(authHeader.slice(7), process.env.JWT_ACCESS_SECRET!) as {
+    const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as {
       sub: string;
       role: string;
     };
-    // Forward user info to downstream services as trusted headers
+    // send user info to downstream services as trusted headers
     req.headers['x-user-id'] = payload.sub;
     req.headers['x-user-role'] = payload.role;
     next();
@@ -78,12 +84,10 @@ const authenticate = (
   }
 };
 
-// ── Wire up proxies ───────────────────────────────────────────────────────────
-// Mount directly on root '/' so Express never modifies req.url/req.originalUrl.
-// We filter and route dynamically using http-proxy-middleware filters.
+// send proxies
 for (const [prefix, target] of Object.entries(services)) {
   app.use(
-    // Run auth middleware first if the route is NOT public
+    // auth middleware first if the route is NOT public
     (req, res, next) => {
       const isPublic = prefix === '/api/v1/auth' || (prefix === '/api/v1/services' && req.method === 'GET');
       if (req.path.startsWith(prefix) && !isPublic) {
@@ -93,7 +97,7 @@ for (const [prefix, target] of Object.entries(services)) {
       }
     },
     createProxyMiddleware({
-      // Match incoming request if it starts with the service prefix
+      // match incoming request if it starts with the service prefix
       pathFilter: (path) => path.startsWith(prefix),
       target,
       changeOrigin: true,
@@ -113,7 +117,7 @@ for (const [prefix, target] of Object.entries(services)) {
 
 
 
-// ── Local dev server ──────────────────────────────────────────────────────────
+// local dev server
 if (require.main === module) {
   app.listen(parseInt(process.env.PORT ?? '3000', 10), () => {
     console.log(`Gateway running on port ${process.env.PORT ?? 3000}`);

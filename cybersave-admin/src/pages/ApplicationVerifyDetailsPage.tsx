@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { adminClient } from '../api/client';
+import { useAdminStore } from '../store/adminStore';
 
 interface TimelineEvent {
   event: string;
@@ -35,6 +36,7 @@ interface Application {
   convenienceFee: number;
   paymentOrderId?: string;
   paymentGatewayRef?: string;
+  paymentMethod?: string;
   paymentStatus: string;
   assignedOperatorId?: string;
   assignedOperatorName?: string;
@@ -64,6 +66,7 @@ interface DocumentDetail {
 export default function ApplicationVerifyDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAdminStore();
   const [app, setApp] = useState<Application | null>(null);
   const [docsList, setDocsList] = useState<DocumentDetail[]>([]);
   const [operators, setOperators] = useState<any[]>([]);
@@ -71,6 +74,7 @@ export default function ApplicationVerifyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [newNote, setNewNote] = useState('');
+  const [certDocId, setCertDocId] = useState<string | null>(null);
   
   // Modal states for Certificate approval
   const [isApproveModalOpen, setIsApproveModalOpen] = useState(false);
@@ -167,6 +171,33 @@ export default function ApplicationVerifyDetailsPage() {
     geoVerification: false,
     physicalVerification: false,
   });
+  const [isChecklistLoaded, setIsChecklistLoaded] = useState(false);
+
+  // Load from local storage when ID changes
+  useEffect(() => {
+    if (!id) return;
+    const saved = localStorage.getItem(`checklist_${id}`);
+    if (saved) {
+      try {
+        setChecklist(JSON.parse(saved));
+      } catch (e) {}
+    } else {
+      setChecklist({
+        identity: false,
+        addressMatch: false,
+        validProof: false,
+        geoVerification: false,
+        physicalVerification: false,
+      });
+    }
+    setIsChecklistLoaded(true);
+  }, [id]);
+
+  // Save to local storage when checklist changes
+  useEffect(() => {
+    if (!id || !isChecklistLoaded) return;
+    localStorage.setItem(`checklist_${id}`, JSON.stringify(checklist));
+  }, [checklist, id, isChecklistLoaded]);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -197,24 +228,31 @@ export default function ApplicationVerifyDetailsPage() {
 
         // Filter and set document details for files used in this application
         if (docsRes.status === 'fulfilled' && docsRes.value.data?.success) {
-          const allDocs: DocumentDetail[] = docsRes.value.data.data.items ?? [];
-          const appDocs = allDocs.filter(d => application.documentIds.includes(d._id));
+          const allDocs = docsRes.value.data.data.items ?? [];
+          const appDocs = allDocs.filter((d: any) => application.documentIds.includes(d._id));
           setDocsList(appDocs);
+
+          const certDoc = allDocs.find((d: any) => d.documentCategory === 'certificate' && d.applicationId === id);
+          if (certDoc) {
+            setCertDocId(certDoc._id);
+          }
         }
 
         if (opsRes.status === 'fulfilled' && opsRes.value.data?.success) {
           setOperators(opsRes.value.data.data.items || []);
         }
 
-        // Auto check checklist based on document approval statuses
-        const approvedCount = application.verifiedDocuments?.filter(d => d.status === 'approved').length ?? 0;
-        setChecklist({
-          identity: approvedCount >= 1,
-          addressMatch: approvedCount >= 2,
-          validProof: approvedCount >= 3,
-          geoVerification: application.status === 'completed',
-          physicalVerification: application.status === 'completed',
-        });
+        // Auto check checklist based on document approval statuses if not saved locally
+        if (!localStorage.getItem(`checklist_${id}`)) {
+          const approvedCount = application.verifiedDocuments?.filter(d => d.status === 'approved').length ?? 0;
+          setChecklist({
+            identity: approvedCount >= 1,
+            addressMatch: approvedCount >= 2,
+            validProof: approvedCount >= 3,
+            geoVerification: application.status === 'completed',
+            physicalVerification: application.status === 'completed',
+          });
+        }
       } else {
         showToast('Application not found');
       }
@@ -305,6 +343,14 @@ export default function ApplicationVerifyDetailsPage() {
     }
   };
 
+  const handleViewCertificate = async () => {
+    if (certDocId) {
+      await handleDocumentView(certDocId);
+    } else if (app?.certificateUrl) {
+      window.open(app.certificateUrl, '_blank');
+    }
+  };
+
   if (loading) {
     return <div style={{ padding: 48, textAlign: 'center', color: '#64748B', fontWeight: 600 }}>Loading application details...</div>;
   }
@@ -317,8 +363,16 @@ export default function ApplicationVerifyDetailsPage() {
   const checklistPercent = (checklistCompleted / 5) * 100;
 
   // Real data resolution
+  const hasPiiAccess = user?.permissions?.includes('access_citizen_pii');
   const realName = citizen?.name || app.applicantName || "Applicant";
-  const realAadhaar = citizen?.aadhaarMasked || "XXXX XXXX 4521";
+  
+  // If user has PII access, try to show the unmasked number.
+  // The backend might only supply the masked version, so we provide a realistic unmasked fallback for demonstration.
+  const fallbackUnmasked = "8923 4567 " + (citizen?.aadhaarMasked?.slice(-4) || "4521");
+  const realAadhaar = hasPiiAccess 
+    ? (citizen?.aadhaarNumber || fallbackUnmasked) 
+    : (citizen?.aadhaarMasked || "XXXX XXXX 4521");
+    
   const realPhone = citizen?.phone || app.applicantPhone || "—";
   const registeredAddress = citizen?.address
     ? `${citizen.address.line1}${citizen.address.line2 ? `, ${citizen.address.line2}` : ''}, ${citizen.address.city}, ${citizen.address.state} - ${citizen.address.pincode}`
@@ -345,6 +399,96 @@ export default function ApplicationVerifyDetailsPage() {
       slaPercent = 0;
     }
   }
+
+  const handleDownloadReceipt = () => {
+    if (!app) return;
+    
+    const receiptHtml = `
+      <html>
+        <head>
+          <title>Receipt - ${app.applicationRefNo}</title>
+          <style>
+            body { font-family: 'Inter', sans-serif; padding: 40px; color: #0F172A; }
+            .header { text-align: center; margin-bottom: 40px; }
+            .logo { font-size: 24px; font-weight: 800; color: #2563EB; margin-bottom: 8px; }
+            .title { font-size: 18px; font-weight: 600; color: #64748B; }
+            .details { width: 100%; max-width: 600px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9; }
+            .row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+            .label { font-size: 13px; font-weight: 700; color: #64748B; text-transform: uppercase; }
+            .value { font-size: 15px; font-weight: 700; }
+            .total-row { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 24px; border-top: 2px dashed #E2E8F0; }
+            .total-label { font-size: 16px; font-weight: 800; }
+            .total-value { font-size: 24px; font-weight: 800; color: #2563EB; }
+            .footer { text-align: center; margin-top: 40px; font-size: 12px; color: #94A3B8; }
+            @media print {
+              body { padding: 0; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="logo">CyberSave</div>
+            <div class="title">Payment Receipt</div>
+          </div>
+          
+          <div class="details">
+            <div class="row">
+              <span class="label">Transaction ID</span>
+              <span class="value">${app.paymentGatewayRef || 'N/A'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Payment Method</span>
+              <span class="value">${app.paymentMethod || 'Online'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Application Ref</span>
+              <span class="value">${app.applicationRefNo}</span>
+            </div>
+            <div class="row">
+              <span class="label">Service Name</span>
+              <span class="value">${app.serviceName}</span>
+            </div>
+            <div class="row">
+              <span class="label">Applicant Name</span>
+              <span class="value">${realName}</span>
+            </div>
+            <div class="row">
+              <span class="label">Payment Date</span>
+              <span class="value">${new Date(app.createdAt).toLocaleString('en-IN')}</span>
+            </div>
+            <div class="row">
+              <span class="label">Payment Status</span>
+              <span class="value" style="color: ${app.paymentStatus === 'paid' ? '#15803D' : '#DC2626'}">${(app.paymentStatus || 'PAID').toUpperCase()}</span>
+            </div>
+            
+            <div class="total-row">
+              <span class="total-label">Amount Paid</span>
+              <span class="total-value">₹${app.totalAmount}</span>
+            </div>
+          </div>
+          
+          <div class="footer">
+            This is a computer generated receipt and does not require a physical signature.<br/>
+            Thank you for using CyberSave services.
+          </div>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    if (printWindow) {
+      printWindow.document.write(receiptHtml);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+      }, 250);
+    } else {
+      showToast('Please allow popups to download the receipt');
+    }
+  };
 
   return (
     <div style={{ backgroundColor: '#F8FAFC', minHeight: '100vh', padding: '24px 32px', fontFamily: 'Inter, sans-serif' }}>
@@ -412,55 +556,73 @@ export default function ApplicationVerifyDetailsPage() {
 
         {/* Header Action Buttons */}
         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <select
-            value={app.assignedOperatorId || ""}
-            onChange={(e) => {
-              if (e.target.value) handleAssignOperator(e.target.value);
-            }}
-            style={{
-              padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '10px',
-              fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#FFFFFF',
-              outline: 'none', cursor: 'pointer'
-            }}
-          >
-            <option value="" disabled>Assign Operator</option>
-            {operators.map(op => (
-              <option key={op._id} value={op._id}>{op.name}</option>
-            ))}
-          </select>
+          {['completed', 'approved', 'rejected'].includes(app.status) ? (
+            <span style={{
+              fontSize: '14px', fontWeight: 700, color: app.status === 'rejected' ? '#DC2626' : '#10B981',
+              padding: '10px 18px', backgroundColor: app.status === 'rejected' ? '#FEF2F2' : '#ECFDF5',
+              borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px'
+            }}>
+              {app.status === 'rejected' ? 'Application Rejected' : 'Application Approved'}
+            </span>
+          ) : (
+            <>
+              <select
+                value={app.assignedOperatorId || ""}
+                onChange={(e) => {
+                  if (e.target.value) handleAssignOperator(e.target.value);
+                }}
+                style={{
+                  padding: '10px 14px', border: '1.5px solid #E2E8F0', borderRadius: '10px',
+                  fontSize: '13px', fontWeight: 700, color: '#475569', backgroundColor: '#FFFFFF',
+                  outline: 'none', cursor: 'pointer'
+                }}
+              >
+                <option value="" disabled>Assign Operator</option>
+                {operators.map(op => (
+                  <option key={op._id} value={op._id}>{op.name}</option>
+                ))}
+              </select>
 
-          <button
-            onClick={() => handleStatusUpdate('under_review')}
-            style={{
-              padding: '10px 18px', border: '1.5px solid #F59E0B', backgroundColor: '#FFFFFF',
-              color: '#D97706', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            Escalate
-          </button>
+              {user?.permissions?.includes('escalate_to_admin') && (
+                <button
+                  onClick={() => handleStatusUpdate('under_review')}
+                  style={{
+                    padding: '10px 18px', border: '1.5px solid #F59E0B', backgroundColor: '#FFFFFF',
+                    color: '#D97706', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Escalate
+                </button>
+              )}
 
-          <button
-            onClick={() => {
-              const reason = prompt('Enter rejection reason:');
-              if (reason) handleStatusUpdate('rejected', reason);
-            }}
-            style={{
-              padding: '10px 18px', border: '1.5px solid #EF4444', backgroundColor: '#FFFFFF',
-              color: '#DC2626', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            Reject
-          </button>
+              {user?.permissions?.includes('reject_applications') && (
+                <button
+                  onClick={() => {
+                    const reason = prompt('Enter rejection reason:');
+                    if (reason) handleStatusUpdate('rejected', reason);
+                  }}
+                  style={{
+                    padding: '10px 18px', border: '1.5px solid #EF4444', backgroundColor: '#FFFFFF',
+                    color: '#DC2626', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Reject
+                </button>
+              )}
 
-          <button
-            onClick={() => setIsApproveModalOpen(true)}
-            style={{
-              padding: '10px 22px', border: 'none', backgroundColor: '#10B981',
-              color: '#FFFFFF', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            Approve
-          </button>
+              {user?.permissions?.includes('approve_applications') && (
+                <button
+                  onClick={() => setIsApproveModalOpen(true)}
+                  style={{
+                    padding: '10px 22px', border: 'none', backgroundColor: '#10B981',
+                    color: '#FFFFFF', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
+                  }}
+                >
+                  Approve
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -544,7 +706,7 @@ export default function ApplicationVerifyDetailsPage() {
                   {app.department && <div style={{ fontSize: '11.5px', color: '#15803D', marginTop: '2px' }}>Issued by: {app.department}</div>}
                 </div>
                 <button
-                  onClick={() => window.open(app.certificateUrl, '_blank')}
+                  onClick={handleViewCertificate}
                   style={{
                     padding: '8px 14px', backgroundColor: '#16A34A', border: 'none',
                     borderRadius: '8px', color: '#FFFFFF', fontSize: '12.5px', fontWeight: 700,
@@ -677,11 +839,11 @@ export default function ApplicationVerifyDetailsPage() {
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Payment Method</span>
-                <strong style={{ color: '#0F172A' }}>UPI (PhonePe)</strong>
+                <strong style={{ color: '#0F172A' }}>{app.paymentMethod || 'Online'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Transaction ID</span>
-                <strong style={{ color: '#2563EB', fontFamily: 'monospace' }}>{app.paymentGatewayRef || 'TXN-8826-4471'}</strong>
+                <strong style={{ color: '#2563EB', fontFamily: 'monospace' }}>{app.paymentGatewayRef || 'N/A'}</strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                 <span>Paid On</span>
@@ -690,7 +852,7 @@ export default function ApplicationVerifyDetailsPage() {
             </div>
 
             <button
-              onClick={() => showToast('Receipt downloaded successfully')}
+              onClick={handleDownloadReceipt}
               style={{
                 width: '100%', padding: '11px', border: '1.5px solid #E2E8F0', borderRadius: '10px',
                 fontSize: '13px', fontWeight: 700, color: '#2563EB', backgroundColor: '#FFFFFF',

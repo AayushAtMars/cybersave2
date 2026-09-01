@@ -12,6 +12,7 @@ import paymentRoutes from './modules/payment/routes';
 
 import { logger } from './modules/application/utils/logger';
 import { startDraftReminderCron } from './modules/application/utils/draftReminder';
+import { startExpiryReminderCron } from './modules/document/utils/expiryReminder';
 
 const app = express();
 
@@ -47,17 +48,17 @@ app.use(async (_req, _res, next) => {
   }
 });
 
-// ── Routes ─────────────────────────────────────────────────────────────────────
+//Routes
 app.use('/api/v1', applicationRoutes); // mounts /services, /applications
 app.use('/api/v1', documentRoutes);    // mounts /documents
 app.use('/api/v1/payments', paymentRoutes); // mounts /payments
 
-// ── Global health check ────────────────────────────────────────────────────────
+//Global health check
 app.get('/health', (_req, res) =>
   res.json({ success: true, data: { service: 'ops-service', status: 'ok', version: '1.0.0' } })
 );
 
-// ── Global error handler ──────────────────────────────────────────────────────
+//Global error handler
 app.use(
   (
     err: Error,
@@ -74,12 +75,13 @@ app.use(
   }
 );
 
-// ── Server startup (Render long-running process) ───────────────────────────────
+//Server startup (Render long-running process)
 if (require.main === module) {
   ensureConnected()
     .then(() => {
       // Start background cron jobs (e.g., draft reminders)
       startDraftReminderCron();
+      startExpiryReminderCron();
 
       app.listen(config.port, () => {
         logger.info(`ops-service listening on port ${config.port}`, { env: config.nodeEnv });

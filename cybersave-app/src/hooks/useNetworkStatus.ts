@@ -1,8 +1,3 @@
-/**
- * useNetworkStatus
- * Returns { isConnected, isChecking } — monitors real network connectivity.
- * Falls back gracefully if NetInfo is unavailable.
- */
 import { useState, useEffect } from 'react';
 
 let NetInfo: any = null;

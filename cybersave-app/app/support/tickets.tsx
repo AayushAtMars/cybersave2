@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { getTickets, Ticket } from '../../src/api/support';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const POPULAR_TOPICS = [
   {
@@ -43,6 +44,7 @@ const POPULAR_TOPICS = [
 ];
 
 export default function SupportTicketsScreen() {
+    const { t } = useTranslation();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -119,7 +121,7 @@ export default function SupportTicketsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Help & Support</Text>
+          <Text style={styles.headerTitle}>{t('tickets.help_support')}</Text>
           <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
@@ -152,17 +154,17 @@ export default function SupportTicketsScreen() {
             <View style={styles.ticketIconOuter}>
               <Ionicons name="mail" size={18} color="#EF4444" />
             </View>
-            <Text style={styles.ticketCardTitle}>Open Ticket</Text>
-            <Text style={styles.ticketCardSub}>Track issues</Text>
+            <Text style={styles.ticketCardTitle}>{t('tickets.open_ticket')}</Text>
+            <Text style={styles.ticketCardSub}>{t('tickets.track_issues')}</Text>
           </TouchableOpacity>
 
           {/* Popular Help Topics */}
           <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionHeader}>Popular Help Topics</Text>
+            <Text style={styles.sectionHeader}>{t('tickets.popular_help_topics')}</Text>
           </View>
           <View style={styles.topicsCard}>
             {filteredTopics.length === 0 ? (
-              <Text style={styles.noResultsText}>No matching help topics found.</Text>
+              <Text style={styles.noResultsText}>{t('tickets.no_matching_help_topics_found')}</Text>
             ) : (
               filteredTopics.map((topic, index) => (
                 <View key={topic.id} style={styles.topicRowWrapper}>
@@ -182,7 +184,7 @@ export default function SupportTicketsScreen() {
 
           {/* National Helpline Numbers */}
           <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionHeader}>National Helpline Numbers</Text>
+            <Text style={styles.sectionHeader}>{t('tickets.national_helpline_numbers')}</Text>
           </View>
           <TouchableOpacity 
             style={styles.emergencyCard} 
@@ -194,11 +196,11 @@ export default function SupportTicketsScreen() {
                 <Ionicons name="call" size={16} color="#FFFFFF" />
               </View>
               <View style={styles.emergencyInfo}>
-                <Text style={styles.emergencyTitle}>National Emergency</Text>
-                <Text style={styles.emergencySubtitle}>Single Emergency helpline response</Text>
+                <Text style={styles.emergencyTitle}>{t('tickets.national_emergency')}</Text>
+                <Text style={styles.emergencySubtitle}>{t('tickets.single_emergency_helpline_resp')}</Text>
               </View>
             </View>
-            <Text style={styles.emergencyNumber}>112</Text>
+            <Text style={styles.emergencyNumber}>{t('tickets.112')}</Text>
           </TouchableOpacity>
 
           {/* Share App Feedback Button */}
@@ -208,7 +210,7 @@ export default function SupportTicketsScreen() {
             onPress={() => router.push('/support/feedback')}
           >
             <Ionicons name="chatbubble-outline" size={16} color="#2563EB" />
-            <Text style={styles.feedbackBtnText}>Share App Feedback</Text>
+            <Text style={styles.feedbackBtnText}>{t('tickets.share_app_feedback')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -230,7 +232,7 @@ export default function SupportTicketsScreen() {
             <View style={styles.sheetHeader}>
               <View style={styles.dragIndicator} />
               <View style={styles.sheetTitleRow}>
-                <Text style={styles.sheetTitle}>Active Support Tickets</Text>
+                <Text style={styles.sheetTitle}>{t('tickets.active_support_tickets')}</Text>
                 <TouchableOpacity onPress={() => setShowTicketsModal(false)}>
                   <Ionicons name="close" size={20} color="#64748B" />
                 </TouchableOpacity>
@@ -247,10 +249,11 @@ export default function SupportTicketsScreen() {
                 ListEmptyComponent={
                   <View style={styles.empty}>
                     <Ionicons name="mail-unread-outline" size={44} color="#94A3B8" />
-                    <Text style={styles.emptyText}>No tickets found</Text>
+                    <Text style={styles.emptyText}>{t('tickets.no_tickets_found')}</Text>
                     <Text style={styles.emptySub}>
-                      Submit queries relating to payments or applications by tapping the button below.
-                    </Text>
+                      
+                                                  {t('tickets.submit_queries_relating_to_pay')}
+                                                </Text>
                   </View>
                 }
                 renderItem={({ item }) => {
@@ -274,7 +277,8 @@ export default function SupportTicketsScreen() {
                       </View>
                       <Text style={styles.ticketDesc} numberOfLines={2}>{item.description}</Text>
                       <Text style={styles.ticketTime}>
-                        Updated: {new Date(item.updatedAt).toLocaleDateString()}
+                        
+                                                      {t('tickets.updated')} {new Date(item.updatedAt).toLocaleDateString()}
                       </Text>
                     </TouchableOpacity>
                   );
@@ -290,7 +294,7 @@ export default function SupportTicketsScreen() {
                 router.push('/support/create');
               }}
             >
-              <Text style={styles.createNewTicketText}>+ Create New Ticket</Text>
+              <Text style={styles.createNewTicketText}>{t('tickets.create_new_ticket')}</Text>
             </TouchableOpacity>
             <SafeAreaView edges={['bottom']} style={{ backgroundColor: '#FFFFFF' }} />
           </View>
@@ -317,7 +321,7 @@ export default function SupportTicketsScreen() {
               style={styles.topicDismissBtn}
               onPress={() => setSelectedTopic(null)}
             >
-              <Text style={styles.topicDismissText}>Got it</Text>
+              <Text style={styles.topicDismissText}>{t('tickets.got_it')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -333,7 +337,7 @@ export default function SupportTicketsScreen() {
         <View style={styles.feedbackOverlay}>
           <View style={styles.feedbackCard}>
             <View style={styles.feedbackHeaderRow}>
-              <Text style={styles.feedbackHeaderTitle}>Share App Feedback</Text>
+              <Text style={styles.feedbackHeaderTitle}>{t('tickets.share_app_feedback')}</Text>
               <TouchableOpacity onPress={() => setShowFeedbackModal(false)}>
                 <Ionicons name="close" size={22} color="#64748B" />
               </TouchableOpacity>
@@ -351,7 +355,7 @@ export default function SupportTicketsScreen() {
               style={styles.feedbackSubmitBtn}
               onPress={handleSubmitFeedback}
             >
-              <Text style={styles.feedbackSubmitText}>Submit Feedback</Text>
+              <Text style={styles.feedbackSubmitText}>{t('tickets.submit_feedback')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -376,14 +380,14 @@ export default function SupportTicketsScreen() {
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.successTitle}>Thank You!</Text>
+            <Text style={styles.successTitle}>{t('tickets.thank_you')}</Text>
             <Text style={styles.successSub}>{successMsg}</Text>
             <TouchableOpacity 
               style={styles.successDoneBtn} 
               onPress={() => setShowSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.successDoneBtnText}>Dismiss</Text>
+              <Text style={styles.successDoneBtnText}>{t('tickets.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>

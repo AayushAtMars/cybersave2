@@ -19,6 +19,7 @@ import { apiClient } from '../../src/api/client';
 import { SkeletonScreen, NoInternet, SystemError } from '../../src/components/UIStates';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 // ── Custom SVG Icon component rendering files from assets/home ────────────────
 const HomeSvgIcon = ({ name, color, size = 24 }: { name: string; color: string; size?: number }) => {
@@ -116,6 +117,7 @@ const CATEGORIES_LIST = [
 ];
 
 export default function HomeScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
 
@@ -191,7 +193,7 @@ export default function HomeScreen() {
                 </Text>
               </View>
               <View>
-                <Text style={styles.greeting}>Good {getTimeOfDay()}, {user?.name?.split(' ')[0] ?? 'there'}</Text>
+                <Text style={styles.greeting}>{t('home.good')} {getTimeOfDay()}, {user?.name?.split(' ')[0] ?? 'there'}</Text>
                 <Text style={styles.userLocation}>{locationText}</Text>
               </View>
             </View>
@@ -213,7 +215,7 @@ export default function HomeScreen() {
             onPress={() => router.push('/(tabs)/services')}
           >
             <Ionicons name="search-outline" size={20} color="#94A3B8" style={styles.searchIcon} />
-            <Text style={styles.searchPlaceholder}>Search services...</Text>
+            <Text style={styles.searchPlaceholder}>{t('home.search_services')}</Text>
           </TouchableOpacity>
 
           {/* ── Quick Actions Card ───────────────────────────────────────── */}
@@ -223,7 +225,7 @@ export default function HomeScreen() {
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
           >
-            <Text style={styles.quickActionsTitle}>Quick Actions</Text>
+            <Text style={styles.quickActionsTitle}>{t('home.quick_actions')}</Text>
             <View style={styles.quickActionsGrid}>
               {/* Aadhaar */}
               <TouchableOpacity
@@ -236,7 +238,7 @@ export default function HomeScreen() {
                 <View style={styles.actionCircle}>
                   <HomeSvgIcon name="adhaar" color="#2563EB" size={22} />
                 </View>
-                <Text style={styles.actionLabel}>Aadhaar</Text>
+                <Text style={styles.actionLabel}>{t('home.aadhaar')}</Text>
               </TouchableOpacity>
 
               {/* PAN Card */}
@@ -250,7 +252,7 @@ export default function HomeScreen() {
                 <View style={styles.actionCircle}>
                   <HomeSvgIcon name="pancard" color="#10B981" size={22} />
                 </View>
-                <Text style={styles.actionLabel}>PAN Card</Text>
+                <Text style={styles.actionLabel}>{t('home.pan_card')}</Text>
               </TouchableOpacity>
 
               {/* Pay Bills */}
@@ -271,7 +273,7 @@ export default function HomeScreen() {
                 <View style={styles.actionCircle}>
                   <HomeSvgIcon name="paybills" color="#F59E0B" size={22} />
                 </View>
-                <Text style={styles.actionLabel}>Pay Bills</Text>
+                <Text style={styles.actionLabel}>{t('home.pay_bills')}</Text>
               </TouchableOpacity>
 
               {/* Banking */}
@@ -283,16 +285,16 @@ export default function HomeScreen() {
                 <View style={styles.actionCircle}>
                   <HomeSvgIcon name="banking" color="#EF4444" size={22} />
                 </View>
-                <Text style={styles.actionLabel}>Banking</Text>
+                <Text style={styles.actionLabel}>{t('home.banking')}</Text>
               </TouchableOpacity>
             </View>
           </LinearGradient>
 
           {/* ── Service Categories ─────────────────────────────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Service Categories</Text>
+            <Text style={styles.sectionTitle}>{t('home.service_categories')}</Text>
             <TouchableOpacity onPress={() => router.push('/(tabs)/services')}>
-              <Text style={styles.viewAll}>View All</Text>
+              <Text style={styles.viewAll}>{t('home.view_all')}</Text>
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -326,7 +328,7 @@ export default function HomeScreen() {
 
           {/* ── Popular Services ───────────────────────────────────────────── */}
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Popular Services</Text>
+            <Text style={styles.sectionTitle}>{t('home.popular_services')}</Text>
           </View>
           <TouchableOpacity
             style={styles.popularCard}
@@ -343,8 +345,8 @@ export default function HomeScreen() {
             activeOpacity={0.8}
           >
             <View>
-              <Text style={styles.popularCardTitle}>Electricity Bill</Text>
-              <Text style={styles.popularCardSub}>Pay central & state utility bills</Text>
+              <Text style={styles.popularCardTitle}>{t('home.electricity_bill')}</Text>
+              <Text style={styles.popularCardSub}>{t('home.pay_central_state_utility_bill')}</Text>
             </View>
           </TouchableOpacity>
 
@@ -356,12 +358,13 @@ export default function HomeScreen() {
             end={{ x: 1, y: 1 }}
           >
             <View style={styles.schemeBadge}>
-              <Text style={styles.schemeBadgeText}>NEW SCHEME</Text>
+              <Text style={styles.schemeBadgeText}>{t('home.new_scheme')}</Text>
             </View>
-            <Text style={styles.schemeTitle}>PM-Kisan Samman Nidhi</Text>
+            <Text style={styles.schemeTitle}>{t('home.pm_kisan_samman_nidhi')}</Text>
             <Text style={styles.schemeDesc}>
-              Eligible farmers get ₹6,000 yearly directly into bank accounts. Apply easily today.
-            </Text>
+              
+                                            {t('home.eligible_farmers_get_6_000_yea')}
+                                          </Text>
             <TouchableOpacity
               onPress={() => {
                 if (pmKisanService) {
@@ -375,7 +378,7 @@ export default function HomeScreen() {
               }}
               activeOpacity={0.8}
             >
-              <Text style={styles.schemeLink}>Check Eligibility &gt;</Text>
+              <Text style={styles.schemeLink}>{t('home.check_eligibility_gt')}</Text>
             </TouchableOpacity>
           </LinearGradient>
         </View>

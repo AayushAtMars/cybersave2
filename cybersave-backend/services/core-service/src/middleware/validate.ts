@@ -27,9 +27,9 @@ export const validate =
     next();
   };
 
-/**
- * Validates req.query against a Zod schema.
- */
+
+// Validates req.query against a Zod schema.
+
 export const validateQuery =
   (schema: ZodSchema) =>
   (req: Request, res: Response, next: NextFunction): void => {

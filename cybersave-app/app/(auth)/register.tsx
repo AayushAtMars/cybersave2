@@ -20,6 +20,7 @@ import { useAuthStore } from '../../src/store/authStore';
 import { sendFirebaseOtp, setActiveConfirmation } from '../../src/api/firebase';
 import { shadows } from '../../src/theme';
 import { STATE_DISTRICTS } from '../../src/utils/districtsData';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 
@@ -70,6 +71,7 @@ function Dropdown({
 }
 
 export default function RegisterScreen() {
+    const { t } = useTranslation();
   const { phone: phoneParam } = useLocalSearchParams<{ phone: string }>();
   // phoneInput is used when user lands on register directly (no OTP param)
   const [phoneInput, setPhoneInput] = useState('');
@@ -137,19 +139,20 @@ export default function RegisterScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Create Account</Text>
+          <Text style={styles.headerTitle}>{t('register.create_account')}</Text>
         </LinearGradient>
 
         {/* White card */}
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Join Cybersave</Text>
+          <Text style={styles.cardTitle}>{t('register.join_cybersave')}</Text>
           <Text style={styles.cardSub}>
-            Sign up to access direct benefit transfers and locker documents
-          </Text>
+            
+                                  {t('register.sign_up_to_access_direct_benef')}
+                                </Text>
 
           {/* Full Name */}
           <View style={styles.field}>
-            <Text style={styles.label}>Full Name (As in Aadhaar)</Text>
+            <Text style={styles.label}>{t('register.full_name_as_in_aadhaar')}</Text>
             <TextInput
               style={styles.input}
               placeholder="Aarav Sharma"
@@ -163,7 +166,7 @@ export default function RegisterScreen() {
 
           {/* Phone Number */}
           <View style={styles.field}>
-            <Text style={styles.label}>Phone Number</Text>
+            <Text style={styles.label}>{t('register.phone_number')}</Text>
             <View style={[styles.phoneRow, phoneIsLocked && styles.phoneRowLocked]}>
               <View style={styles.countryCode}>
                 <View style={styles.flagContainer}>
@@ -171,7 +174,7 @@ export default function RegisterScreen() {
                   <View style={[styles.flagStripe, { backgroundColor: '#FFFFFF' }]} />
                   <View style={[styles.flagStripe, { backgroundColor: '#138808' }]} />
                 </View>
-                <Text style={styles.countryCodeText}>+91</Text>
+                <Text style={styles.countryCodeText}>{t('register.91')}</Text>
               </View>
               {phoneIsLocked ? (
                 // Read-only: phone was verified via OTP
@@ -193,13 +196,13 @@ export default function RegisterScreen() {
               )}
             </View>
             {!phoneIsLocked && phoneInput.length > 0 && !/^[6-9]\d{9}$/.test(phoneInput) && (
-              <Text style={styles.phoneHint}>Enter a valid 10-digit mobile number</Text>
+              <Text style={styles.phoneHint}>{t('register.enter_a_valid_10_digit_mobile_')}</Text>
             )}
           </View>
 
           {/* Email */}
           <View style={styles.field}>
-            <Text style={styles.label}>Email ID (Optional)</Text>
+            <Text style={styles.label}>{t('register.email_id_optional')}</Text>
             <TextInput
               style={styles.input}
               placeholder="aarav.sharma@example.com"
@@ -214,7 +217,7 @@ export default function RegisterScreen() {
 
           {/* Aadhaar */}
           <View style={styles.field}>
-            <Text style={styles.label}>Aadhaar Number (Optional)</Text>
+            <Text style={styles.label}>{t('register.aadhaar_number_optional')}</Text>
             <TextInput
               style={styles.input}
               placeholder="1234 5678 9012"
@@ -255,8 +258,9 @@ export default function RegisterScreen() {
               {agreed && <Text style={styles.checkMark}>✓</Text>}
             </View>
             <Text style={styles.agreeText}>
-              I agree to the National E-Governance Terms of Service and Privacy Policy.
-            </Text>
+              
+                                        {t('register.i_agree_to_the_national_e_gove')}
+                                      </Text>
           </TouchableOpacity>
 
           {/* Error */}
@@ -354,9 +358,9 @@ export default function RegisterScreen() {
         </View>
 
         <View style={styles.loginRow}>
-          <Text style={styles.loginText}>Already have an account? </Text>
+          <Text style={styles.loginText}>{t('register.already_have_an_account')} </Text>
           <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-            <Text style={styles.loginLink}>Login</Text>
+            <Text style={styles.loginLink}>{t('register.login')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

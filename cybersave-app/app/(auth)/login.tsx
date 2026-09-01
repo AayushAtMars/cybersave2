@@ -21,6 +21,7 @@ import { useSendOtp } from '../../src/api/auth';
 import { useAuthStore } from '../../src/store/authStore';
 import { sendFirebaseOtp, setActiveConfirmation } from '../../src/api/firebase';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const { height, width } = Dimensions.get('window');
 
@@ -63,6 +64,7 @@ function FingerprintIcon() {
 }
 
 export default function LoginScreen() {
+    const { t } = useTranslation();
   const [phone, setPhone] = useState('');
   const inputRef = useRef<TextInput>(null);
   const sendOtp = useSendOtp();
@@ -130,14 +132,14 @@ export default function LoginScreen() {
           end={{ x: 1, y: 0 }}
         >
           <SafeAreaView edges={['top']} style={{ flex: 0 }} />
-          <Text style={styles.headerTitle}>Welcome Back</Text>
-          <Text style={styles.headerSub}>Sign in to safely access your e-gov portal</Text>
+          <Text style={styles.headerTitle}>{t('login.welcome_back')}</Text>
+          <Text style={styles.headerSub}>{t('login.sign_in_to_safely_access_your_')}</Text>
         </LinearGradient>
 
         {/* White card container */}
         <View style={styles.card}>
           {/* Mobile Number label */}
-          <Text style={styles.fieldLabel}>Mobile Number</Text>
+          <Text style={styles.fieldLabel}>{t('login.mobile_number')}</Text>
 
           {/* Phone input */}
           <View style={styles.phoneRow}>
@@ -148,7 +150,7 @@ export default function LoginScreen() {
                 <View style={[styles.flagStripe, { backgroundColor: '#FFFFFF' }]} />
                 <View style={[styles.flagStripe, { backgroundColor: '#138808' }]} />
               </View>
-              <Text style={styles.countryCodeText}>+91</Text>
+              <Text style={styles.countryCodeText}>{t('login.91')}</Text>
             </View>
             <View style={styles.dividerLineVertical} />
             <TextInput
@@ -195,7 +197,7 @@ export default function LoginScreen() {
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
+            <Text style={styles.dividerText}>{t('login.or')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -208,14 +210,14 @@ export default function LoginScreen() {
             <View style={styles.biometricIconWrap}>
               <FingerprintIcon />
             </View>
-            <Text style={styles.biometricText}>Login with Fingerprint / Face ID</Text>
+            <Text style={styles.biometricText}>{t('login.login_with_fingerprint_face_id')}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.registerRow}>
-          <Text style={styles.registerText}>New user? </Text>
+          <Text style={styles.registerText}>{t('login.new_user')} </Text>
           <TouchableOpacity onPress={() => router.push('/(auth)/register')}>
-            <Text style={styles.registerLink}>Register Now</Text>
+            <Text style={styles.registerLink}>{t('login.register_now')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

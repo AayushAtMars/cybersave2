@@ -18,8 +18,10 @@ import * as DocumentPicker from 'expo-document-picker';
 import { createTicket } from '../../src/api/support';
 import { useUploadDocument, getDownloadUrl } from '../../src/api/documents';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function CreateTicketScreen() {
+    const { t } = useTranslation();
   const [subject, setSubject] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Technical Support');
@@ -63,7 +65,7 @@ export default function CreateTicketScreen() {
         // Upload via Supabase pipeline
         const uploadedDoc = await uploadDoc.mutateAsync({
           file,
-          documentCategory: 'Support Attachment',
+          documentCategory: 'other',
         });
 
         // Fetch public download URL
@@ -114,7 +116,7 @@ export default function CreateTicketScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Raise a Ticket</Text>
+          <Text style={styles.headerTitle}>{t('create.raise_a_ticket')}</Text>
           <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
@@ -128,7 +130,7 @@ export default function CreateTicketScreen() {
         <View style={styles.whiteCardContainer}>
           {/* Support Category Selector */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Support Category</Text>
+            <Text style={styles.fieldLabel}>{t('create.support_category')}</Text>
             <TouchableOpacity 
               style={styles.dropdownInput} 
               onPress={() => setShowCategoryPicker(true)}
@@ -141,7 +143,7 @@ export default function CreateTicketScreen() {
 
           {/* Ticket Subject */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Ticket Subject</Text>
+            <Text style={styles.fieldLabel}>{t('create.ticket_subject')}</Text>
             <TextInput
               style={styles.textInput}
               value={subject}
@@ -153,7 +155,7 @@ export default function CreateTicketScreen() {
 
           {/* Detailed Description */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Detailed Description</Text>
+            <Text style={styles.fieldLabel}>{t('create.detailed_description')}</Text>
             <TextInput
               style={styles.textarea}
               value={description}
@@ -167,7 +169,7 @@ export default function CreateTicketScreen() {
 
           {/* Priority Level Selectors */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Priority Level</Text>
+            <Text style={styles.fieldLabel}>{t('create.priority_level')}</Text>
             <View style={styles.radioRow}>
               {(['low', 'medium', 'high'] as const).map((level) => {
                 const isSelected = priority === level;
@@ -190,7 +192,7 @@ export default function CreateTicketScreen() {
 
           {/* Upload Screenshots */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Upload Screenshots</Text>
+            <Text style={styles.fieldLabel}>{t('create.upload_screenshots')}</Text>
             <TouchableOpacity 
               style={styles.uploadCard} 
               onPress={handlePickDocument}
@@ -207,8 +209,8 @@ export default function CreateTicketScreen() {
               ) : (
                 <>
                   <Ionicons name="cloud-upload-outline" size={24} color="#2563EB" />
-                  <Text style={styles.uploadCardTitle}>Choose files or drag here</Text>
-                  <Text style={styles.uploadCardSub}>PNG, JPG, PDF up to 5MB</Text>
+                  <Text style={styles.uploadCardTitle}>{t('create.choose_files_or_drag_here')}</Text>
+                  <Text style={styles.uploadCardSub}>{t('create.png_jpg_pdf_up_to_5mb')}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -224,7 +226,7 @@ export default function CreateTicketScreen() {
             {loading ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.submitBtnText}>Submit Support Ticket</Text>
+              <Text style={styles.submitBtnText}>{t('create.submit_support_ticket')}</Text>
             )}
           </TouchableOpacity>
 
@@ -232,8 +234,9 @@ export default function CreateTicketScreen() {
           <View style={styles.faqBanner}>
             <Ionicons name="information-circle-outline" size={18} color="#2563EB" />
             <Text style={styles.faqBannerText}>
-              Check FAQ before raising. Most issues resolve instantly!
-            </Text>
+              
+                                        {t('create.check_faq_before_raising_most_')}
+                                      </Text>
           </View>
         </View>
       </ScrollView>
@@ -254,7 +257,7 @@ export default function CreateTicketScreen() {
           <View style={styles.bottomSheet}>
             <View style={styles.sheetHeader}>
               <View style={styles.dragIndicator} />
-              <Text style={styles.sheetTitle}>Select Category</Text>
+              <Text style={styles.sheetTitle}>{t('create.select_category')}</Text>
             </View>
             <View style={styles.sheetOptions}>
               {categories.map((cat) => (

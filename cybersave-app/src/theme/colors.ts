@@ -1,7 +1,3 @@
-// ─── CyberSave Design Tokens ──────────────────────────────────────────────────
-// Extracted from design.md and Figma screenshots
-// Treat as approximate — confirm exact hex from Figma Inspect panel before production
-
 export const colors = {
   // Brand gradient
   primary: '#2563EB',
@@ -47,8 +43,6 @@ export const colors = {
   tabInactive: '#94A3B8',
 } as const;
 
-// ─── Status color helper ──────────────────────────────────────────────────────
-// Maps ApplicationStatus enum values to design token colors (design.md §2)
 export const statusColors = {
   draft: { text: colors.textMuted, bg: colors.divider },
   submitted: { text: colors.status.inProgress, bg: colors.status.inProgressBg },

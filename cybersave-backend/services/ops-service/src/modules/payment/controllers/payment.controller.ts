@@ -13,6 +13,7 @@ const razorpay = new Razorpay({
 // Lazy-resolve models
 const getWalletModel = () => getModels().Wallet;
 const getTransactionModel = () => getModels().Transaction;
+const getApplicationModel = () => getModels().Application;
 
 // ── POST /payments/orders ─────────────────────────────────────────────────────
 export const createOrder = async (req: Request, res: Response): Promise<void> => {
@@ -140,7 +141,7 @@ export const handleWebhook = async (req: Request, res: Response): Promise<void> 
         // Direct in-process function call instead of HTTP POST!
         const mockReq = {
           params: { id: applicationId },
-          body: { paymentGatewayRef: payment.id, paymentOrderId: payment.order_id },
+          body: { paymentGatewayRef: payment.id, paymentOrderId: payment.order_id, paymentMethod: payment.method },
         } as unknown as Request;
 
         const mockRes = {
@@ -201,16 +202,103 @@ export const listAdminTransactions = async (req: Request, res: Response): Promis
     return;
   }
 
-  const { citizenId } = req.query;
-  if (!citizenId) {
-    res.status(400).json({ success: false, error: 'citizenId query param is required' });
-    return;
-  }
+  const { citizenId, type, page = '1', limit = '20' } = req.query;
+  const pageNum = parseInt(page as string, 10);
+  const limitNum = Math.min(parseInt(limit as string, 10), 100);
+
+  const filter: any = {};
+  if (citizenId) filter.citizenId = String(citizenId);
+  if (type) filter.type = String(type);
 
   const Transaction = getTransactionModel();
-  const transactions = await Transaction.find({ citizenId: String(citizenId) })
-    .sort({ createdAt: -1 })
-    .lean();
+  
+  const [items, total] = await Promise.all([
+    Transaction.find(filter)
+      .sort({ createdAt: -1 })
+      .skip((pageNum - 1) * limitNum)
+      .limit(limitNum)
+      .lean(),
+    Transaction.countDocuments(filter)
+  ]);
 
-  res.json({ success: true, data: { items: transactions } });
+  res.json({
+    success: true,
+    data: {
+      items,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum)
+    }
+  });
+};
+
+// ── POST /payments/wallet/pay-application ─────────────────────────────────────
+export const payApplicationWithWallet = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { applicationId } = req.body as { applicationId: string };
+    const citizenId = req.user!.id;
+
+    const Application = getApplicationModel();
+    const Wallet = getWalletModel();
+    const Transaction = getTransactionModel();
+
+    const application = await Application.findOne({ _id: applicationId, citizenId });
+    if (!application) {
+      res.status(404).json({ success: false, error: 'Application not found', errorCode: 'APPLICATION_NOT_FOUND' });
+      return;
+    }
+
+    if (application.paymentStatus === 'paid') {
+      res.status(400).json({ success: false, error: 'Application already paid', errorCode: 'ALREADY_PAID' });
+      return;
+    }
+
+    let wallet = await Wallet.findOne({ citizenId });
+    if (!wallet) {
+      wallet = await Wallet.create({ citizenId, balance: 0 });
+    }
+
+    const amountPaise = application.totalAmount;
+    if (wallet.balance < amountPaise) {
+      res.status(400).json({ success: false, error: 'Insufficient wallet balance', errorCode: 'INSUFFICIENT_FUNDS' });
+      return;
+    }
+
+    // Deduct balance
+    wallet.balance -= amountPaise;
+    await wallet.save();
+
+    const txnRef = `wal_${Date.now()}`;
+
+    // Log transaction
+    await Transaction.create({
+      citizenId,
+      walletId: wallet._id,
+      applicationId: application._id.toString(),
+      type: TransactionType.DEBIT,
+      amount: amountPaise,
+      description: `Payment for ${application.serviceName}`,
+      status: 'completed',
+      idempotencyKey: `wal_pay_${Date.now()}_${application._id.toString()}`,
+    });
+
+    // Automatically submit application if it was a draft
+    application.paymentStatus = 'paid';
+    application.paymentMethod = 'wallet';
+    application.paymentGatewayRef = txnRef;
+    application.status = 'submitted';
+    application.timeline.push({
+      event: 'Application submitted via Wallet Payment',
+      actorId: citizenId,
+      actorRole: 'citizen',
+      timestamp: new Date(),
+    });
+    await application.save();
+
+    res.json({ success: true, data: { success: true, txnId: txnRef } });
+  } catch (err: any) {
+    console.error('payApplicationWithWallet Error:', err);
+    res.status(500).json({ success: false, error: 'Internal Server Error', errorCode: 'INTERNAL_ERROR' });
+  }
 };

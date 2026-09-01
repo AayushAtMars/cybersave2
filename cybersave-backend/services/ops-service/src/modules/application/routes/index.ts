@@ -16,8 +16,10 @@ import {
   uploadCertificate,
   listAllApplications,
   createApplicationByAdmin,
+  getOperatorStats,
+  getDashboardStats,
 } from '../controllers/application.controller';
-import { listServices, getService, createService, updateService } from '../controllers/service.controller';
+import { listServices, getService, createService, updateService, deleteService } from '../controllers/service.controller';
 import { CreateServiceSchema } from '@cybersave/shared';
 import { z } from 'zod';
 
@@ -41,6 +43,12 @@ router.patch(
   requireRole('admin', 'super_admin'),
   updateService
 );
+router.delete(
+  '/services/:id',
+  authenticateGateway,
+  requireRole('admin', 'super_admin'),
+  deleteService
+);
 
 // ── Admin stats ──────────────────────────────────────────────────────────────
 router.get(
@@ -50,11 +58,19 @@ router.get(
   getAdminStats
 );
 
+// ── Operator stats ────────────────────────────────────────────────────────────
+router.get(
+  '/applications/operator/stats',
+  authenticateGateway,
+  requireRole('operator', 'admin', 'super_admin'),
+  getOperatorStats
+);
+
 // ── Admin: list all applications ─────────────────────────────────────────────
 router.get(
   '/applications/admin/all',
   authenticateGateway,
-  requireRole('admin', 'super_admin'),
+  requireRole('operator', 'admin', 'super_admin'),
   listAllApplications
 );
 
@@ -77,6 +93,7 @@ router.post(
 );
 
 router.get('/applications', authenticateGateway, requireRole('citizen'), listApplications);
+router.get('/applications/stats', authenticateGateway, requireRole('citizen'), getDashboardStats);
 router.get('/applications/:id', authenticateGateway, requireRole('citizen', 'operator', 'admin', 'super_admin'), getApplication);
 
 router.patch(

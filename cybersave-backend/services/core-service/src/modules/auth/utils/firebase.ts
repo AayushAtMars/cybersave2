@@ -9,9 +9,8 @@ const GOOGLE_CERTS_URL = 'https://www.googleapis.com/robot/v1/metadata/x509/secu
 const PROJECT_ID = 'cybersave-625ad';
 const ISSUER = `https://securetoken.google.com/${PROJECT_ID}`;
 
-/**
- * Fetch Google's public keys for Firebase ID token validation.
- */
+// Fetch Google's public keys for Firebase ID token validation.
+
 const getGooglePublicKeys = async (): Promise<Record<string, string>> => {
   const now = Date.now();
   if (googlePublicKeysCache && now < cacheExpiry) {

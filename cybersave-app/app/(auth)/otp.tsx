@@ -20,11 +20,13 @@ import { useAuthStore } from '../../src/store/authStore';
 import * as SecureStore from 'expo-secure-store';
 import { sendFirebaseOtp, getActiveConfirmation, setActiveConfirmation } from '../../src/api/firebase';
 import { shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const OTP_LENGTH = 6;
 const RESEND_COOLDOWN = 30;
 
 export default function OtpScreen() {
+    const { t } = useTranslation();
   const {
     phone,
     devOtp,
@@ -137,8 +139,8 @@ export default function OtpScreen() {
         router.replace('/(tabs)/home');
       }
     } catch (err: any) {
-      console.error('[OTP VERIFY ERROR]', err);
-      Alert.alert('Verification Failed', err.message ?? 'Invalid code or authentication failed.');
+      const serverError = err.response?.data?.error;
+      Alert.alert('Verification Failed', serverError || err.message || 'Invalid code or authentication failed.');
       setOtp(Array(OTP_LENGTH).fill(''));
       refs.current[0]?.focus();
     }
@@ -188,22 +190,23 @@ export default function OtpScreen() {
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
             <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Verify Mobile</Text>
+          <Text style={styles.headerTitle}>{t('otp.verify_mobile')}</Text>
           <View style={{ width: 48 }} />
         </View>
       </LinearGradient>
 
       {/* White card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Verify Your Number</Text>
+        <Text style={styles.cardTitle}>{t('otp.verify_your_number')}</Text>
         <Text style={styles.cardSub}>
-          We have sent a {OTP_LENGTH}-digit One-Time Password (OTP) to the mobile number ending in ••••••{phone ? phone.slice(-4) : '7890'}
+          
+                            {t('otp.we_have_sent_a')} {OTP_LENGTH}{t('otp.digit_one_time_password_otp_to')}{phone ? phone.slice(-4) : '7890'}
         </Text>
 
         {/* Dev-mode banner */}
         {!!devOtp && (
           <View style={styles.devBanner}>
-            <Text style={styles.devBannerLabel}>🔧 Dev Mode — OTP auto-filled</Text>
+            <Text style={styles.devBannerLabel}>{t('otp.dev_mode_otp_auto_filled')}</Text>
             <Text style={styles.devBannerOtp}>{devOtp}</Text>
           </View>
         )}
@@ -231,11 +234,12 @@ export default function OtpScreen() {
         <View style={styles.resendRow}>
           <TouchableOpacity onPress={handleResend} disabled={timer > 0}>
             <Text style={styles.resendText}>
-              Resend OTP in <Text style={styles.resendTimer}>{timerDisplay}</Text>
+              
+                                        {t('otp.resend_otp_in')} <Text style={styles.resendTimer}>{timerDisplay}</Text>
             </Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => router.back()}>
-            <Text style={styles.changeNumber}>Change Number</Text>
+            <Text style={styles.changeNumber}>{t('otp.change_number')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -275,7 +279,7 @@ export default function OtpScreen() {
         {/* Secured footer */}
         <View style={styles.securedRow}>
           <Ionicons name="lock-closed" size={14} color="#10B981" />
-          <Text style={styles.securedText}>Secured by National Identity Vault (NiDV)</Text>
+          <Text style={styles.securedText}>{t('otp.secured_by_national_identity_v')}</Text>
         </View>
       </View>
     </KeyboardAvoidingView>

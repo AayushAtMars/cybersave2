@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { getModels } from '../../../config/models';
+import { notificationService } from '../services/notification.service';
 
-// ── GET /notifications — list citizen's own notifications ──────────────────────
+//GET /notifications — list citizen's own notifications
 export const listNotifications = async (req: Request, res: Response): Promise<void> => {
   const citizenId = req.user!.id;
   const { Notification } = getModels();
@@ -9,7 +10,7 @@ export const listNotifications = async (req: Request, res: Response): Promise<vo
   res.json({ success: true, data: { items: notifications } });
 };
 
-// ── POST /notifications/read — mark all or specific notifications as read ─────
+// POST /notifications/read — mark all or specific notifications as read
 export const markAsRead = async (req: Request, res: Response): Promise<void> => {
   const citizenId = req.user!.id;
   const { ids } = req.body as { ids?: string[] };
@@ -24,7 +25,7 @@ export const markAsRead = async (req: Request, res: Response): Promise<void> => 
   res.json({ success: true, data: { message: 'Notifications marked as read' } });
 };
 
-// ── POST /notifications/send — trigger a notification (internal API) ──────────
+// POST /notifications/send — trigger a notification (internal API)
 // Called by ops-service (application/payment) to trigger a notification
 export const sendNotification = async (req: Request, res: Response): Promise<void> => {
   const { citizenId, title, body, type } = req.body as {
@@ -50,7 +51,7 @@ export const sendNotification = async (req: Request, res: Response): Promise<voi
   res.status(201).json({ success: true, data: { notification } });
 };
 
-// ── GET /notifications/admin ──────────────────────────────────────────────────
+//GET /notifications/admin
 export const listAdminNotifications = async (req: Request, res: Response): Promise<void> => {
   try {
     const { Notification } = getModels();
@@ -61,7 +62,35 @@ export const listAdminNotifications = async (req: Request, res: Response): Promi
   }
 };
 
-// ── PATCH /notifications/admin/:id/read ───────────────────────────────────────
+//GET /notifications/admin/stream
+export const streamAdminNotifications = (req: Request, res: Response) => {
+  const adminId = req.user!.id;
+  notificationService.addSSEClient(adminId, res);
+};
+
+//POST /notifications/admin/broadcast
+export const broadcastSystemUpdate = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { title, body } = req.body as { title: string; body: string };
+    await notificationService.dispatchAdminAlert('system_update', title, body);
+    res.json({ success: true, data: { message: 'System update broadcasted' } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+//POST /notifications/internal/admin-alert
+export const internalAdminAlert = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { title, body, type } = req.body as { title: string; body: string; type: string };
+    await notificationService.dispatchAdminAlert(type as any, title, body);
+    res.json({ success: true, data: { message: 'Alert dispatched' } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+//PATCH /notifications/admin/:id/read
 export const markAdminAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
     const { Notification } = getModels();
@@ -80,7 +109,7 @@ export const markAdminAsRead = async (req: Request, res: Response): Promise<void
   }
 };
 
-// ── POST /notifications/admin/read-all ────────────────────────────────────────
+//POST /notifications/admin/read-all
 export const markAllAdminAsRead = async (req: Request, res: Response): Promise<void> => {
   try {
     const { Notification } = getModels();

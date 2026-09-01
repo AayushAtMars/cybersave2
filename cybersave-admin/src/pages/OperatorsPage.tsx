@@ -3,16 +3,16 @@ import { adminClient } from '../api/client';
 import axios from 'axios';
 
 interface OperatorProfileViewProps {
-  op: Operator & { phone?: string; twoFaEnabled?: boolean };
+  op: Operator & { phone?: string };
   applications: any[];
   tab: 'overview' | 'activity_log' | 'permissions' | 'documents';
   setTab: (t: 'overview' | 'activity_log' | 'permissions' | 'documents') => void;
   onClose: () => void;
   onStatusChange: (status: 'active' | 'suspended') => void;
-  on2FAToggle: (enabled: boolean) => void;
+  onProfileUpdate: (updatedFields: Partial<Operator>) => void;
 }
 
-function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusChange, on2FAToggle }: OperatorProfileViewProps) {
+function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusChange, onProfileUpdate }: OperatorProfileViewProps) {
   const getInitials = (n: string) => n.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
 
   // Performance calculations
@@ -90,17 +90,6 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
     }
   };
 
-  const handleToggle2FA = async () => {
-    const nextVal = !op.twoFaEnabled;
-    try {
-      await adminClient.patch(`/auth/admin/operators/${op._id}/2fa`, { enabled: nextVal });
-      on2FAToggle(nextVal);
-      alert(`2FA is now ${nextVal ? 'enabled' : 'disabled'} for ${op.name}`);
-    } catch (err) {
-      alert('Failed to update 2FA setting');
-    }
-  };
-
   const handleResetPasswordClick = async () => {
     const newPass = window.prompt(`Enter new password for ${op.name} (min 8 characters):`);
     if (!newPass) return;
@@ -113,6 +102,25 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
       alert('Operator password has been reset successfully!');
     } catch (err: any) {
       alert(err.response?.data?.error || 'Failed to reset password');
+    }
+  };
+
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: op.name,
+    email: op.email,
+    employeeId: op.employeeId,
+    department: op.department
+  });
+
+  const handleProfileSave = async () => {
+    try {
+      await adminClient.patch(`/auth/admin/operators/${op._id}`, editForm);
+      onProfileUpdate(editForm);
+      setIsEditingProfile(false);
+      alert('Profile updated successfully!');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to update profile');
     }
   };
 
@@ -133,7 +141,7 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px',
         boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
           <div style={{
             width: '72px', height: '72px', borderRadius: '36px',
             background: 'linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%)',
@@ -142,58 +150,78 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
           }}>
             {getInitials(op.name)}
           </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0F172A', margin: 0 }}>{op.name}</h2>
-              <span style={{
-                fontSize: '12px', fontWeight: 750, textTransform: 'capitalize',
-                backgroundColor: op.status === 'active' ? '#E6FDF3' : '#FEE2E2',
-                color: op.status === 'active' ? '#10B981' : '#EF4444',
-                padding: '3px 8px', borderRadius: '6px'
-              }}>
-                {op.status}
-              </span>
-            </div>
-            <p style={{ fontSize: '14.5px', color: '#475569', fontWeight: 600, margin: '4px 0 0 0' }}>
-              {op.role === 'super_admin' ? 'System Admin' : op.role === 'admin' ? 'Senior Analyst' : 'Field Operator'} • <span style={{ color: '#2563EB' }}>{op.department}</span>
-            </p>
-            <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0 0' }}>
-              Employee ID: <span style={{ fontWeight: 700, color: '#334155' }}>{op.employeeId}</span> • Joined: <span style={{ fontWeight: 700, color: '#334155' }}>{new Date(op.createdAt).toLocaleDateString('en-GB')}</span>
-            </p>
+          <div style={{ flex: 1 }}>
+            {isEditingProfile ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', maxWidth: '500px' }}>
+                <input value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} placeholder="Name" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #CBD5E1' }} />
+                <input value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} placeholder="Email" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #CBD5E1' }} />
+                <input value={editForm.employeeId} onChange={e => setEditForm({...editForm, employeeId: e.target.value})} placeholder="Employee ID" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #CBD5E1' }} />
+                <input value={editForm.department} onChange={e => setEditForm({...editForm, department: e.target.value})} placeholder="Department" style={{ padding: '8px', borderRadius: '6px', border: '1px solid #CBD5E1' }} />
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <h2 style={{ fontSize: '24px', fontWeight: 800, color: '#0F172A', margin: 0 }}>{op.name}</h2>
+                  <span style={{
+                    fontSize: '12px', fontWeight: 750, textTransform: 'capitalize',
+                    backgroundColor: op.status === 'active' ? '#E6FDF3' : '#FEE2E2',
+                    color: op.status === 'active' ? '#10B981' : '#EF4444',
+                    padding: '3px 8px', borderRadius: '6px'
+                  }}>
+                    {op.status}
+                  </span>
+                </div>
+                <p style={{ fontSize: '14.5px', color: '#475569', fontWeight: 600, margin: '4px 0 0 0' }}>
+                  {op.role === 'super_admin' ? 'System Admin' : op.role === 'admin' ? 'Senior Analyst' : 'Field Operator'} • <span style={{ color: '#2563EB' }}>{op.department}</span>
+                </p>
+                <p style={{ fontSize: '13px', color: '#64748B', margin: '4px 0 0 0' }}>
+                  Employee ID: <span style={{ fontWeight: 700, color: '#334155' }}>{op.employeeId}</span> • Joined: <span style={{ fontWeight: 700, color: '#334155' }}>{new Date(op.createdAt).toLocaleDateString('en-GB')}</span>
+                </p>
+              </>
+            )}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={() => alert("Inline profile editing will be supported in the next system release.")}
-            style={{
-              padding: '10px 18px', backgroundColor: '#2563EB', color: '#FFFFFF',
-              border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            Edit Profile
-          </button>
-          <button
-            onClick={handleResetPasswordClick}
-            style={{
-              padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#334155',
-              border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            Reset Password
-          </button>
-          <button
-            onClick={() => onStatusChange(op.status === 'active' ? 'suspended' : 'active')}
-            style={{
-              padding: '10px 18px', backgroundColor: '#FFFFFF',
-              color: op.status === 'active' ? '#EF4444' : '#10B981',
-              border: `1.5px solid ${op.status === 'active' ? '#FCA5A5' : '#6EE7B7'}`,
-              borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
-            }}
-          >
-            {op.status === 'active' ? 'Suspend Account' : 'Activate Account'}
-          </button>
+          {isEditingProfile ? (
+            <>
+              <button onClick={() => setIsEditingProfile(false)} style={{ padding: '10px 18px', backgroundColor: '#FFFFFF', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleProfileSave} style={{ padding: '10px 18px', backgroundColor: '#10B981', color: '#FFFFFF', border: 'none', borderRadius: '8px', fontWeight: 700, cursor: 'pointer' }}>Save</button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setIsEditingProfile(true)}
+                style={{
+                  padding: '10px 18px', backgroundColor: '#2563EB', color: '#FFFFFF',
+                  border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                Edit Profile
+              </button>
+              <button
+                onClick={handleResetPasswordClick}
+                style={{
+                  padding: '10px 18px', backgroundColor: '#FFFFFF', color: '#334155',
+                  border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                Reset Password
+              </button>
+              <button
+                onClick={() => onStatusChange(op.status === 'active' ? 'suspended' : 'active')}
+                style={{
+                  padding: '10px 18px', backgroundColor: '#FFFFFF',
+                  color: op.status === 'active' ? '#EF4444' : '#10B981',
+                  border: `1.5px solid ${op.status === 'active' ? '#FCA5A5' : '#6EE7B7'}`,
+                  borderRadius: '8px', fontSize: '14px', fontWeight: 700, cursor: 'pointer'
+                }}
+              >
+                {op.status === 'active' ? 'Suspend' : 'Activate'}
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -257,30 +285,12 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
                 <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Access & Security Settings</h3>
                 <span style={{ fontSize: '12px', fontWeight: 600, color: '#64748B' }}>Security Policy V2.1</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '16px', borderBottom: '1.5px solid #F1F5F9', marginBottom: '16px' }}>
-                <div>
-                  <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', display: 'block' }}>Two-Factor Authentication (2FA)</span>
-                  <span style={{ fontSize: '12.5px', color: '#64748B', marginTop: '2px', display: 'block' }}>Requires a secure mobile authenticator code upon signing in.</span>
-                </div>
-                <div 
-                  onClick={handleToggle2FA}
-                  style={{
-                    width: '44px', height: '24px', borderRadius: '12px',
-                    backgroundColor: op.twoFaEnabled ? '#10B981' : '#CBD5E1',
-                    cursor: 'pointer', position: 'relative', transition: '0.2s'
-                  }}
-                >
-                  <div style={{
-                    width: '18px', height: '18px', borderRadius: '9px', backgroundColor: '#FFFFFF',
-                    position: 'absolute', top: '3px', left: op.twoFaEnabled ? '23px' : '3px',
-                    transition: '0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
-                  }} />
-                </div>
-              </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
                 <div>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Last Login Date/Time</span>
-                  <span style={{ fontSize: '13.5px', color: '#0F172A', fontWeight: 700 }}>28/01/2026, 09:12 AM</span>
+                  <span style={{ fontSize: '13.5px', color: '#0F172A', fontWeight: 700 }}>
+                    {op.updatedAt ? new Date(op.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : 'Never'}
+                  </span>
                 </div>
                 <div>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>Active Sessions</span>
@@ -904,9 +914,9 @@ export default function OperatorsPage() {
           handleUpdateStatus(viewingOp._id, nextStatus);
           setViewingOp(prev => prev ? { ...prev, status: nextStatus } : null);
         }}
-        on2FAToggle={(enabled) => {
-          setViewingOp(prev => prev ? { ...prev, twoFaEnabled: enabled } : null);
-          setOps(prevOps => prevOps.map(o => o._id === viewingOp._id ? { ...o, twoFaEnabled: enabled } : o));
+        onProfileUpdate={(updatedFields) => {
+          setViewingOp(prev => prev ? { ...prev, ...updatedFields } : null);
+          setOps(prevOps => prevOps.map(o => o._id === viewingOp._id ? { ...o, ...updatedFields } : o));
         }}
       />
     );

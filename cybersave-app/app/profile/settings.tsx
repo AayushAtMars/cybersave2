@@ -20,8 +20,10 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { useAuthStore } from '../../src/store/authStore';
 import { apiClient } from '../../src/api/client';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function SettingsScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -47,6 +49,7 @@ export default function SettingsScreen() {
   // Success notifications
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [showClearCacheModal, setShowClearCacheModal] = useState(false);
 
   // Load persisted states on mount
   useEffect(() => {
@@ -108,20 +111,37 @@ export default function SettingsScreen() {
   };
 
   const handleClearCache = async () => {
+    setShowClearCacheModal(true);
+  };
+
+  const confirmClearCache = async () => {
+    setShowClearCacheModal(false);
     try {
+      try {
+        await apiClient.post('/auth/logout', {});
+      } catch (e) {
+        // Continue clearing cache even if logout API fails
+      }
       const cacheDir = FileSystem.cacheDirectory;
       if (cacheDir) {
-        // Read directory and delete contents
         const files = await FileSystem.readDirectoryAsync(cacheDir);
         for (const file of files) {
           await FileSystem.deleteAsync(`${cacheDir}${file}`, { idempotent: true });
         }
       }
-      setCacheSize('0.0 MB');
-      setSuccessMsg('Cache directory cleared successfully!');
-      setShowSuccessModal(true);
+      
+      // Clear all secure store data
+      await SecureStore.deleteItemAsync('user_session');
+      await SecureStore.deleteItemAsync('biometric_enabled');
+      await SecureStore.deleteItemAsync('user_mpin');
+      await SecureStore.deleteItemAsync('autopay_enabled');
+      await SecureStore.deleteItemAsync('two_factor_enabled');
+      await SecureStore.deleteItemAsync('user_language');
+      
+      clearAuth();
+      router.replace('/(onboarding)/splash');
     } catch (err) {
-      Alert.alert('Error', 'Failed to clear cache.');
+      Alert.alert('Error', 'Failed to clear cache and data.');
     }
   };
 
@@ -270,7 +290,7 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Settings</Text>
+          <Text style={styles.headerTitle}>{t('settings.settings')}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
@@ -284,34 +304,16 @@ export default function SettingsScreen() {
         <View style={styles.cardContainer}>
           {/* ACCOUNT SECTION */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Account</Text>
+            <Text style={styles.sectionHeader}>{t('settings.account')}</Text>
             <View style={styles.sectionCard}>
-              {/* Option: Language */}
-              <TouchableOpacity 
-                style={styles.optionRow} 
-                activeOpacity={0.7} 
-                onPress={() => setShowLanguageModal(true)}
-              >
-                <View style={styles.optionLeft}>
-                  <Ionicons name="globe" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Language</Text>
-                </View>
-                <View style={styles.optionRight}>
-                  <Text style={styles.optionValue}>{selectedLanguage}</Text>
-                  <Ionicons name="chevron-forward" size={14} color="#64748B" />
-                </View>
-              </TouchableOpacity>
-
-              <View style={styles.divider} />
-
               {/* Option: Notifications */}
               <View style={styles.optionRow}>
                 <View style={styles.optionLeft}>
                   <Ionicons name="notifications" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Notifications</Text>
+                  <Text style={styles.optionLabel}>{t('settings.notifications')}</Text>
                 </View>
                 <View style={styles.optionRight}>
-                  <Text style={styles.optionValue}>All Active</Text>
+                  <Text style={styles.optionValue}>{t('settings.all_active')}</Text>
                   <Ionicons name="chevron-forward" size={14} color="#64748B" />
                 </View>
               </View>
@@ -322,7 +324,7 @@ export default function SettingsScreen() {
               <View style={styles.optionRow}>
                 <View style={styles.optionLeft}>
                   <Ionicons name="finger-print" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Biometric Login</Text>
+                  <Text style={styles.optionLabel}>{t('settings.biometric_login')}</Text>
                 </View>
                 <Switch
                   value={biometricEnabled}
@@ -332,27 +334,13 @@ export default function SettingsScreen() {
                 />
               </View>
 
-              <View style={styles.divider} />
 
-              {/* Option: Auto-pay */}
-              <View style={styles.optionRow}>
-                <View style={styles.optionLeft}>
-                  <Ionicons name="repeat" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Auto-pay</Text>
-                </View>
-                <Switch
-                  value={autopayEnabled}
-                  onValueChange={handleAutopayToggle}
-                  trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
             </View>
           </View>
 
           {/* SECURITY SECTION */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Security</Text>
+            <Text style={styles.sectionHeader}>{t('settings.security')}</Text>
             <View style={styles.sectionCard}>
               {/* Option: Change MPIN */}
               <TouchableOpacity 
@@ -362,26 +350,12 @@ export default function SettingsScreen() {
               >
                 <View style={styles.optionLeft}>
                   <Ionicons name="lock-closed" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Change MPIN</Text>
+                  <Text style={styles.optionLabel}>{t('settings.change_mpin')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={14} color="#64748B" />
               </TouchableOpacity>
 
-              <View style={styles.divider} />
 
-              {/* Option: Two-Factor Auth */}
-              <View style={styles.optionRow}>
-                <View style={styles.optionLeft}>
-                  <Ionicons name="shield-checkmark" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Two-Factor Auth</Text>
-                </View>
-                <Switch
-                  value={twoFactorEnabled}
-                  onValueChange={handle2FactorToggle}
-                  trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
-                  thumbColor="#FFFFFF"
-                />
-              </View>
 
               <View style={styles.divider} />
 
@@ -393,7 +367,7 @@ export default function SettingsScreen() {
               >
                 <View style={styles.optionLeft}>
                   <Ionicons name="time" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Login History</Text>
+                  <Text style={styles.optionLabel}>{t('settings.login_history')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={14} color="#64748B" />
               </TouchableOpacity>
@@ -402,7 +376,7 @@ export default function SettingsScreen() {
 
           {/* DATA SECTION */}
           <View style={styles.section}>
-            <Text style={styles.sectionHeader}>Data</Text>
+            <Text style={styles.sectionHeader}>{t('settings.data')}</Text>
             <View style={styles.sectionCard}>
               {/* Option: Clear Cache */}
               <TouchableOpacity 
@@ -412,7 +386,7 @@ export default function SettingsScreen() {
               >
                 <View style={styles.optionLeft}>
                   <Ionicons name="trash" size={18} color="#2563EB" />
-                  <Text style={styles.optionLabel}>Clear Cache</Text>
+                  <Text style={styles.optionLabel}>{t('settings.clear_cache')}</Text>
                 </View>
                 <Text style={styles.optionValue}>{cacheSize}</Text>
               </TouchableOpacity>
@@ -427,7 +401,7 @@ export default function SettingsScreen() {
               >
                 <View style={styles.optionLeft}>
                   <Ionicons name="warning" size={18} color="#EF4444" />
-                  <Text style={[styles.optionLabel, { color: '#EF4444' }]}>Delete Account</Text>
+                  <Text style={[styles.optionLabel, { color: '#EF4444' }]}>{t('settings.delete_account')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={14} color="#EF4444" />
               </TouchableOpacity>
@@ -452,7 +426,7 @@ export default function SettingsScreen() {
           <View style={styles.bottomSheet}>
             <View style={styles.sheetHeader}>
               <View style={styles.dragIndicator} />
-              <Text style={styles.sheetTitle}>Select Language</Text>
+              <Text style={styles.sheetTitle}>{t('settings.select_language')}</Text>
             </View>
             <View style={styles.sheetOptions}>
               {['English', 'Hindi', 'Kannada', 'Telugu', 'Tamil'].map((lang) => (
@@ -493,7 +467,7 @@ export default function SettingsScreen() {
             <View style={styles.mpinInputs}>
               {hasExistingMpin && (
                 <View style={styles.field}>
-                  <Text style={styles.fieldLabel}>Current MPIN</Text>
+                  <Text style={styles.fieldLabel}>{t('settings.current_mpin')}</Text>
                   <TextInput
                     style={styles.pinInput}
                     value={currentMpin}
@@ -508,7 +482,7 @@ export default function SettingsScreen() {
               )}
 
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>New MPIN</Text>
+                <Text style={styles.fieldLabel}>{t('settings.new_mpin')}</Text>
                 <TextInput
                   style={styles.pinInput}
                   value={newMpin}
@@ -522,7 +496,7 @@ export default function SettingsScreen() {
               </View>
 
               <View style={styles.field}>
-                <Text style={styles.fieldLabel}>Confirm New MPIN</Text>
+                <Text style={styles.fieldLabel}>{t('settings.confirm_new_mpin')}</Text>
                 <TextInput
                   style={styles.pinInput}
                   value={confirmMpin}
@@ -562,7 +536,7 @@ export default function SettingsScreen() {
             <View style={styles.sheetHeader}>
               <View style={styles.dragIndicator} />
               <View style={styles.sheetTitleRow}>
-                <Text style={styles.sheetTitle}>Login History</Text>
+                <Text style={styles.sheetTitle}>{t('settings.login_history')}</Text>
                 <TouchableOpacity onPress={() => setShowHistoryModal(false)}>
                   <Ionicons name="close" size={20} color="#64748B" />
                 </TouchableOpacity>
@@ -570,7 +544,7 @@ export default function SettingsScreen() {
             </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.historyList}>
               {[...(user?.sessions || [])].sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime()).length === 0 ? (
-                <Text style={styles.emptySessionText}>No login history found.</Text>
+                <Text style={styles.emptySessionText}>{t('settings.no_login_history_found')}</Text>
               ) : (
                 [...(user?.sessions || [])]
                   .sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime())
@@ -583,23 +557,31 @@ export default function SettingsScreen() {
                       hour: '2-digit',
                       minute: '2-digit',
                     });
+                    const isActive = isCurrent && session.type !== 'logout';
+                    const actionText = session.type === 'logout' ? 'Logged Out' : 'Logged In';
+                    const iconColor = session.type === 'logout' ? '#EF4444' : (isActive ? '#2563EB' : '#10B981');
+                    
                     return (
-                      <View key={session.id || index}>
-                        {index > 0 && <View style={styles.divider} />}
-                        <View style={styles.historyRow}>
+                      <View key={session.id || index} style={styles.historyCard}>
+                        <View style={[styles.historyIconBox, { backgroundColor: session.type === 'logout' ? '#FEF2F2' : (isActive ? '#EFF6FF' : '#ECFDF5') }]}>
                           <Ionicons 
-                            name={session.device.toLowerCase().includes('web') ? 'globe-outline' : 'phone-portrait-outline'} 
-                            size={22} 
-                            color={isCurrent ? '#2563EB' : '#64748B'} 
+                            name={session.device.toLowerCase().includes('web') ? 'laptop-outline' : 'phone-portrait-outline'} 
+                            size={20} 
+                            color={iconColor} 
                           />
-                          <View style={styles.historyInfo}>
-                            <Text style={styles.historyDevice}>
-                              {session.device} {isCurrent ? '(Active Now)' : ''}
-                            </Text>
-                            <Text style={styles.historyMeta}>
-                              {session.location} • {formattedDate}
-                            </Text>
-                          </View>
+                        </View>
+                        <View style={styles.historyInfo}>
+                          <Text style={styles.historyDevice}>
+                            {session.device}
+                          </Text>
+                          <Text style={styles.historyMeta}>
+                            {session.location} • {formattedDate}
+                          </Text>
+                        </View>
+                        <View style={[styles.historyBadge, { backgroundColor: session.type === 'logout' ? '#FEF2F2' : (isActive ? '#EFF6FF' : '#F1F5F9') }]}>
+                          <Text style={[styles.historyBadgeText, { color: session.type === 'logout' ? '#EF4444' : (isActive ? '#2563EB' : '#475569') }]}>
+                            {isActive ? 'Active' : actionText}
+                          </Text>
                         </View>
                       </View>
                     );
@@ -629,15 +611,58 @@ export default function SettingsScreen() {
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.successTitle}>Settings Saved!</Text>
+            <Text style={styles.successTitle}>{t('settings.settings_saved')}</Text>
             <Text style={styles.successSub}>{successMsg}</Text>
             <TouchableOpacity 
               style={styles.successDoneBtn} 
               onPress={() => setShowSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.successDoneBtnText}>Dismiss</Text>
+              <Text style={styles.successDoneBtnText}>{t('settings.dismiss')}</Text>
             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Clear Cache Modal */}
+      <Modal
+        visible={showClearCacheModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowClearCacheModal(false)}
+      >
+        <View style={styles.successOverlay}>
+          <View style={styles.successCard}>
+            <View style={styles.warningIconOuter}>
+              <LinearGradient
+                colors={['#EF4444', '#DC2626']}
+                style={styles.successIconInner}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+              >
+                <Ionicons name="trash" size={32} color="#FFFFFF" />
+              </LinearGradient>
+            </View>
+            <Text style={styles.successTitle}>Clear Cache</Text>
+            <Text style={styles.successSub}>
+              This will clear all local data and log you out. Are you sure?
+            </Text>
+            <View style={{ width: '100%', gap: 8, marginTop: 4 }}>
+              <TouchableOpacity 
+                style={[styles.successDoneBtn, { backgroundColor: '#EF4444', marginTop: 0 }]} 
+                onPress={confirmClearCache}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.successDoneBtnText}>CLEAR & LOGOUT</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.successDoneBtn, { backgroundColor: '#F1F5F9', marginTop: 0 }]} 
+                onPress={() => setShowClearCacheModal(false)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.successDoneBtnText, { color: '#64748B' }]}>CANCEL</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -775,6 +800,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 28,
     paddingHorizontal: 24,
     paddingTop: 16,
+    maxHeight: '85%',
     paddingBottom: 24,
     ...shadows.lg,
   },
@@ -883,28 +909,57 @@ const styles = StyleSheet.create({
   // Login History List
   historyList: {
     gap: 12,
-    marginTop: 4,
+    marginTop: 8,
     paddingBottom: 24,
   },
-  historyRow: {
+  historyCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    paddingVertical: 4,
+    padding: 12,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  historyIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   historyInfo: {
     flex: 1,
-    gap: 2,
+    gap: 4,
   },
   historyDevice: {
+    fontFamily: 'Inter',
     fontSize: 14,
     fontWeight: '700',
     color: '#0F172A',
   },
   historyMeta: {
+    fontFamily: 'Inter',
     fontSize: 11,
     color: '#64748B',
     fontWeight: '500',
+  },
+  historyBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  historyBadgeText: {
+    fontFamily: 'Inter',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
 
   // Success Modal
@@ -973,5 +1028,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     flex: 1,
     paddingVertical: 12,
+  },
+  warningIconOuter: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
   },
 });

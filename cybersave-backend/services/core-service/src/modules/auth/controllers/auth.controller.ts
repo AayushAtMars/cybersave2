@@ -30,7 +30,7 @@ import { logger, maskPhone } from '../utils/logger';
 import { config } from '../../../config';
 import crypto from 'crypto';
 
-// Lazy-resolved models (registered after DB connection)
+//Lazy-resolved models (registered after DB connection)
 const getUser = () => getModels().User;
 const getOperator = () => getModels().Operator;
 const getAuditLog = () => getModels().AuditLog;
@@ -66,23 +66,19 @@ const registerSession = async (user: any, req: Request) => {
     user.sessions = [];
   }
 
-  // Check if session with same device and IP already exists to update it, or add new
-  const existingIndex = user.sessions.findIndex((s: any) => s.device === device && s.ip === ip);
-  if (existingIndex !== -1) {
-    user.sessions[existingIndex].lastActive = new Date();
-  } else {
-    user.sessions.push({
-      id: crypto.randomBytes(8).toString('hex'),
-      device,
-      location,
-      ip,
-      lastActive: new Date(),
-    });
-  }
+  // Always push a new login event for history tracking
+  user.sessions.push({
+    id: crypto.randomBytes(8).toString('hex'),
+    device,
+    location,
+    ip,
+    type: 'login',
+    lastActive: new Date(),
+  });
 
-  // Keep only the last 5 sessions to avoid bloating User document
-  if (user.sessions.length > 5) {
-    user.sessions = user.sessions.slice(-5);
+  // Keep only the last 20 sessions to avoid bloating User document
+  if (user.sessions.length > 20) {
+    user.sessions = user.sessions.slice(-20);
   }
 
   user.markModified('sessions');
@@ -90,7 +86,7 @@ const registerSession = async (user: any, req: Request) => {
 };
 
 
-// ── POST /auth/send-otp ───────────────────────────────────────────────────────────────
+//POST /auth/send-otp
 export const sendOtp = async (req: Request, res: Response): Promise<void> => {
   const { phone } = req.body as { phone: string };
 
@@ -161,6 +157,15 @@ export const verifyOtpAndLogin = async (req: Request, res: Response): Promise<vo
     logger.info('New citizen registered', { phone: maskPhone(phone) });
   }
 
+  if (!user.isActive) {
+    res.status(403).json({
+      success: false,
+      error: 'Your account has been blocked by the administrator.',
+      errorCode: 'ACCOUNT_BLOCKED',
+    });
+    return;
+  }
+
   const accessToken = signAccessToken(user.id, user.role);
   const { token: refreshToken } = signRefreshToken(user.id, user.role);
 
@@ -185,7 +190,7 @@ export const verifyOtpAndLogin = async (req: Request, res: Response): Promise<vo
   });
 };
 
-// ── POST /auth/register ──────────────────────────────────────────────────────
+//POST /auth/register
 export const register = async (req: Request, res: Response): Promise<void> => {
   const { phone, name, email, aadhaarNumber, state, district } = req.body as {
     phone: string;
@@ -254,7 +259,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
 
 
 
-// ── POST /auth/refresh ──────────────────────────────────────────────────────
+//POST /auth/refresh
 export const refreshToken = async (req: Request, res: Response): Promise<void> => {
   const { refreshToken: token } = req.body as { refreshToken: string };
 
@@ -272,7 +277,7 @@ export const refreshToken = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// ── POST /auth/logout ───────────────────────────────────────────────────────
+//POST /auth/logout
 export const logout = async (req: Request, res: Response): Promise<void> => {
   const { refreshToken: token } = req.body as { refreshToken?: string };
 
@@ -293,10 +298,37 @@ export const logout = async (req: Request, res: Response): Promise<void> => {
     }
   }
 
+  // Log the logout event
+  if (req.user?.id) {
+    const User = getUser();
+    const user = await User.findById(req.user.id);
+    if (user) {
+      const ip = (req.headers['x-forwarded-for'] as string) || req.ip || '127.0.0.1';
+      const userAgent = req.headers['user-agent'] || '';
+      const device = parseDevice(userAgent);
+      const location = parseLocation(ip);
+
+      if (!user.sessions) user.sessions = [];
+      user.sessions.push({
+        id: crypto.randomBytes(8).toString('hex'),
+        device,
+        location,
+        ip,
+        type: 'logout',
+        lastActive: new Date(),
+      });
+      if (user.sessions.length > 20) {
+        user.sessions = user.sessions.slice(-20);
+      }
+      user.markModified('sessions');
+      await user.save();
+    }
+  }
+
   res.json({ success: true, data: { message: 'Logged out successfully' } });
 };
 
-// ── GET /auth/admin/me — get current operator profile ────────────────────────
+//GET /auth/admin/me
 export const getMe = async (req: Request, res: Response): Promise<void> => {
   try {
     const Operator = getOperator();
@@ -320,6 +352,8 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
         twoFaEnabled: operator.twoFaEnabled,
         status: operator.status,
         permissions: operator.permissions,
+        notificationPreferences: operator.notificationPreferences,
+        localizationPreferences: operator.localizationPreferences,
       },
     });
   } catch (err: any) {
@@ -327,12 +361,12 @@ export const getMe = async (req: Request, res: Response): Promise<void> => {
   }
 };
 
-// ── PATCH /auth/admin/me — update operator's own profile ─────────────────────
+//PATCH /auth/admin/me
 export const updateOperatorProfile = async (req: Request, res: Response): Promise<void> => {
   try {
     const Operator = getOperator();
     const operatorId = req.user!.id;
-    const { name, email, phone, avatar } = req.body as { name?: string; email?: string; phone?: string; avatar?: string };
+    const { name, email, phone, avatar, notificationPreferences, localizationPreferences } = req.body as any;
 
     const operator = await Operator.findById(operatorId);
     if (!operator) {
@@ -344,18 +378,28 @@ export const updateOperatorProfile = async (req: Request, res: Response): Promis
     if (email) operator.email = email.toLowerCase();
     if (phone !== undefined) operator.phone = phone;
     if (avatar !== undefined) operator.avatar = avatar;
+    if (notificationPreferences !== undefined) operator.notificationPreferences = notificationPreferences;
+    if (localizationPreferences !== undefined) operator.localizationPreferences = localizationPreferences;
     await operator.save();
 
     res.json({
       success: true,
-      data: { id: operator.id, name: operator.name, email: operator.email, phone: operator.phone, avatar: operator.avatar },
+      data: {
+        id: operator.id,
+        name: operator.name,
+        email: operator.email,
+        phone: operator.phone,
+        avatar: operator.avatar,
+        notificationPreferences: operator.notificationPreferences,
+        localizationPreferences: operator.localizationPreferences,
+      },
     });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }
 };
 
-// ── PATCH /auth/admin/me/password — update operator's password ────────────────
+//PATCH /auth/admin/me/password
 export const updateOperatorPassword = async (req: Request, res: Response): Promise<void> => {
   try {
     const Operator = getOperator();
@@ -388,7 +432,7 @@ export const updateOperatorPassword = async (req: Request, res: Response): Promi
   }
 };
 
-// ── PATCH /auth/admin/me/2fa — toggle 2FA for operator ───────────────────────
+//PATCH /auth/admin/me/2fa
 export const toggleOperator2FA = async (req: Request, res: Response): Promise<void> => {
   try {
     const Operator = getOperator();
@@ -457,7 +501,7 @@ export const adminToggleOperator2FA = async (req: Request, res: Response): Promi
   }
 };
 
-// ── POST /auth/operator/login ───────────────────────────────────────────────
+//POST /auth/operator/login
 export const operatorLogin = async (req: Request, res: Response): Promise<void> => {
   const { email, password, captchaToken } = req.body as { email: string; password: string; captchaToken?: string };
 
@@ -589,7 +633,7 @@ export const operatorLogin = async (req: Request, res: Response): Promise<void> 
   });
 };
 
-// ── PATCH /auth/profile ──────────────────────────────────────────────────────
+//PATCH /auth/profile
 export const updateProfile = async (req: Request, res: Response): Promise<void> => {
   const { dob, gender, email, avatar, aadhaarNumber, panNumber } = req.body as {
     dob?: string;
@@ -644,7 +688,7 @@ export const updateProfile = async (req: Request, res: Response): Promise<void> 
   });
 };
 
-// ── PATCH /auth/profile/address ──────────────────────────────────────────────
+//PATCH /auth/profile/address
 export const updateAddress = async (req: Request, res: Response): Promise<void> => {
   const { line1, line2, city, state, pincode, addresses } = req.body as {
     line1?: string;
@@ -703,7 +747,7 @@ export const updateAddress = async (req: Request, res: Response): Promise<void> 
   });
 };
 
-// ── GET /auth/admin/citizens — list citizens ──────────────────────────────────
+//GET /auth/admin/citizens
 export const listCitizens = async (req: Request, res: Response): Promise<void> => {
   try {
     const User = getUser();
@@ -781,7 +825,7 @@ export const listCitizens = async (req: Request, res: Response): Promise<void> =
   }
 };
 
-// ── GET /auth/admin/citizens/:id — full citizen profile ───────────────────────
+//GET /auth/admin/citizens/:id
 export const getCitizenDetail = async (req: Request, res: Response): Promise<void> => {
   try {
     const User = getUser();
@@ -847,7 +891,7 @@ export const listOperators = async (req: Request, res: Response): Promise<void> 
   });
 };
 
-// ── POST /auth/admin/operators — create operator ──────────────────────────────
+//POST /auth/admin/operators
 export const createOperator = async (req: Request, res: Response): Promise<void> => {
   const { name, email, password, employeeId, department, role, permissions } = req.body as {
     name: string;
@@ -906,7 +950,50 @@ export const createOperator = async (req: Request, res: Response): Promise<void>
   );
 };
 
-// ── PATCH /auth/admin/citizens/:id/block ──────────────────────────────────────
+//PATCH /auth/admin/citizens/:id/block
+
+//PATCH /auth/admin/citizens/:id
+export const adminUpdateCitizenProfile = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { name, phone, email, dob, gender, aadhaarNumber, panNumber, state, district } = req.body;
+
+  const User = getUser();
+  const user = await User.findById(id);
+  
+  if (!user || (user as any).role !== 'citizen') {
+    res.status(404).json({ success: false, error: 'Citizen not found' });
+    return;
+  }
+
+  if (name !== undefined) user.name = name;
+  if (phone !== undefined) user.phone = phone;
+  if (email !== undefined) user.email = email;
+  if (dob !== undefined) user.dob = dob;
+  if (gender !== undefined) user.gender = gender;
+  if (aadhaarNumber !== undefined) user.aadhaarNumber = aadhaarNumber;
+  if (panNumber !== undefined) user.panNumber = panNumber;
+  if (state !== undefined) user.state = state;
+  if (district !== undefined) user.district = district;
+
+  await user.save();
+
+  res.json({
+    success: true,
+    data: {
+      id: user.id,
+      name: user.name,
+      phone: user.phone,
+      email: user.email,
+      dob: user.dob,
+      gender: user.gender,
+      aadhaarMasked: user.aadhaarNumber ? user.aadhaarNumber.replace(/.(?=.{4})/g, 'x') : undefined,
+      panMasked: user.panNumber ? user.panNumber.replace(/.(?=.{4})/g, 'X') : undefined,
+      state: user.state,
+      district: user.district,
+    }
+  });
+};
+
 export const toggleCitizenStatus = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
@@ -923,7 +1010,7 @@ export const toggleCitizenStatus = async (req: Request, res: Response): Promise<
   res.json({ success: true, data: { user: { id: user.id, name: user.name, isActive: user.isActive } } });
 };
 
-// ── PATCH /auth/admin/operators/:id/status ────────────────────────────────────
+//PATCH /auth/admin/operators/:id/status
 export const updateOperatorStatus = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { status } = req.body as { status: 'active' | 'suspended' };
@@ -976,7 +1063,32 @@ export const adminUpdateOperatorRBAC = async (req: Request, res: Response): Prom
   }
 };
 
-// ── POST /auth/admin/citizens — create citizen ──────────────────────────────────
+export const adminUpdateOperatorProfile = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { name, email, employeeId, department } = req.body as { name?: string; email?: string; employeeId?: string; department?: string };
+
+    const Operator = getOperator();
+    const operator = await Operator.findById(id);
+    if (!operator) {
+      res.status(404).json({ success: false, error: 'Operator not found', errorCode: 'OPERATOR_NOT_FOUND' });
+      return;
+    }
+
+    if (name) operator.name = name;
+    if (email) operator.email = email;
+    if (employeeId) operator.employeeId = employeeId;
+    if (department) operator.department = department;
+
+    await operator.save();
+
+    res.json({ success: true, data: { operator: { id: operator.id, name: operator.name, email: operator.email, employeeId: operator.employeeId, department: operator.department } } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+//POST /auth/admin/citizens
 export const createCitizen = async (req: Request, res: Response): Promise<void> => {
   try {
     const { name, phone, email, aadhaarNumber, district, state } = req.body;
@@ -1014,7 +1126,7 @@ export const createCitizen = async (req: Request, res: Response): Promise<void> 
   }
 };
 
-// ── POST /auth/admin/citizens/import — bulk import citizens ───────────────────────
+//POST /auth/admin/citizens/import
 export const importCitizens = async (req: Request, res: Response): Promise<void> => {
   try {
     const { citizens } = req.body as {

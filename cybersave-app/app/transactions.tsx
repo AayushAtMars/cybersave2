@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useTransactions } from '../src/api/applications';
 import { colors, typography, spacing, radius, shadows } from '../src/theme';
+import { useTranslation } from "react-i18next";
 
 const FILTERS = [
   { id: 'all', label: 'All' },
@@ -53,6 +54,7 @@ const getHeaderDate = (iso: string) => {
 };
 
 export default function TransactionHistoryScreen() {
+    const { t } = useTranslation();
   const { data: txns, isLoading, refetch, isRefetching } = useTransactions();
   const [activeFilter, setActiveFilter] = useState('all');
 
@@ -185,7 +187,7 @@ export default function TransactionHistoryScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Transaction History</Text>
+          <Text style={styles.headerTitle}>{t('transactions.transaction_history')}</Text>
           <TouchableOpacity style={styles.headerRightBtn} onPress={() => setShowDatePicker(true)}>
             <Ionicons name="calendar-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
@@ -279,7 +281,8 @@ export default function TransactionHistoryScreen() {
                           {serviceName ?? item.description}
                         </Text>
                         <Text style={styles.txnSub}>
-                          Ref: {shortRef} • {fmtTime(item.createdAt)}
+                          
+                                                                {t('transactions.ref')} {shortRef} • {fmtTime(item.createdAt)}
                         </Text>
                       </View>
                     </View>
@@ -298,10 +301,11 @@ export default function TransactionHistoryScreen() {
             ListEmptyComponent={
               <View style={styles.emptyBox}>
                 <Ionicons name="card-outline" size={48} color="#94A3B8" />
-                <Text style={styles.emptyTitle}>No Transactions Found</Text>
+                <Text style={styles.emptyTitle}>{t('transactions.no_transactions_found')}</Text>
                 <Text style={styles.emptySub}>
-                  No transactions match the selected filters.
-                </Text>
+                  
+                                          {t('transactions.no_transactions_match_the_sele')}
+                                        </Text>
               </View>
             }
             showsVerticalScrollIndicator={false}
@@ -319,14 +323,14 @@ export default function TransactionHistoryScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Filter by Date Range</Text>
+              <Text style={styles.modalTitle}>{t('transactions.filter_by_date_range')}</Text>
               <TouchableOpacity onPress={() => setShowDatePicker(false)}>
                 <Ionicons name="close" size={24} color="#64748B" />
               </TouchableOpacity>
             </View>
 
             {/* Presets */}
-            <Text style={styles.modalSubLabel}>Select Preset</Text>
+            <Text style={styles.modalSubLabel}>{t('transactions.select_preset')}</Text>
             <View style={styles.presetRow}>
               {[
                 { id: 'all', label: 'All Time' },
@@ -352,8 +356,9 @@ export default function TransactionHistoryScreen() {
                 onPress={() => setSelectedPreset('custom')}
               >
                 <Text style={[styles.presetText, selectedPreset === 'custom' && styles.presetTextActive]}>
-                  Custom Range
-                </Text>
+                  
+                                                    {t('transactions.custom_range')}
+                                                  </Text>
               </TouchableOpacity>
             </View>
 
@@ -361,7 +366,7 @@ export default function TransactionHistoryScreen() {
             {selectedPreset === 'custom' && (
               <View style={styles.customInputsWrapper}>
                 <View style={styles.inputCol}>
-                  <Text style={styles.inputLabel}>Start Date (DD/MM/YYYY)</Text>
+                  <Text style={styles.inputLabel}>{t('transactions.start_date_dd_mm_yyyy')}</Text>
                   <TextInput
                     style={styles.dateInput}
                     placeholder="DD/MM/YYYY"
@@ -371,7 +376,7 @@ export default function TransactionHistoryScreen() {
                   />
                 </View>
                 <View style={styles.inputCol}>
-                  <Text style={styles.inputLabel}>End Date (DD/MM/YYYY)</Text>
+                  <Text style={styles.inputLabel}>{t('transactions.end_date_dd_mm_yyyy')}</Text>
                   <TextInput
                     style={styles.dateInput}
                     placeholder="DD/MM/YYYY"
@@ -386,7 +391,7 @@ export default function TransactionHistoryScreen() {
             {/* Action buttons */}
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.applyBtn} onPress={handleApplyDateFilter}>
-                <Text style={styles.applyBtnText}>Apply Filter</Text>
+                <Text style={styles.applyBtnText}>{t('transactions.apply_filter')}</Text>
               </TouchableOpacity>
             </View>
           </View>

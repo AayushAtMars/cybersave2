@@ -435,6 +435,12 @@ export default function TicketsPage() {
                   <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Created</span>
                   <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{new Date(selectedTicket.createdAt).toLocaleDateString('en-GB')}</span>
                 </div>
+                {selectedTicket.attachmentUrl && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '10px', marginTop: '10px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Attachment</span>
+                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563EB', fontWeight: 750, textDecoration: 'underline' }}>View Image/PDF</a>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -564,10 +570,7 @@ export default function TicketsPage() {
                     fontSize: '13.5px', minHeight: '100px', outline: 'none', fontFamily: 'inherit', resize: 'vertical'
                   }}
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px' }}>
-                  <button style={{ background: 'none', border: 'none', color: '#64748B', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 700, cursor: 'pointer' }} onClick={() => alert("Attachment functionality requires storage ticket config.")}>
-                    <span>📎</span> Attach file or logs
-                  </button>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '12px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button style={{ padding: '8px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }} onClick={() => alert("Draft saved locally.")}>Save Draft</button>
                     <button style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backgroundColor: '#2563EB', color: '#FFFFFF', cursor: 'pointer' }} onClick={async () => {
@@ -626,6 +629,12 @@ export default function TicketsPage() {
                     <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>John Smith</span>
                   </div>
                 </div>
+                {selectedTicket.attachmentUrl && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Attachment</span>
+                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563EB', fontWeight: 750, textDecoration: 'underline' }}>View Image/PDF</a>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -704,16 +713,19 @@ export default function TicketsPage() {
         </div>
         <button
           onClick={() => {
-            const csvContent = "data:text/csv;charset=utf-8," 
-              + ["Ticket ID,Subject,Category,Priority,Status,Assigned To,Created At"].join(",") + "\n"
-              + tickets.map(t => `"${getTktIdStr(t)}","${t.subject}","${t.category || ''}","${t.priority || ''}","${t.status}","${t.assignedOperatorName || 'Unassigned'}","${t.createdAt}"`).join("\n");
-            const encodedUri = encodeURI(csvContent);
+            const header = ["Ticket ID,Subject,Category,Priority,Status,Assigned To,Created At"].join(",");
+            const rows = tickets.map(t => `"${getTktIdStr(t)}","${t.subject?.replace(/"/g, '""')}","${t.category || ''}","${t.priority || ''}","${t.status}","${t.assignedOperatorName || 'Unassigned'}","${new Date(t.createdAt).toLocaleDateString('en-GB')}"`);
+            const csvContent = header + "\n" + rows.join("\n");
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            link.setAttribute("href", url);
             link.setAttribute("download", `tickets_report_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
           }}
           style={{
             padding: '8px 16px',

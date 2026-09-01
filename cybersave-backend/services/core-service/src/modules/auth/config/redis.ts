@@ -2,14 +2,13 @@ import { Redis } from '@upstash/redis';
 import { config } from '../../../config';
 import { logger } from '../utils/logger';
 
-// @upstash/redis uses HTTP REST — works perfectly on Vercel serverless
-// (ioredis requires persistent TCP which doesn't suit serverless — switched, 2026-08-06)
+
 export const redis = new Redis({
   url: config.redisUrl,
   token: config.redisToken,
 });
 
-// ── OTP helpers ─────────────────────────────────────────────────────────────
+//OTP helpers
 const otpKey = (phone: string) => `otp:${phone}`;
 const otpAttemptsKey = (phone: string) => `otp_attempts:${phone}`;
 
@@ -35,7 +34,7 @@ export const incrementOtpAttempts = async (phone: string): Promise<number> => {
   return attempts;
 };
 
-// ── Refresh token blacklist ──────────────────────────────────────────────────
+//refresh token blacklist
 export const blacklistToken = async (jti: string, ttlSeconds: number): Promise<void> => {
   await redis.setex(`blacklist:${jti}`, ttlSeconds, '1');
 };

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { adminClient } from '../api/client';
 import { Link } from 'react-router-dom';
+import { useAdminStore } from '../store/adminStore';
 import { STATE_DISTRICTS } from '../utils/districtsData';
 
 interface Application {
@@ -44,6 +45,7 @@ const CATEGORIES = [
 ];
 
 export default function ApplicationsQueuePage() {
+  const user = useAdminStore((s) => s.user);
   const [apps, setApps] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -377,6 +379,54 @@ export default function ApplicationsQueuePage() {
       .toUpperCase();
   };
 
+  const handleExportReport = async () => {
+    try {
+      // Fetch up to 1000 items matching current filters for the export
+      const { data } = await adminClient.get(`/applications/admin/all`, {
+        params: {
+          page: 1,
+          limit: 1000,
+          search: search || undefined,
+          status: statusFilter !== 'all' ? statusFilter : undefined,
+          category: activeTab !== 'All Applications' ? activeTab : undefined,
+          assigned: assignedFilter !== 'all' ? assignedFilter : undefined
+        }
+      });
+      
+      const exportApps = data?.data?.items || [];
+      if (exportApps.length === 0) {
+        alert('No data to export based on current filters.');
+        return;
+      }
+      
+      const csvHeader = 'App ID,Citizen,Service Type,Priority,Status,Assigned,Submitted,Amount\n';
+      const csvRows = exportApps.map((app: Application) => {
+        const appId = `"${app.applicationRefNo || ''}"`;
+        const citizen = `"${app.applicantName || 'N/A'}"`;
+        const service = `"${app.serviceName || ''}"`;
+        const priority = `"${app.serviceName.toLowerCase().includes('pan') || app.serviceName.toLowerCase().includes('mobile') || app.status === 'docs_pending' ? 'High' : app.serviceName.toLowerCase().includes('address') || app.status === 'under_review' ? 'Medium' : 'Low'}"`;
+        const status = `"${app.status ? app.status.replace('_', ' ') : ''}"`;
+        const assigned = `"${app.assignedOperatorName || 'Unassigned'}"`;
+        const submitted = `"${formatSubmittedDate(app.createdAt)}"`;
+        const amount = `"${app.totalAmount || 0}"`;
+        return [appId, citizen, service, priority, status, assigned, submitted, amount].join(',');
+      });
+      
+      const csvString = csvHeader + csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Applications_Report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Failed to export report', err);
+      alert('Failed to export report. Please try again later.');
+    }
+  };
+
   return (
     <div style={{ padding: '24px 32px', backgroundColor: '#F8FAFC', minHeight: '100vh', fontFamily: 'Inter, sans-serif' }}>
       
@@ -395,7 +445,9 @@ export default function ApplicationsQueuePage() {
         </div>
         
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button style={{
+          <button 
+            onClick={handleExportReport}
+            style={{
             display: 'flex',
             alignItems: 'center',
             gap: '8px',

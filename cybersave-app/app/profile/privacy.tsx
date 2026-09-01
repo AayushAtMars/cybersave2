@@ -18,8 +18,10 @@ import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '../../src/store/authStore';
 import { apiClient } from '../../src/api/client';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function PrivacySecurityScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -131,7 +133,7 @@ export default function PrivacySecurityScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Privacy & Security</Text>
+          <Text style={styles.headerTitle}>{t('privacy.privacy_security')}</Text>
           <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
@@ -149,23 +151,24 @@ export default function PrivacySecurityScreen() {
               <Ionicons name="shield-checkmark" size={24} color="#10B981" />
             </View>
             <View style={styles.shieldInfo}>
-              <Text style={styles.shieldTitle}>Security Shield Active</Text>
+              <Text style={styles.shieldTitle}>{t('privacy.security_shield_active')}</Text>
               <Text style={styles.shieldSub}>
-                Your digital assets and personal details are encrypted.
-              </Text>
+                
+                                              {t('privacy.your_digital_assets_and_person')}
+                                            </Text>
             </View>
           </View>
 
           {/* Consent Management Section */}
           <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionHeader}>Consent Management</Text>
+            <Text style={styles.sectionHeader}>{t('privacy.consent_management')}</Text>
           </View>
           <View style={styles.sectionCard}>
             {/* Option: Analytics */}
             <View style={styles.optionRow}>
               <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>Analytics Consent</Text>
-                <Text style={styles.optionDesc}>Allow anonymous diagnostic reports</Text>
+                <Text style={styles.optionTitle}>{t('privacy.analytics_consent')}</Text>
+                <Text style={styles.optionDesc}>{t('privacy.allow_anonymous_diagnostic_rep')}</Text>
               </View>
               <Switch
                 value={analyticsConsent}
@@ -180,8 +183,8 @@ export default function PrivacySecurityScreen() {
             {/* Option: Third-Party Sharing */}
             <View style={styles.optionRow}>
               <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>Third-Party Sharing</Text>
-                <Text style={styles.optionDesc}>Share verified tags with official departments</Text>
+                <Text style={styles.optionTitle}>{t('privacy.third_party_sharing')}</Text>
+                <Text style={styles.optionDesc}>{t('privacy.share_verified_tags_with_offic')}</Text>
               </View>
               <Switch
                 value={sharingConsent}
@@ -194,14 +197,14 @@ export default function PrivacySecurityScreen() {
 
           {/* Active Sessions Section */}
           <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionHeader}>Active Sessions</Text>
+            <Text style={styles.sectionHeader}>{t('privacy.active_sessions')}</Text>
           </View>
           <View style={styles.sessionsCard}>
             {loadingSessions ? (
               <ActivityIndicator size="small" color="#2563EB" style={{ marginVertical: 12 }} />
             ) : activeSessions.length === 0 ? (
               <View style={styles.emptySessionWrapper}>
-                <Text style={styles.emptySessionText}>No active sessions found.</Text>
+                <Text style={styles.emptySessionText}>{t('privacy.no_active_sessions_found')}</Text>
               </View>
             ) : (
               activeSessions.map((session, index) => {
@@ -244,7 +247,7 @@ export default function PrivacySecurityScreen() {
               activeOpacity={0.8}
               onPress={handleDownloadData}
             >
-              <Text style={styles.downloadBtnText}>Download My Digital Data</Text>
+              <Text style={styles.downloadBtnText}>{t('privacy.download_my_digital_data')}</Text>
             </TouchableOpacity>
 
             {/* Deactivate Account */}
@@ -253,7 +256,7 @@ export default function PrivacySecurityScreen() {
               activeOpacity={0.8}
               onPress={handleDeactivate}
             >
-              <Text style={styles.deactivateBtnText}>Deactivate Account</Text>
+              <Text style={styles.deactivateBtnText}>{t('privacy.deactivate_account')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -278,14 +281,14 @@ export default function PrivacySecurityScreen() {
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.successTitle}>Export Completed!</Text>
+            <Text style={styles.successTitle}>{t('privacy.export_completed')}</Text>
             <Text style={styles.successSub}>{successMsg}</Text>
             <TouchableOpacity 
               style={styles.successDoneBtn} 
               onPress={() => setShowSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.successDoneBtnText}>Dismiss</Text>
+              <Text style={styles.successDoneBtnText}>{t('privacy.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>

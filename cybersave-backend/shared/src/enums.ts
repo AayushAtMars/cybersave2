@@ -1,4 +1,4 @@
-// ─── Application Status ─────────────────────────────────────────────────────
+// Application Status
 export const ApplicationStatus = {
   DRAFT: 'draft',
   SUBMITTED: 'submitted',
@@ -10,7 +10,7 @@ export const ApplicationStatus = {
 } as const;
 export type ApplicationStatus = (typeof ApplicationStatus)[keyof typeof ApplicationStatus];
 
-// ─── Document Status ─────────────────────────────────────────────────────────
+//Document Status
 export const DocumentStatus = {
   PENDING: 'pending',
   VERIFIED: 'verified',
@@ -18,7 +18,7 @@ export const DocumentStatus = {
 } as const;
 export type DocumentStatus = (typeof DocumentStatus)[keyof typeof DocumentStatus];
 
-// ─── Ticket Status ────────────────────────────────────────────────────────────
+// Ticket Status
 export const TicketStatus = {
   OPEN: 'open',
   IN_PROGRESS: 'in_progress',
@@ -27,7 +27,7 @@ export const TicketStatus = {
 } as const;
 export type TicketStatus = (typeof TicketStatus)[keyof typeof TicketStatus];
 
-// ─── User Roles ───────────────────────────────────────────────────────────────
+// User Roles
 export const UserRole = {
   CITIZEN: 'citizen',
   OPERATOR: 'operator',
@@ -36,7 +36,7 @@ export const UserRole = {
 } as const;
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
-// ─── Transaction Type ─────────────────────────────────────────────────────────
+//Transaction Type
 export const TransactionType = {
   CREDIT: 'credit',
   DEBIT: 'debit',
@@ -44,7 +44,7 @@ export const TransactionType = {
 } as const;
 export type TransactionType = (typeof TransactionType)[keyof typeof TransactionType];
 
-// ─── Notification Type ────────────────────────────────────────────────────────
+//Notification Type
 export const NotificationType = {
   APPLICATION_UPDATE: 'application_update',
   PAYMENT: 'payment',
@@ -54,7 +54,7 @@ export const NotificationType = {
 } as const;
 export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 
-// ─── Operator Status ──────────────────────────────────────────────────────────
+//Operator Status
 export const OperatorStatus = {
   ACTIVE: 'active',
   PENDING: 'pending',
@@ -62,7 +62,7 @@ export const OperatorStatus = {
 } as const;
 export type OperatorStatus = (typeof OperatorStatus)[keyof typeof OperatorStatus];
 
-// ─── Service Category ─────────────────────────────────────────────────────────
+//Service Category
 export const ServiceCategory = {
   AADHAAR: 'aadhaar',
   PAN: 'pan',

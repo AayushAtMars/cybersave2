@@ -32,6 +32,17 @@
   text-rendering: optimizeLegibility;
 }
 
+html.dark {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+html.dark img, 
+html.dark svg,
+html.dark video,
+html.dark [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
 body {
   background-color: var(--color-bg);
   color: var(--color-text-primary);

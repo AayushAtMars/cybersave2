@@ -219,23 +219,20 @@ export default function SettingsPage() {
           });
           setAvatar(op.avatar ?? '');
           setTwoFaEnabled(op.twoFaEnabled ?? false);
+
+          if (op.notificationPreferences) {
+            setNotifPrefs(op.notificationPreferences);
+          }
+          if (op.localizationPreferences) {
+            setLanguage(op.localizationPreferences.language ?? 'en-US');
+            setTimezone(op.localizationPreferences.timezone ?? 'Asia/Kolkata');
+            setColorTheme(op.localizationPreferences.colorTheme ?? 'system');
+          }
         }
       } catch {
         // keep the store-initialized defaults already set
       }
     })();
-
-    // Load notification prefs from localStorage
-    const saved = localStorage.getItem('cybersave-notif-prefs');
-    if (saved) setNotifPrefs(JSON.parse(saved));
-
-    const savedLocale = localStorage.getItem('cybersave-locale-prefs');
-    if (savedLocale) {
-      const parsed = JSON.parse(savedLocale);
-      setLanguage(parsed.language ?? 'en-US');
-      setTimezone(parsed.timezone ?? 'Asia/Kolkata');
-      setColorTheme(parsed.colorTheme ?? 'system');
-    }
   }, []);
 
   // ── Photo upload handlers ──────────────────────────────────────────────────
@@ -339,21 +336,30 @@ export default function SettingsPage() {
   };
 
   // ── Save notification prefs ────────────────────────────────────────────────
-  const updateNotifPref = (key: keyof typeof notifPrefs, value: boolean) => {
+  const updateNotifPref = async (key: keyof typeof notifPrefs, value: boolean) => {
     const updated = { ...notifPrefs, [key]: value };
     setNotifPrefs(updated);
-    localStorage.setItem('cybersave-notif-prefs', JSON.stringify(updated));
-    showToast('Notification preference saved', 'success');
+    try {
+      await adminClient.patch('/auth/admin/me', { notificationPreferences: updated });
+      showToast('Notification preference saved', 'success');
+    } catch {
+      showToast('Failed to save notification preference', 'error');
+    }
   };
 
   // ── Save locale prefs ─────────────────────────────────────────────────────
-  const updateLocalePref = (key: 'language' | 'timezone' | 'colorTheme', value: string) => {
+  const updateLocalePref = async (key: 'language' | 'timezone' | 'colorTheme', value: string) => {
     const updated = { language, timezone, colorTheme, [key]: value };
     if (key === 'language') setLanguage(value);
     if (key === 'timezone') setTimezone(value);
     if (key === 'colorTheme') setColorTheme(value);
-    localStorage.setItem('cybersave-locale-prefs', JSON.stringify(updated));
-    showToast('Preference saved', 'success');
+    
+    try {
+      await adminClient.patch('/auth/admin/me', { localizationPreferences: updated });
+      showToast('Preference saved', 'success');
+    } catch {
+      showToast('Failed to save preference', 'error');
+    }
   };
 
   const roleLabel = (r: string) => {
@@ -597,33 +603,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* 2FA row */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '16px',
-              backgroundColor: '#F8FAFC',
-              borderRadius: '10px',
-              border: '1.5px solid #E2E8F0',
-              marginBottom: '24px',
-            }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', marginBottom: '3px' }}>
-                  Two-Factor Authentication (2FA)
-                </div>
-                <div style={{ fontSize: '12.5px', color: '#64748B' }}>
-                  Secure your administrative console with mandatory authentication checks.
-                </div>
-              </div>
-              <Toggle
-                id="two-fa-toggle"
-                checked={twoFaEnabled}
-                onChange={handle2FAToggle}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '24px' }}>
               <button
                 id="update-password-btn"
                 onClick={handleUpdatePassword}
@@ -686,102 +666,6 @@ export default function SettingsPage() {
                 />
               </div>
             ))}
-          </SectionCard>
-
-          {/* Localization & Theme */}
-          <SectionCard>
-            <h2 style={sectionTitleStyle}>Localization & Theme</h2>
-            <p style={{ ...sectionSubStyle, marginBottom: '20px' }}>
-              Customize the default language, regional standard timeline, and color display theme.
-            </p>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="locale-language" style={labelStyle}>Default Language</label>
-              <div style={{ position: 'relative' }}>
-                <select
-                  id="locale-language"
-                  value={language}
-                  onChange={e => updateLocalePref('language', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 32px 10px 12px',
-                    border: '1.5px solid #E2E8F0',
-                    borderRadius: '9px',
-                    fontSize: '13.5px',
-                    color: '#0F172A',
-                    backgroundColor: '#FFFFFF',
-                    appearance: 'none' as const,
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="en-US">English (United States) - EN</option>
-                  <option value="en-IN">English (India) - EN</option>
-                  <option value="hi-IN">Hindi (India) - HI</option>
-                  <option value="ta-IN">Tamil - TA</option>
-                  <option value="te-IN">Telugu - TE</option>
-                </select>
-                <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <label htmlFor="locale-timezone" style={labelStyle}>Regional Timezone</label>
-              <div style={{ position: 'relative' }}>
-                <select
-                  id="locale-timezone"
-                  value={timezone}
-                  onChange={e => updateLocalePref('timezone', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 32px 10px 12px',
-                    border: '1.5px solid #E2E8F0',
-                    borderRadius: '9px',
-                    fontSize: '13.5px',
-                    color: '#0F172A',
-                    backgroundColor: '#FFFFFF',
-                    appearance: 'none' as const,
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="Asia/Kolkata">(GMT+05:30) India Standard Time - IST</option>
-                  <option value="UTC">(GMT+00:00) UTC</option>
-                  <option value="America/New_York">(GMT-05:00) Eastern Time - ET</option>
-                  <option value="Europe/London">(GMT+00:00) London - GMT</option>
-                  <option value="Asia/Dubai">(GMT+04:00) Gulf Standard Time - GST</option>
-                </select>
-                <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="locale-theme" style={labelStyle}>Active Color Theme</label>
-              <div style={{ position: 'relative' }}>
-                <select
-                  id="locale-theme"
-                  value={colorTheme}
-                  onChange={e => updateLocalePref('colorTheme', e.target.value)}
-                  style={{
-                    width: '100%',
-                    padding: '10px 32px 10px 12px',
-                    border: '1.5px solid #E2E8F0',
-                    borderRadius: '9px',
-                    fontSize: '13.5px',
-                    color: '#0F172A',
-                    backgroundColor: '#FFFFFF',
-                    appearance: 'none' as const,
-                    outline: 'none',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <option value="system">Follow System Default Theme</option>
-                  <option value="light">Light Mode</option>
-                  <option value="dark">Dark Mode</option>
-                </select>
-                <svg style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#64748B" strokeWidth="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-              </div>
-            </div>
           </SectionCard>
         </div>
       </div>

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
 import { getModels } from '../../../config/models';
+import { notificationService } from '../../notification/services/notification.service';
 
-// ── Fire-and-forget audit emit — now in-process (same service!) ───────────────
+//Fire-and-forget audit emit — now in-process (same service!)
 const emitAuditLog = (payload: {
   userId?: string;
   userName: string;
@@ -19,7 +20,7 @@ const emitAuditLog = (payload: {
   }).catch(() => {});
 };
 
-// ── Citizen: POST /support/tickets ────────────────────────────────────────────
+//Citizen: POST /support/tickets
 export const createTicket = async (req: Request, res: Response): Promise<void> => {
   const citizenId = req.user!.id;
   const { subject, description, category, priority, attachmentUrl, assignedOperatorName } = req.body as {
@@ -78,9 +79,15 @@ export const createTicket = async (req: Request, res: Response): Promise<void> =
     ipAddress: String(req.ip || req.headers['x-forwarded-for'] || 'Unknown'),
     status: 'success',
   });
+
+  notificationService.dispatchAdminAlert(
+    'support_ticket',
+    'New Support Ticket',
+    `Ticket #${(ticket as any)._id.toString().slice(-6).toUpperCase()} created by citizen.`
+  ).catch(err => console.error('Failed to dispatch support ticket alert:', err));
 };
 
-// ── Citizen: GET /support/tickets — own list ──────────────────────────────────
+//citizen: GET /support/tickets — own list
 export const listCitizenTickets = async (req: Request, res: Response): Promise<void> => {
   const citizenId = req.user!.id;
   const { Ticket } = getModels();
@@ -88,7 +95,7 @@ export const listCitizenTickets = async (req: Request, res: Response): Promise<v
   res.json({ success: true, data: { items: tickets } });
 };
 
-// ── Citizen & Operator: GET /support/tickets/:id ──────────────────────────────
+//citizen & operator: GET /support/tickets/:id
 export const getTicketDetails = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { Ticket } = getModels();
@@ -100,7 +107,7 @@ export const getTicketDetails = async (req: Request, res: Response): Promise<voi
   res.json({ success: true, data: { ticket } });
 };
 
-// ── Citizen & Operator: POST /support/tickets/:id/reply ───────────────────────
+//Citizen & Operator: POST /support/tickets/:id/reply
 export const replyToTicket = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { message } = req.body as { message: string };
@@ -123,17 +130,25 @@ export const replyToTicket = async (req: Request, res: Response): Promise<void> 
   ticket.status = senderRole === 'operator' ? 'in_progress' : 'open';
   await ticket.save();
 
+  if (senderRole === 'citizen') {
+    notificationService.dispatchAdminAlert(
+      'support_ticket',
+      'New Reply on Support Ticket',
+      `Citizen added a reply to ticket #${ticket._id.toString().slice(-6).toUpperCase()}.`
+    ).catch(err => console.error('Failed to dispatch support ticket reply alert:', err));
+  }
+
   res.json({ success: true, data: { ticket } });
 };
 
-// ── Operator: GET /support/operator/tickets — queue ───────────────────────────
+//Operator: GET /support/operator/tickets — queue
 export const listOperatorTickets = async (req: Request, res: Response): Promise<void> => {
   const { Ticket } = getModels();
   const tickets = await Ticket.find({ status: { $ne: 'closed' } }).sort({ createdAt: 1 }).lean();
   res.json({ success: true, data: { items: tickets } });
 };
 
-// ── Operator: PATCH /support/operator/tickets/:id/status ───────────────────────
+//Operator: PATCH /support/operator/tickets/:id/status
 export const updateTicketStatus = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
   const { status } = req.body as { status: 'in_progress' | 'resolved' | 'closed' };
@@ -155,7 +170,7 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
   res.json({ success: true, data: { ticket } });
 };
 
-// ── Admin: GET /support/admin/tickets — list all tickets ───────────────────────
+//Admin: GET /support/admin/tickets — list all tickets
 export const listAdminTickets = async (req: Request, res: Response): Promise<void> => {
   try {
     const { Ticket } = getModels();

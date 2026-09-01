@@ -9,10 +9,12 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 
 export default function Onboarding1() {
+    const { t } = useTranslation();
   const handleNext = () => router.push('/(onboarding)/onboarding-2');
   const handleSkip = () => router.replace('/(auth)/login');
 
@@ -20,19 +22,21 @@ export default function Onboarding1() {
     <View style={styles.container}>
       {/* Skip */}
       <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{t('onboarding-1.skip')}</Text>
       </TouchableOpacity>
 
       {/* Title */}
       <View style={styles.titleContainer}>
         <Text style={styles.title}>
-          Welcome to{' '}
-          <Text style={styles.titleBlue}>Cyber</Text>
-          <Text style={styles.titleBold}>save</Text>
+          
+                            {t('onboarding-1.welcome_to')}{' '}
+          <Text style={styles.titleBlue}>{t('onboarding-1.cyber')}</Text>
+          <Text style={styles.titleBold}>{t('onboarding-1.save')}</Text>
         </Text>
         <Text style={styles.subtitle}>
-          Access 500+ central and state government{'\n'}services securely from your phone.
-        </Text>
+          
+                            {t('onboarding-1.access_500_central_and_state_g')}{'\n'}{t('onboarding-1.services_securely_from_your_ph')}
+                          </Text>
       </View>
 
       {/* Illustration */}
@@ -62,7 +66,7 @@ export default function Onboarding1() {
     end={{ x: 1, y: 0 }}
     style={styles.ctaBtn}
   >
-    <Text style={styles.ctaText}>Next</Text>
+    <Text style={styles.ctaText}>{t('onboarding-1.next')}</Text>
   </LinearGradient>
 </TouchableOpacity>
     </View>

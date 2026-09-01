@@ -1,0 +1,877 @@
+[
+  {
+    "ns": "step-4-review",
+    "key": "pdf",
+    "text": ".pdf"
+  },
+  {
+    "ns": "step-5-payment",
+    "key": "visa_mastercard_rupay",
+    "text": "Visa, MasterCard, RuPay"
+  },
+  {
+    "ns": "step-5-payment",
+    "key": "google_pay_phonepe_paytm",
+    "text": "Google Pay, PhonePe, Paytm"
+  },
+  {
+    "ns": "home",
+    "key": "pm_kisan_samman_nidhi",
+    "text": "PM-Kisan Samman Nidhi"
+  },
+  {
+    "ns": "about",
+    "key": "version_2_1_0_build_54",
+    "text": "Version 2.1.0 (Build 54)"
+  },
+  {
+    "ns": "about",
+    "key": "cybersave",
+    "text": "Cybersave"
+  },
+  {
+    "ns": "about",
+    "key": "about_cybersave",
+    "text": "About Cybersave"
+  },
+  {
+    "ns": "address",
+    "key": "dismiss",
+    "text": "Dismiss"
+  },
+  {
+    "ns": "address",
+    "key": "the_address_has_been_permanent",
+    "text": "The address has been permanently removed from your profile."
+  },
+  {
+    "ns": "address",
+    "key": "address_deleted",
+    "text": "Address Deleted"
+  },
+  {
+    "ns": "address",
+    "key": "success",
+    "text": "Success!"
+  },
+  {
+    "ns": "address",
+    "key": "save_address",
+    "text": "Save Address"
+  },
+  {
+    "ns": "address",
+    "key": "use_this_address_as_pre_filled",
+    "text": "Use this address as pre-filled default."
+  },
+  {
+    "ns": "address",
+    "key": "set_as_default_address",
+    "text": "Set as default address"
+  },
+  {
+    "ns": "address",
+    "key": "pin_code",
+    "text": "PIN Code *"
+  },
+  {
+    "ns": "address",
+    "key": "state",
+    "text": "State *"
+  },
+  {
+    "ns": "address",
+    "key": "city",
+    "text": "City *"
+  },
+  {
+    "ns": "address",
+    "key": "address_line_2",
+    "text": "Address Line 2"
+  },
+  {
+    "ns": "address",
+    "key": "address_line_1",
+    "text": "Address Line 1 *"
+  },
+  {
+    "ns": "address",
+    "key": "tag_label",
+    "text": "Tag / Label *"
+  },
+  {
+    "ns": "address",
+    "key": "add_an_address_to_automaticall",
+    "text": "Add an address to automatically pre-fill your applications and security logs."
+  },
+  {
+    "ns": "address",
+    "key": "no_saved_addresses",
+    "text": "No saved addresses"
+  },
+  {
+    "ns": "address",
+    "key": "add_new_address",
+    "text": "+ Add New Address"
+  },
+  {
+    "ns": "address",
+    "key": "my_addresses",
+    "text": "My Addresses"
+  },
+  {
+    "ns": "address",
+    "key": "pincode",
+    "text": "Pincode:"
+  },
+  {
+    "ns": "address",
+    "key": "default",
+    "text": "Default"
+  },
+  {
+    "ns": "documents",
+    "key": "delete",
+    "text": "Delete"
+  },
+  {
+    "ns": "documents",
+    "key": "cancel",
+    "text": "Cancel"
+  },
+  {
+    "ns": "documents",
+    "key": "this_action_cannot_be_undone",
+    "text": "\"? This action cannot be undone."
+  },
+  {
+    "ns": "documents",
+    "key": "are_you_sure_you_want_to_perma",
+    "text": "Are you sure you want to permanently delete \""
+  },
+  {
+    "ns": "documents",
+    "key": "delete_document",
+    "text": "Delete Document?"
+  },
+  {
+    "ns": "documents",
+    "key": "dismiss",
+    "text": "Dismiss"
+  },
+  {
+    "ns": "documents",
+    "key": "the_file_has_been_permanently_",
+    "text": "The file has been permanently removed from your vault and storage bucket."
+  },
+  {
+    "ns": "documents",
+    "key": "document_deleted",
+    "text": "Document Deleted"
+  },
+  {
+    "ns": "documents",
+    "key": "your_document_has_been_safely_",
+    "text": "Your document has been safely encrypted and uploaded to the secure vault storage."
+  },
+  {
+    "ns": "documents",
+    "key": "upload_successful",
+    "text": "Upload Successful!"
+  },
+  {
+    "ns": "documents",
+    "key": "please_wait_while_we_encrypt_a",
+    "text": "Please wait while we encrypt and secure your file."
+  },
+  {
+    "ns": "documents",
+    "key": "uploading_document",
+    "text": "Uploading Document..."
+  },
+  {
+    "ns": "documents",
+    "key": "itr_receipts_payslips_bank_sta",
+    "text": "ITR Receipts, Payslips, Bank Statements, etc."
+  },
+  {
+    "ns": "documents",
+    "key": "financial_income_proof",
+    "text": "Financial / Income Proof"
+  },
+  {
+    "ns": "documents",
+    "key": "birth_certificate_address_cert",
+    "text": "Birth Certificate, Address Certificate, etc."
+  },
+  {
+    "ns": "documents",
+    "key": "certificate_birth_proof",
+    "text": "Certificate / Birth Proof"
+  },
+  {
+    "ns": "documents",
+    "key": "aadhaar_card_pan_card_voter_id",
+    "text": "Aadhaar Card, PAN Card, Voter ID, etc."
+  },
+  {
+    "ns": "documents",
+    "key": "id_proof",
+    "text": "ID Proof"
+  },
+  {
+    "ns": "documents",
+    "key": "choose_the_category_of_the_doc",
+    "text": "Choose the category of the document you want to upload."
+  },
+  {
+    "ns": "documents",
+    "key": "select_document_type",
+    "text": "Select Document Type"
+  },
+  {
+    "ns": "documents",
+    "key": "uploaded_documents_will_show_u",
+    "text": "Uploaded documents will show up here once you upload them or submit an application."
+  },
+  {
+    "ns": "documents",
+    "key": "vault_is_empty",
+    "text": "Vault is empty"
+  },
+  {
+    "ns": "documents",
+    "key": "upload_new_document",
+    "text": "Upload New Document"
+  },
+  {
+    "ns": "documents",
+    "key": "mb",
+    "text": "MB"
+  },
+  {
+    "ns": "documents",
+    "key": "storage_usage",
+    "text": "Storage Usage"
+  },
+  {
+    "ns": "documents",
+    "key": "my_documents",
+    "text": "My Documents"
+  },
+  {
+    "ns": "documents",
+    "key": "share",
+    "text": "Share"
+  },
+  {
+    "ns": "documents",
+    "key": "download",
+    "text": "Download"
+  },
+  {
+    "ns": "documents",
+    "key": "view",
+    "text": "View"
+  },
+  {
+    "ns": "documents",
+    "key": "uploaded",
+    "text": "Uploaded"
+  },
+  {
+    "ns": "info",
+    "key": "link_document",
+    "text": "Link Document"
+  },
+  {
+    "ns": "info",
+    "key": "enter_your_12_digit_aadhaar_nu",
+    "text": "Enter your 12-digit Aadhaar number or 10-character PAN card number to link it to your account."
+  },
+  {
+    "ns": "info",
+    "key": "card",
+    "text": "Card"
+  },
+  {
+    "ns": "info",
+    "key": "link",
+    "text": "Link"
+  },
+  {
+    "ns": "info",
+    "key": "last_updated_12_may_2026_4_32_",
+    "text": "Last updated: 12 May 2026, 4:32 PM"
+  },
+  {
+    "ns": "info",
+    "key": "save_changes",
+    "text": "Save Changes"
+  },
+  {
+    "ns": "info",
+    "key": "pan_masked",
+    "text": "PAN (Masked)"
+  },
+  {
+    "ns": "info",
+    "key": "aadhaar_masked",
+    "text": "Aadhaar (Masked)"
+  },
+  {
+    "ns": "info",
+    "key": "gender",
+    "text": "Gender"
+  },
+  {
+    "ns": "info",
+    "key": "date_of_birth",
+    "text": "Date of Birth"
+  },
+  {
+    "ns": "info",
+    "key": "email",
+    "text": "Email"
+  },
+  {
+    "ns": "info",
+    "key": "verified",
+    "text": "Verified"
+  },
+  {
+    "ns": "info",
+    "key": "phone",
+    "text": "Phone"
+  },
+  {
+    "ns": "info",
+    "key": "full_name",
+    "text": "Full Name"
+  },
+  {
+    "ns": "info",
+    "key": "change_photo",
+    "text": "Change Photo"
+  },
+  {
+    "ns": "info",
+    "key": "personal_information",
+    "text": "Personal Information"
+  },
+  {
+    "ns": "privacy",
+    "key": "dismiss",
+    "text": "Dismiss"
+  },
+  {
+    "ns": "privacy",
+    "key": "export_completed",
+    "text": "Export Completed!"
+  },
+  {
+    "ns": "privacy",
+    "key": "deactivate_account",
+    "text": "Deactivate Account"
+  },
+  {
+    "ns": "privacy",
+    "key": "download_my_digital_data",
+    "text": "Download My Digital Data"
+  },
+  {
+    "ns": "privacy",
+    "key": "no_active_sessions_found",
+    "text": "No active sessions found."
+  },
+  {
+    "ns": "privacy",
+    "key": "active_sessions",
+    "text": "Active Sessions"
+  },
+  {
+    "ns": "privacy",
+    "key": "share_verified_tags_with_offic",
+    "text": "Share verified tags with official departments"
+  },
+  {
+    "ns": "privacy",
+    "key": "third_party_sharing",
+    "text": "Third-Party Sharing"
+  },
+  {
+    "ns": "privacy",
+    "key": "allow_anonymous_diagnostic_rep",
+    "text": "Allow anonymous diagnostic reports"
+  },
+  {
+    "ns": "privacy",
+    "key": "analytics_consent",
+    "text": "Analytics Consent"
+  },
+  {
+    "ns": "privacy",
+    "key": "consent_management",
+    "text": "Consent Management"
+  },
+  {
+    "ns": "privacy",
+    "key": "your_digital_assets_and_person",
+    "text": "Your digital assets and personal details are encrypted."
+  },
+  {
+    "ns": "privacy",
+    "key": "security_shield_active",
+    "text": "Security Shield Active"
+  },
+  {
+    "ns": "privacy",
+    "key": "privacy_security",
+    "text": "Privacy & Security"
+  },
+  {
+    "ns": "settings",
+    "key": "dismiss",
+    "text": "Dismiss"
+  },
+  {
+    "ns": "settings",
+    "key": "settings_saved",
+    "text": "Settings Saved!"
+  },
+  {
+    "ns": "settings",
+    "key": "no_login_history_found",
+    "text": "No login history found."
+  },
+  {
+    "ns": "settings",
+    "key": "login_history",
+    "text": "Login History"
+  },
+  {
+    "ns": "settings",
+    "key": "confirm_new_mpin",
+    "text": "Confirm New MPIN"
+  },
+  {
+    "ns": "settings",
+    "key": "new_mpin",
+    "text": "New MPIN"
+  },
+  {
+    "ns": "settings",
+    "key": "current_mpin",
+    "text": "Current MPIN"
+  },
+  {
+    "ns": "settings",
+    "key": "select_language",
+    "text": "Select Language"
+  },
+  {
+    "ns": "settings",
+    "key": "delete_account",
+    "text": "Delete Account"
+  },
+  {
+    "ns": "settings",
+    "key": "clear_cache",
+    "text": "Clear Cache"
+  },
+  {
+    "ns": "settings",
+    "key": "data",
+    "text": "Data"
+  },
+  {
+    "ns": "settings",
+    "key": "two_factor_auth",
+    "text": "Two-Factor Auth"
+  },
+  {
+    "ns": "settings",
+    "key": "change_mpin",
+    "text": "Change MPIN"
+  },
+  {
+    "ns": "settings",
+    "key": "security",
+    "text": "Security"
+  },
+  {
+    "ns": "settings",
+    "key": "auto_pay",
+    "text": "Auto-pay"
+  },
+  {
+    "ns": "settings",
+    "key": "biometric_login",
+    "text": "Biometric Login"
+  },
+  {
+    "ns": "settings",
+    "key": "all_active",
+    "text": "All Active"
+  },
+  {
+    "ns": "settings",
+    "key": "notifications",
+    "text": "Notifications"
+  },
+  {
+    "ns": "settings",
+    "key": "language",
+    "text": "Language"
+  },
+  {
+    "ns": "settings",
+    "key": "account",
+    "text": "Account"
+  },
+  {
+    "ns": "settings",
+    "key": "settings",
+    "text": "Settings"
+  },
+  {
+    "ns": "detail",
+    "key": "apply_now",
+    "text": "Apply Now"
+  },
+  {
+    "ns": "detail",
+    "key": "refund_policy",
+    "text": "Refund Policy:"
+  },
+  {
+    "ns": "detail",
+    "key": "payment_refund_information",
+    "text": "Payment & Refund Information"
+  },
+  {
+    "ns": "detail",
+    "key": "additional_options_processing_",
+    "text": "Additional Options / Processing Fees"
+  },
+  {
+    "ns": "detail",
+    "key": "processing_time",
+    "text": "Processing Time"
+  },
+  {
+    "ns": "detail",
+    "key": "government_fee",
+    "text": "Government Fee"
+  },
+  {
+    "ns": "detail",
+    "key": "address_proof_utility_bill",
+    "text": "Address Proof (Utility Bill)"
+  },
+  {
+    "ns": "detail",
+    "key": "marriage_certificate_of_parent",
+    "text": "Marriage Certificate of Parents"
+  },
+  {
+    "ns": "detail",
+    "key": "id_proof_of_parents_aadhaar_pa",
+    "text": "ID Proof of Parents (Aadhaar/PAN)"
+  },
+  {
+    "ns": "detail",
+    "key": "proof_of_birth_from_hospital",
+    "text": "Proof of Birth from Hospital"
+  },
+  {
+    "ns": "detail",
+    "key": "documents_required",
+    "text": "Documents Required"
+  },
+  {
+    "ns": "detail",
+    "key": "registered_within_21_days_stan",
+    "text": "Registered within 21 days (Standard fee)"
+  },
+  {
+    "ns": "detail",
+    "key": "birth_occurred_within_state_li",
+    "text": "Birth occurred within state limits"
+  },
+  {
+    "ns": "detail",
+    "key": "citizen_of_india",
+    "text": "Citizen of India"
+  },
+  {
+    "ns": "detail",
+    "key": "eligibility",
+    "text": "Eligibility"
+  },
+  {
+    "ns": "detail",
+    "key": "about_this_service",
+    "text": "About This Service"
+  },
+  {
+    "ns": "detail",
+    "key": "legally_certified_document_by_",
+    "text": "Legally certified document by the"
+  },
+  {
+    "ns": "detail",
+    "key": "registry",
+    "text": "Registry"
+  },
+  {
+    "ns": "detail",
+    "key": "official",
+    "text": "Official"
+  },
+  {
+    "ns": "detail",
+    "key": "go_back",
+    "text": "Go Back"
+  },
+  {
+    "ns": "detail",
+    "key": "service_details_could_not_be_f",
+    "text": "Service details could not be found."
+  },
+  {
+    "ns": "hub",
+    "key": "available_services",
+    "text": "Available Services"
+  },
+  {
+    "ns": "chat",
+    "key": "this_support_ticket_has_been_c",
+    "text": "This support ticket has been closed by operator."
+  },
+  {
+    "ns": "chat",
+    "key": "send",
+    "text": "Send"
+  },
+  {
+    "ns": "chat",
+    "key": "status",
+    "text": "Status:"
+  },
+  {
+    "ns": "create",
+    "key": "select_category",
+    "text": "Select Category"
+  },
+  {
+    "ns": "create",
+    "key": "check_faq_before_raising_most_",
+    "text": "Check FAQ before raising. Most issues resolve instantly!"
+  },
+  {
+    "ns": "create",
+    "key": "submit_support_ticket",
+    "text": "Submit Support Ticket"
+  },
+  {
+    "ns": "create",
+    "key": "png_jpg_pdf_up_to_5mb",
+    "text": "PNG, JPG, PDF up to 5MB"
+  },
+  {
+    "ns": "create",
+    "key": "choose_files_or_drag_here",
+    "text": "Choose files or drag here"
+  },
+  {
+    "ns": "create",
+    "key": "upload_screenshots",
+    "text": "Upload Screenshots"
+  },
+  {
+    "ns": "create",
+    "key": "priority_level",
+    "text": "Priority Level"
+  },
+  {
+    "ns": "create",
+    "key": "detailed_description",
+    "text": "Detailed Description"
+  },
+  {
+    "ns": "create",
+    "key": "ticket_subject",
+    "text": "Ticket Subject"
+  },
+  {
+    "ns": "create",
+    "key": "support_category",
+    "text": "Support Category"
+  },
+  {
+    "ns": "create",
+    "key": "raise_a_ticket",
+    "text": "Raise a Ticket"
+  },
+  {
+    "ns": "feedback",
+    "key": "dismiss",
+    "text": "Dismiss"
+  },
+  {
+    "ns": "feedback",
+    "key": "feedback_sent",
+    "text": "Feedback Sent!"
+  },
+  {
+    "ns": "feedback",
+    "key": "very_intuitive_ui_but_i_got_a_",
+    "text": "Very intuitive UI, but I got a minor delay in Aadhaar update status. Overall nice."
+  },
+  {
+    "ns": "feedback",
+    "key": "ananya_s",
+    "text": "Ananya S."
+  },
+  {
+    "ns": "feedback",
+    "key": "extremely_smooth_itr_filing_ex",
+    "text": "Extremely smooth ITR filing experience! Verified within seconds."
+  },
+  {
+    "ns": "feedback",
+    "key": "rakesh_k",
+    "text": "Rakesh K."
+  },
+  {
+    "ns": "feedback",
+    "key": "recent_reviews",
+    "text": "Recent Reviews"
+  },
+  {
+    "ns": "feedback",
+    "key": "submit_feedback",
+    "text": "Submit Feedback"
+  },
+  {
+    "ns": "feedback",
+    "key": "write_your_feedback",
+    "text": "Write your feedback"
+  },
+  {
+    "ns": "feedback",
+    "key": "what_should_we_improve",
+    "text": "What should we improve?"
+  },
+  {
+    "ns": "feedback",
+    "key": "stars",
+    "text": "stars ("
+  },
+  {
+    "ns": "feedback",
+    "key": "you_selected",
+    "text": "You selected"
+  },
+  {
+    "ns": "feedback",
+    "key": "rate_your_experience",
+    "text": "Rate Your Experience"
+  },
+  {
+    "ns": "feedback",
+    "key": "share_feedback",
+    "text": "Share Feedback"
+  },
+  {
+    "ns": "tickets",
+    "key": "dismiss",
+    "text": "Dismiss"
+  },
+  {
+    "ns": "tickets",
+    "key": "thank_you",
+    "text": "Thank You!"
+  },
+  {
+    "ns": "tickets",
+    "key": "submit_feedback",
+    "text": "Submit Feedback"
+  },
+  {
+    "ns": "tickets",
+    "key": "share_app_feedback",
+    "text": "Share App Feedback"
+  },
+  {
+    "ns": "tickets",
+    "key": "got_it",
+    "text": "Got it"
+  },
+  {
+    "ns": "tickets",
+    "key": "create_new_ticket",
+    "text": "+ Create New Ticket"
+  },
+  {
+    "ns": "tickets",
+    "key": "updated",
+    "text": "Updated:"
+  },
+  {
+    "ns": "tickets",
+    "key": "submit_queries_relating_to_pay",
+    "text": "Submit queries relating to payments or applications by tapping the button below."
+  },
+  {
+    "ns": "tickets",
+    "key": "no_tickets_found",
+    "text": "No tickets found"
+  },
+  {
+    "ns": "tickets",
+    "key": "active_support_tickets",
+    "text": "Active Support Tickets"
+  },
+  {
+    "ns": "tickets",
+    "key": "single_emergency_helpline_resp",
+    "text": "Single Emergency helpline response"
+  },
+  {
+    "ns": "tickets",
+    "key": "national_emergency",
+    "text": "National Emergency"
+  },
+  {
+    "ns": "tickets",
+    "key": "national_helpline_numbers",
+    "text": "National Helpline Numbers"
+  },
+  {
+    "ns": "tickets",
+    "key": "no_matching_help_topics_found",
+    "text": "No matching help topics found."
+  },
+  {
+    "ns": "tickets",
+    "key": "popular_help_topics",
+    "text": "Popular Help Topics"
+  },
+  {
+    "ns": "tickets",
+    "key": "track_issues",
+    "text": "Track issues"
+  },
+  {
+    "ns": "tickets",
+    "key": "open_ticket",
+    "text": "Open Ticket"
+  },
+  {
+    "ns": "tickets",
+    "key": "help_support",
+    "text": "Help & Support"
+  }
+]

@@ -21,7 +21,12 @@ export const getUploadUrl = async (
   if (error || !data) {
     throw new Error(`Failed to create upload URL: ${error?.message}`);
   }
-  return data;
+  
+  const signedUrl = data.signedUrl.startsWith('http') 
+    ? data.signedUrl 
+    : `${config.supabaseUrl}${data.signedUrl}`;
+    
+  return { ...data, signedUrl };
 };
 
 export const getDownloadUrl = async (storageKey: string): Promise<string> => {

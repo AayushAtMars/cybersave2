@@ -7,6 +7,7 @@ import {
   listTransactions,
   getWallet,
   listAdminTransactions,
+  payApplicationWithWallet,
 } from '../controllers/payment.controller';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.post('/webhook', handleWebhook);
 router.get('/wallet', authenticateGateway, getWallet);
 router.post('/orders', authenticateGateway, createOrder);
 router.post('/wallet/topup', authenticateGateway, createTopupOrder);
+router.post('/wallet/pay-application', authenticateGateway, payApplicationWithWallet);
 router.get('/transactions', authenticateGateway, listTransactions);
 
 // Admin/Operator endpoints

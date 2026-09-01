@@ -18,6 +18,7 @@ import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { useDocuments, useUploadDocument, useDeleteDocument, getDownloadUrl } from '../../src/api/documents';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const CATEGORIES = [
   { id: 'all', label: 'All' },
@@ -27,6 +28,7 @@ const CATEGORIES = [
 ];
 
 export default function MyDocumentsScreen() {
+    const { t } = useTranslation();
   const { data: documents, isLoading } = useDocuments();
   const uploadDocument = useUploadDocument();
   const deleteDocument = useDeleteDocument();
@@ -184,8 +186,9 @@ export default function MyDocumentsScreen() {
         <View style={styles.info}>
           <Text style={styles.docName} numberOfLines={1}>{item.originalName}</Text>
           <Text style={styles.docMeta}>
-            Uploaded {getFriendlyDate(item.createdAt)} • {((item.sizeBytes || 0) / (1024 * 1024)).toFixed(1)} MB
-          </Text>
+            
+                                  {t('documents.uploaded')} {getFriendlyDate(item.createdAt)} • {((item.sizeBytes || 0) / (1024 * 1024)).toFixed(1)}  {t('documents.mb')}
+                                </Text>
         </View>
         <View style={styles.categoryBadge}>
           <Text style={styles.categoryText}>{getFriendlyCategoryLabel(item.documentCategory)}</Text>
@@ -197,17 +200,17 @@ export default function MyDocumentsScreen() {
       <View style={styles.cardActions}>
         <TouchableOpacity style={styles.actionBtn} onPress={() => handleDownload(item.id || item._id)}>
           <Ionicons name="eye-outline" size={16} color="#64748B" />
-          <Text style={styles.actionText}>View</Text>
+          <Text style={styles.actionText}>{t('documents.view')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionBtn} onPress={() => handleDownload(item.id || item._id)}>
           <Ionicons name="download-outline" size={16} color="#64748B" />
-          <Text style={styles.actionText}>Download</Text>
+          <Text style={styles.actionText}>{t('documents.download')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.actionBtn} onPress={() => handleShare(item.id || item._id, item.originalName)}>
           <Ionicons name="share-social-outline" size={16} color="#64748B" />
-          <Text style={styles.actionText}>Share</Text>
+          <Text style={styles.actionText}>{t('documents.share')}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={[styles.actionBtn, styles.deleteBtn]} onPress={() => handleDelete(item.id || item._id, item.originalName)}>
@@ -231,7 +234,7 @@ export default function MyDocumentsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Documents</Text>
+          <Text style={styles.headerTitle}>{t('documents.my_documents')}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
@@ -242,8 +245,8 @@ export default function MyDocumentsScreen() {
           {/* Storage Bar Card */}
           <View style={styles.storageCard}>
             <View style={styles.storageHeader}>
-              <Text style={styles.storageTitle}>Storage Usage</Text>
-              <Text style={styles.storageLimitText}>{totalMb.toFixed(1)} MB / {LIMIT_MB} MB</Text>
+              <Text style={styles.storageTitle}>{t('documents.storage_usage')}</Text>
+              <Text style={styles.storageLimitText}>{totalMb.toFixed(1)}  {t('documents.mb')} {LIMIT_MB}  {t('documents.mb')}</Text>
             </View>
             <View style={styles.progressTrack}>
               <View style={[styles.progressBar, { width: `${progressPct}%` }]} />
@@ -277,7 +280,7 @@ export default function MyDocumentsScreen() {
           {/* Upload Button */}
           <TouchableOpacity style={styles.uploadBtn} onPress={handleUpload} activeOpacity={0.8}>
             <Ionicons name="add" size={18} color="#2563EB" />
-            <Text style={styles.uploadBtnText}>Upload New Document</Text>
+            <Text style={styles.uploadBtnText}>{t('documents.upload_new_document')}</Text>
           </TouchableOpacity>
 
           {/* Document List */}
@@ -286,10 +289,11 @@ export default function MyDocumentsScreen() {
           ) : filteredDocs?.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="folder-open-outline" size={48} color="#94A3B8" />
-              <Text style={styles.emptyTitle}>Vault is empty</Text>
+              <Text style={styles.emptyTitle}>{t('documents.vault_is_empty')}</Text>
               <Text style={styles.emptySub}>
-                Uploaded documents will show up here once you upload them or submit an application.
-              </Text>
+                
+                                                  {t('documents.uploaded_documents_will_show_u')}
+                                                </Text>
             </View>
           ) : (
             <FlatList
@@ -320,12 +324,12 @@ export default function MyDocumentsScreen() {
             <View style={styles.dragIndicator} />
             <View style={styles.sheetHeader}>
               <View style={styles.sheetTitleRow}>
-                <Text style={styles.sheetTitle}>Select Document Type</Text>
+                <Text style={styles.sheetTitle}>{t('documents.select_document_type')}</Text>
                 <TouchableOpacity style={styles.sheetCloseBtn} onPress={() => setShowCategoryModal(false)}>
                   <Ionicons name="close" size={20} color="#64748B" />
                 </TouchableOpacity>
               </View>
-              <Text style={styles.sheetSubtitle}>Choose the category of the document you want to upload.</Text>
+              <Text style={styles.sheetSubtitle}>{t('documents.choose_the_category_of_the_doc')}</Text>
             </View>
 
             <View style={styles.sheetOptions}>
@@ -338,8 +342,8 @@ export default function MyDocumentsScreen() {
                   <Ionicons name="card-outline" size={22} color="#2563EB" />
                 </View>
                 <View style={styles.optionInfo}>
-                  <Text style={styles.optionTitle}>ID Proof</Text>
-                  <Text style={styles.optionDesc}>Aadhaar Card, PAN Card, Voter ID, etc.</Text>
+                  <Text style={styles.optionTitle}>{t('documents.id_proof')}</Text>
+                  <Text style={styles.optionDesc}>{t('documents.aadhaar_card_pan_card_voter_id')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
               </TouchableOpacity>
@@ -353,8 +357,8 @@ export default function MyDocumentsScreen() {
                   <Ionicons name="ribbon-outline" size={22} color="#10B981" />
                 </View>
                 <View style={styles.optionInfo}>
-                  <Text style={styles.optionTitle}>Certificate / Birth Proof</Text>
-                  <Text style={styles.optionDesc}>Birth Certificate, Address Certificate, etc.</Text>
+                  <Text style={styles.optionTitle}>{t('documents.certificate_birth_proof')}</Text>
+                  <Text style={styles.optionDesc}>{t('documents.birth_certificate_address_cert')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
               </TouchableOpacity>
@@ -368,8 +372,8 @@ export default function MyDocumentsScreen() {
                   <Ionicons name="cash-outline" size={22} color="#D946EF" />
                 </View>
                 <View style={styles.optionInfo}>
-                  <Text style={styles.optionTitle}>Financial / Income Proof</Text>
-                  <Text style={styles.optionDesc}>ITR Receipts, Payslips, Bank Statements, etc.</Text>
+                  <Text style={styles.optionTitle}>{t('documents.financial_income_proof')}</Text>
+                  <Text style={styles.optionDesc}>{t('documents.itr_receipts_payslips_bank_sta')}</Text>
                 </View>
                 <Ionicons name="chevron-forward" size={16} color="#94A3B8" />
               </TouchableOpacity>
@@ -388,12 +392,12 @@ export default function MyDocumentsScreen() {
         <View style={styles.loaderOverlay}>
           <View style={styles.loaderCard}>
             <Ionicons name="cloud-upload-outline" size={40} color="#2563EB" style={styles.loaderIcon} />
-            <Text style={styles.loaderTitle}>Uploading Document...</Text>
+            <Text style={styles.loaderTitle}>{t('documents.uploading_document')}</Text>
             <Text style={styles.loaderPercent}>{uploadProgress}%</Text>
             <View style={styles.loaderProgressTrack}>
               <View style={[styles.loaderProgressBar, { width: `${uploadProgress}%` }]} />
             </View>
-            <Text style={styles.loaderSub}>Please wait while we encrypt and secure your file.</Text>
+            <Text style={styles.loaderSub}>{t('documents.please_wait_while_we_encrypt_a')}</Text>
           </View>
         </View>
       </Modal>
@@ -417,16 +421,17 @@ export default function MyDocumentsScreen() {
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.successTitle}>Upload Successful!</Text>
+            <Text style={styles.successTitle}>{t('documents.upload_successful')}</Text>
             <Text style={styles.successSub}>
-              Your document has been safely encrypted and uploaded to the secure vault storage.
-            </Text>
+              
+                                        {t('documents.your_document_has_been_safely_')}
+                                      </Text>
             <TouchableOpacity 
               style={styles.successDoneBtn} 
               onPress={() => setShowSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.successDoneBtnText}>Dismiss</Text>
+              <Text style={styles.successDoneBtnText}>{t('documents.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -446,16 +451,17 @@ export default function MyDocumentsScreen() {
                 <Ionicons name="trash-outline" size={32} color="#EF4444" />
               </View>
             </View>
-            <Text style={styles.deleteTitle}>Document Deleted</Text>
+            <Text style={styles.deleteTitle}>{t('documents.document_deleted')}</Text>
             <Text style={styles.deleteSub}>
-              The file has been permanently removed from your vault and storage bucket.
-            </Text>
+              
+                                        {t('documents.the_file_has_been_permanently_')}
+                                      </Text>
             <TouchableOpacity 
               style={styles.deleteDoneBtn} 
               onPress={() => setShowDeleteSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.deleteDoneBtnText}>Dismiss</Text>
+              <Text style={styles.deleteDoneBtnText}>{t('documents.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -475,24 +481,25 @@ export default function MyDocumentsScreen() {
                 <Ionicons name="alert-circle-outline" size={36} color="#F59E0B" />
               </View>
             </View>
-            <Text style={styles.successTitle}>Delete Document?</Text>
+            <Text style={styles.successTitle}>{t('documents.delete_document')}</Text>
             <Text style={styles.successSub}>
-              Are you sure you want to permanently delete "{documentToDelete?.name}"? This action cannot be undone.
-            </Text>
+              
+                                        {t('documents.are_you_sure_you_want_to_perma')}{documentToDelete?.name}{t('documents.this_action_cannot_be_undone')}
+                                      </Text>
             <View style={styles.modalActionRow}>
               <TouchableOpacity 
                 style={styles.modalCancelBtn} 
                 onPress={() => setShowDeleteConfirmModal(false)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalCancelBtnText}>Cancel</Text>
+                <Text style={styles.modalCancelBtnText}>{t('documents.cancel')}</Text>
               </TouchableOpacity>
               <TouchableOpacity 
                 style={styles.modalConfirmDeleteBtn} 
                 onPress={confirmDelete}
                 activeOpacity={0.8}
               >
-                <Text style={styles.modalConfirmDeleteBtnText}>Delete</Text>
+                <Text style={styles.modalConfirmDeleteBtnText}>{t('documents.delete')}</Text>
               </TouchableOpacity>
             </View>
           </View>

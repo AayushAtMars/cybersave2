@@ -14,8 +14,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useService, useCreateApplication } from '../../src/api/applications';
 import { useDraftStore } from '../../src/store/draftApplicationStore';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function ServiceDetailScreen() {
+    const { t } = useTranslation();
   const { serviceId } = useLocalSearchParams<{ serviceId: string }>();
 
   // Fetch live service configuration from MongoDB
@@ -35,9 +37,9 @@ export default function ServiceDetailScreen() {
   if (!service) {
     return (
       <View style={styles.center}>
-        <Text style={styles.errorText}>Service details could not be found.</Text>
+        <Text style={styles.errorText}>{t('detail.service_details_could_not_be_f')}</Text>
         <TouchableOpacity style={styles.backLink} onPress={() => router.back()}>
-          <Text style={styles.backLinkText}>Go Back</Text>
+          <Text style={styles.backLinkText}>{t('detail.go_back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -97,9 +99,10 @@ export default function ServiceDetailScreen() {
           {/* Official Registry Card Banner */}
           <View style={styles.registryCard}>
             <View style={styles.registryInfo}>
-              <Text style={styles.registryTitle}>Official {service.name} Registry</Text>
+              <Text style={styles.registryTitle}>{t('detail.official')} {service.name}  {t('detail.registry')}</Text>
               <Text style={styles.registrySubtitle}>
-                Legally certified document by the {service.department || 'Municipal Registrar of Births and Deaths'}.
+                
+                                              {t('detail.legally_certified_document_by_')} {service.department || 'Municipal Registrar of Births and Deaths'}.
               </Text>
             </View>
             <View style={styles.registryIconBox}>
@@ -111,7 +114,7 @@ export default function ServiceDetailScreen() {
           <View style={styles.detailsStack}>
             {/* About This Service */}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>About This Service</Text>
+              <Text style={styles.sectionTitle}>{t('detail.about_this_service')}</Text>
               <Text style={styles.sectionDesc}>
                 {service.description || `Get official ${service.name} Certificates issued by state/central bodies. Crucial for school admissions, passport applications, and identity proofs.`}
               </Text>
@@ -119,7 +122,7 @@ export default function ServiceDetailScreen() {
 
             {/* Eligibility */}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Eligibility</Text>
+              <Text style={styles.sectionTitle}>{t('detail.eligibility')}</Text>
               {(service.eligibility && service.eligibility.length > 0) ? (
                 service.eligibility.map((el, index) => (
                   <View key={index} style={styles.row}>
@@ -131,15 +134,15 @@ export default function ServiceDetailScreen() {
                 <>
                   <View style={styles.row}>
                     <Ionicons name="checkmark" size={16} color="#10B981" />
-                    <Text style={styles.rowText}>Citizen of India</Text>
+                    <Text style={styles.rowText}>{t('detail.citizen_of_india')}</Text>
                   </View>
                   <View style={styles.row}>
                     <Ionicons name="checkmark" size={16} color="#10B981" />
-                    <Text style={styles.rowText}>Birth occurred within state limits</Text>
+                    <Text style={styles.rowText}>{t('detail.birth_occurred_within_state_li')}</Text>
                   </View>
                   <View style={styles.row}>
                     <Ionicons name="checkmark" size={16} color="#10B981" />
-                    <Text style={styles.rowText}>Registered within 21 days (Standard fee)</Text>
+                    <Text style={styles.rowText}>{t('detail.registered_within_21_days_stan')}</Text>
                   </View>
                 </>
               )}
@@ -147,7 +150,7 @@ export default function ServiceDetailScreen() {
 
             {/* Documents Required */}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Documents Required</Text>
+              <Text style={styles.sectionTitle}>{t('detail.documents_required')}</Text>
               {service.requiredDocuments && service.requiredDocuments.length > 0 ? (
                 service.requiredDocuments.map((doc, index) => (
                   <View key={index} style={styles.bulletRow}>
@@ -159,19 +162,19 @@ export default function ServiceDetailScreen() {
                 <>
                   <View style={styles.bulletRow}>
                     <View style={styles.bulletPoint} />
-                    <Text style={styles.rowText}>Proof of Birth from Hospital</Text>
+                    <Text style={styles.rowText}>{t('detail.proof_of_birth_from_hospital')}</Text>
                   </View>
                   <View style={styles.bulletRow}>
                     <View style={styles.bulletPoint} />
-                    <Text style={styles.rowText}>ID Proof of Parents (Aadhaar/PAN)</Text>
+                    <Text style={styles.rowText}>{t('detail.id_proof_of_parents_aadhaar_pa')}</Text>
                   </View>
                   <View style={styles.bulletRow}>
                     <View style={styles.bulletPoint} />
-                    <Text style={styles.rowText}>Marriage Certificate of Parents</Text>
+                    <Text style={styles.rowText}>{t('detail.marriage_certificate_of_parent')}</Text>
                   </View>
                   <View style={styles.bulletRow}>
                     <View style={styles.bulletPoint} />
-                    <Text style={styles.rowText}>Address Proof (Utility Bill)</Text>
+                    <Text style={styles.rowText}>{t('detail.address_proof_utility_bill')}</Text>
                   </View>
                 </>
               )}
@@ -180,11 +183,11 @@ export default function ServiceDetailScreen() {
             {/* Fee & SLA Duration Cards */}
             <View style={styles.metaRow}>
               <View style={styles.metaCard}>
-                <Text style={styles.metaLabel}>Government Fee</Text>
+                <Text style={styles.metaLabel}>{t('detail.government_fee')}</Text>
                 <Text style={styles.feeValue}>₹{totalFeeInRupees.toFixed(0)}</Text>
               </View>
               <View style={styles.metaCard}>
-                <Text style={styles.metaLabel}>Processing Time</Text>
+                <Text style={styles.metaLabel}>{t('detail.processing_time')}</Text>
                 <Text style={styles.metaValue}>
                   {processingDays === 1 ? '1 Day' : `${processingDays === 0 ? '7-15' : processingDays} Days`}
                 </Text>
@@ -194,14 +197,14 @@ export default function ServiceDetailScreen() {
             {/* Additional Charges Section */}
             {service.additionalCharges && service.additionalCharges.length > 0 && (
               <View style={styles.sectionCard}>
-                <Text style={styles.sectionTitle}>Additional Options / Processing Fees</Text>
+                <Text style={styles.sectionTitle}>{t('detail.additional_options_processing_')}</Text>
                 {service.additionalCharges.map((ch: any, idx: number) => (
                   <View key={idx} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 4 }}>
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 13, fontWeight: '700', color: '#0F172A' }}>{ch.name}</Text>
                       {ch.condition ? <Text style={{ fontSize: 11, color: '#64748B' }}>{ch.condition}</Text> : null}
                     </View>
-                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#EF4444' }}>+₹{ch.amount}</Text>
+                    <Text style={{ fontSize: 13.5, fontWeight: '700', color: '#EF4444' }}>{t('detail.key_337rln')}{ch.amount}</Text>
                   </View>
                 ))}
               </View>
@@ -209,7 +212,7 @@ export default function ServiceDetailScreen() {
 
             {/* Payment & Refund Info Section */}
             <View style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>Payment & Refund Information</Text>
+              <Text style={styles.sectionTitle}>{t('detail.payment_refund_information')}</Text>
               <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginVertical: 4 }}>
                 {(service.paymentMethods && service.paymentMethods.length > 0 ? service.paymentMethods : ['Online Payment', 'UPI']).map((m: string, idx: number) => (
                   <View key={idx} style={{ backgroundColor: '#EFF6FF', paddingVertical: 4, paddingHorizontal: 8, borderRadius: 100 }}>
@@ -218,7 +221,7 @@ export default function ServiceDetailScreen() {
                 ))}
               </View>
               <View style={{ borderTopWidth: 1, borderTopColor: '#E2E8F0', paddingTop: 8, marginTop: 4 }}>
-                <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>Refund Policy:</Text>
+                <Text style={{ fontSize: 11, color: '#64748B', fontWeight: '600' }}>{t('detail.refund_policy')}</Text>
                 <Text style={{ fontSize: 12, color: '#0F172A', marginTop: 2 }}>{service.refundPolicy || 'Non-refundable after processing starts'}</Text>
               </View>
             </View>
@@ -233,7 +236,7 @@ export default function ServiceDetailScreen() {
               {isCreating ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.applyBtnText}>Apply Now</Text>
+                <Text style={styles.applyBtnText}>{t('detail.apply_now')}</Text>
               )}
             </TouchableOpacity>
           </View>

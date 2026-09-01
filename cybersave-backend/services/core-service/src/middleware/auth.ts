@@ -16,7 +16,7 @@ declare global {
   }
 }
 
-// ── Full JWT verify (used by auth-module routes that sign tokens directly) ─────
+//Full JWT verify (used by auth-module routes that sign tokens directly)
 export const authenticate = async (
   req: Request,
   res: Response,
@@ -44,7 +44,7 @@ export const authenticate = async (
   }
 };
 
-// ── Gateway-header based authenticate (notification & support modules) ─────────
+//Gateway-header based authenticate (notification & support modules)
 // Gateway has already verified the JWT; it forwards x-user-id and x-user-role
 export const authenticateGateway = (req: Request, res: Response, next: NextFunction): void => {
   const userId = req.headers['x-user-id'] as string;

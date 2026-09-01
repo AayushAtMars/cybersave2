@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { shadows } from '../../src/theme';
 import { useAuthStore } from '../../src/store/authStore';
+import { useTranslation } from 'react-i18next';
 
 const LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
@@ -30,7 +31,8 @@ const LANGUAGES = [
 ];
 
 export default function LanguageSelect() {
-  const [selected, setSelected] = useState('en');
+  const { t, i18n } = useTranslation();
+  const [selected, setSelected] = useState(i18n.language || 'en');
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   const handleContinue = () => {
@@ -65,7 +67,7 @@ export default function LanguageSelect() {
           ) : (
             <View style={{ width: 40 }} />
           )}
-          <Text style={styles.headerTitle}>Choose Your Language</Text>
+          <Text style={styles.headerTitle}>{t('languageSelect.title')}</Text>
           <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
@@ -81,7 +83,7 @@ export default function LanguageSelect() {
           showsVerticalScrollIndicator={false}
           ListHeaderComponent={
             <Text style={styles.hintText}>
-              Select your preferred language to customize the app interface and official services.
+              {t('languageSelect.subtitle')}
             </Text>
           }
           renderItem={({ item }) => {
@@ -89,7 +91,10 @@ export default function LanguageSelect() {
             return (
               <TouchableOpacity
                 style={[styles.langCard, isSelected && styles.langCardSelected]}
-                onPress={() => setSelected(item.code)}
+                onPress={() => {
+                  setSelected(item.code);
+                  i18n.changeLanguage(item.code);
+                }}
                 activeOpacity={0.85}
               >
                 <View style={styles.langTexts}>
@@ -113,7 +118,7 @@ export default function LanguageSelect() {
               end={{ x: 1, y: 0 }}
               style={styles.continueBtn}
             >
-              <Text style={styles.continueBtnText}>Continue</Text>
+              <Text style={styles.continueBtnText}>{t('languageSelect.continue')}</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>

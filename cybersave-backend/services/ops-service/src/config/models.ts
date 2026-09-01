@@ -36,6 +36,7 @@ const ApplicationSchema = new Schema(
     convenienceFee: { type: Number, required: true },
     paymentOrderId: { type: String },
     paymentGatewayRef: { type: String },
+    paymentMethod: { type: String },
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
     assignedOperatorId: { type: String },
     assignedOperatorName: { type: String },
@@ -120,7 +121,7 @@ ServiceSchema.virtual('totalFee').get(function (this: any) {
   return this.govtFee + this.convenienceFee;
 });
 
-// ── Document Module Schemas ──────────────────────────────────────────────────
+//Document Module Schemas
 
 const DocumentSchema = new Schema(
   {
@@ -149,7 +150,7 @@ const DocumentSchema = new Schema(
 DocumentSchema.index({ ownerId: 1, documentCategory: 1 });
 DocumentSchema.index({ applicationId: 1, verifiedStatus: 1 });
 
-// ── Payment Module Schemas ────────────────────────────────────────────────────
+//Payment Module Schemas
 
 const WalletSchema = new Schema(
   {
@@ -177,7 +178,7 @@ const TransactionSchema = new Schema(
 
 TransactionSchema.index({ citizenId: 1, createdAt: -1 });
 
-// ── Model registration ────────────────────────────────────────────────────────
+//Model registration
 
 let Application: mongoose.Model<any>;
 let Service: mongoose.Model<any>;

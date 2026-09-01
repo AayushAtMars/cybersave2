@@ -80,3 +80,22 @@ export const updateService = async (req: Request, res: Response): Promise<void> 
 
   res.json({ success: true, data: { service } });
 };
+
+// ── DELETE /services/:id — admin only ─────────────────────────────────────────
+export const deleteService = async (req: Request, res: Response): Promise<void> => {
+  const Service = getServiceModel();
+  const service = await Service.findByIdAndDelete(req.params.id);
+  if (!service) {
+    res.status(404).json({ success: false, error: 'Service not found', errorCode: 'SERVICE_NOT_FOUND' });
+    return;
+  }
+
+  triggerNotification(
+    'admin',
+    'Scheme/service deleted',
+    `The service "${service.name}" was successfully removed.`,
+    'system_update'
+  ).catch((err: any) => console.error('Failed to trigger notification:', err.message));
+
+  res.json({ success: true, message: 'Service deleted successfully' });
+};

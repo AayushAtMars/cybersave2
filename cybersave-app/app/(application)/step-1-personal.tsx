@@ -20,6 +20,7 @@ import { useDraftStore } from '../../src/store/draftApplicationStore';
 import { useService, useSaveWizardStep } from '../../src/api/applications';
 import { colors, spacing, radius, shadows } from '../../src/theme';
 import { STATE_DISTRICTS } from '../../src/utils/districtsData';
+import { useTranslation } from "react-i18next";
 
 function SearchableModalPicker({
   visible,
@@ -99,6 +100,7 @@ function SearchableModalPicker({
 }
 
 export default function Step1PersonalScreen() {
+    const { t } = useTranslation();
   const draft = useDraftStore((s) => s.draft);
   const updateDraft = useDraftStore((s) => s.updateDraft);
   const { data: service, isLoading } = useService(draft?.serviceId ?? '');
@@ -380,8 +382,8 @@ export default function Step1PersonalScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>Apply {service.name}</Text>
-          <Text style={styles.headerStep}>Step 1/5</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>{t('step-1-personal.apply')} {service.name}</Text>
+          <Text style={styles.headerStep}>{t('step-1-personal.step_1_5')}</Text>
         </View>
         {/* Progress track */}
         <View style={styles.progressContainer}>
@@ -402,13 +404,13 @@ export default function Step1PersonalScreen() {
             keyboardShouldPersistTaps="handled"
           >
             {/* Personal Details Section */}
-            <Text style={styles.sectionTitle}>Personal Details</Text>
+            <Text style={styles.sectionTitle}>{t('step-1-personal.personal_details')}</Text>
             <View style={styles.fieldsGap}>
               {renderPersonalFields()}
             </View>
 
             {/* Address Details Section */}
-            <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Address Details</Text>
+            <Text style={[styles.sectionTitle, { marginTop: 12 }]}>{t('step-1-personal.address_details')}</Text>
             <View style={styles.fieldsGap}>
               {renderAddressFields()}
             </View>
@@ -429,7 +431,7 @@ export default function Step1PersonalScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.draftBtn} onPress={() => router.replace('/(tabs)/home')}>
-            <Text style={styles.draftText}>Save Draft</Text>
+            <Text style={styles.draftText}>{t('step-1-personal.save_draft')}</Text>
           </TouchableOpacity>
         </View>
 

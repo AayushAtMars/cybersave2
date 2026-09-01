@@ -2,9 +2,7 @@ import mongoose from 'mongoose';
 import { config } from './index';
 import { logger } from '../modules/auth/utils/logger';
 
-// ── Named connections — each domain keeps its own MongoDB database ─────────────
-// This avoids any data migration: existing data stays in the same Mongo DB names.
-
+// each domain keeps its own MongoDB database
 export let dbAuth: mongoose.Connection;
 export let dbNotification: mongoose.Connection;
 export let dbSupport: mongoose.Connection;

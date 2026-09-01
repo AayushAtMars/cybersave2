@@ -3,6 +3,7 @@ import { Routes, Route, NavLink, useNavigate } from 'react-router-dom';
 import { useAdminStore } from '../store/adminStore';
 import { adminClient } from '../api/client';
 import DashboardHome from './DashboardHome';
+import OperatorDashboardHome from './OperatorDashboardHome';
 import ApplicationsQueuePage from './ApplicationsQueuePage';
 import ApplicationVerifyDetailsPage from './ApplicationVerifyDetailsPage';
 import OperatorsPage from './OperatorsPage';
@@ -13,6 +14,7 @@ import NotificationsPage from './NotificationsPage';
 import AnalyticsPage from './AnalyticsPage';
 import AuditLogsPage from './AuditLogsPage';
 import SettingsPage from './SettingsPage';
+import WalletTransactionsPage from './WalletTransactionsPage';
 import logo from '../../assets/dashboard-logo.png';
 
 // SVG Icons
@@ -70,6 +72,7 @@ const navItems = [
   { to: '/applications', label: 'Applications', icon: Icons.Applications },
   { to: '/services', label: 'Services', icon: Icons.Services },
   { to: '/operators', label: 'Operators', icon: Icons.Operators },
+  { to: '/transactions', label: 'Transactions', icon: Icons.Transactions },
   { to: '/notifications', label: 'Notifications', icon: Icons.Notifications },
   { to: '/tickets', label: 'Support Tickets', icon: Icons.SupportTickets },
   { to: '/analytics', label: 'Analytics', icon: Icons.Analytics },
@@ -79,10 +82,86 @@ const navItems = [
 
 export default function DashboardLayout() {
   const user = useAdminStore((s) => s.user);
-  const setAuth = useAdminStore((s) => s.setAuth);
   const accessToken = useAdminStore((s) => s.accessToken);
+  const setAuth = useAdminStore((s) => s.setAuth);
   const clearAuth = useAdminStore((s) => s.clearAuth);
   const navigate = useNavigate();
+
+  // Quick Actions Dropdown State
+  const [showQuickActions, setShowQuickActions] = useState(false);
+
+  // Theme State
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('theme') === 'dark');
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDark]);
+
+  // Push Notification Toast State
+  const [toast, setToast] = useState<{ title: string; body: string } | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Fetch initial unread count and listen to reset event
+  useEffect(() => {
+    if (!accessToken) return;
+    
+    const fetchUnread = async () => {
+      try {
+        const { data } = await adminClient.get('/notifications/admin');
+        if (data.success) {
+          const unread = data.data.items.filter((n: any) => !n.read).length;
+          setUnreadCount(unread);
+        }
+      } catch (err) {
+        console.error('Failed to fetch unread count', err);
+      }
+    };
+    fetchUnread();
+
+    const handleMarkAllRead = () => setUnreadCount(0);
+    window.addEventListener('mark-all-notifications-read', handleMarkAllRead);
+    return () => window.removeEventListener('mark-all-notifications-read', handleMarkAllRead);
+  }, [accessToken]);
+
+  // Set up SSE Push Notifications
+  useEffect(() => {
+    if (!accessToken) return;
+    
+    // Connect to SSE stream
+    const eventSource = new EventSource(`${adminClient.defaults.baseURL}/notifications/admin/stream?token=${accessToken}`);
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === 'connected') return;
+        
+        // Show push notification toast
+        setToast({ title: data.title, body: data.body });
+        setUnreadCount(prev => prev + 1);
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => setToast(null), 5000);
+      } catch (err) {
+        console.error('SSE parsing error', err);
+      }
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('SSE Error:', err);
+      // Browser will automatically attempt to reconnect. Do not close() it here.
+    };
+
+    return () => {
+      eventSource.close();
+    };
+  }, [accessToken]);
+
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -143,7 +222,19 @@ export default function DashboardLayout() {
           gap: '4px',
           overflowY: 'auto'
         }}>
-          {navItems.map(({ to, label, icon: Icon, end }) => (
+          {navItems.filter(item => {
+            if (user?.role === 'operator') {
+              const allowedRoutes = ['/', '/applications', '/notifications', '/settings'];
+              if (user.permissions?.includes('manage_tickets')) {
+                allowedRoutes.push('/tickets');
+              }
+              if (user.permissions?.includes('view_transactions')) {
+                allowedRoutes.push('/transactions');
+              }
+              return allowedRoutes.includes(item.to);
+            }
+            return true;
+          }).map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={label}
               to={to}
@@ -273,71 +364,130 @@ export default function DashboardLayout() {
 
           {/* Right Profile Controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            {/* Lang Dropdown */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '14px', color: '#475569', cursor: 'pointer', fontWeight: 600 }}>
-              <span>EN</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
 
-            {/* Brightness sun */}
-            <button style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-              <Icons.Sun />
+
+            {/* Brightness sun / moon */}
+            <button 
+              onClick={() => setIsDark(!isDark)}
+              style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+            >
+              {isDark ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+              ) : (
+                <Icons.Sun />
+              )}
             </button>
 
             {/* Notification bell badge */}
-            <div style={{ position: 'relative', cursor: 'pointer', color: '#475569' }}>
+            <div 
+              style={{ position: 'relative', cursor: 'pointer', color: '#475569' }}
+              onClick={() => navigate('/notifications')}
+            >
               <Icons.Notifications />
-              <span style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-4px',
-                backgroundColor: '#EF4444',
-                color: '#FFFFFF',
-                fontSize: '9px',
-                fontWeight: 700,
-                width: '15px',
-                height: '15px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1.5px solid #FFFFFF'
-              }}>
-                12
-              </span>
+              {unreadCount > 0 && (
+                <span style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-4px',
+                  backgroundColor: '#EF4444',
+                  color: '#FFFFFF',
+                  fontSize: '9px',
+                  fontWeight: 700,
+                  width: '15px',
+                  height: '15px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1.5px solid #FFFFFF'
+                }}>
+                  {unreadCount > 99 ? '99+' : unreadCount}
+                </span>
+              )}
             </div>
 
             {/* Dynamic Header Action Button */}
-            <button
-              onClick={() => {
-                if (window.location.pathname.endsWith('/operators')) {
-                  window.dispatchEvent(new CustomEvent('open-add-operator-modal'));
-                } else if (window.location.pathname.endsWith('/notifications')) {
-                  window.dispatchEvent(new CustomEvent('mark-all-notifications-read'));
-                } else if (window.location.pathname.endsWith('/tickets')) {
-                  window.dispatchEvent(new CustomEvent('open-create-ticket-modal'));
-                }
-              }}
-              style={{
-                backgroundColor: '#2563EB',
-                color: '#FFFFFF',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '10px 18px',
-                fontSize: '14px',
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 2px 4px rgba(37, 99, 235, 0.15)'
-              }}
-            >
-              {window.location.pathname.endsWith('/operators') 
-                ? 'Add New Operator' 
-                : window.location.pathname.endsWith('/notifications') 
-                ? 'Mark All as Read' 
-                : window.location.pathname.endsWith('/tickets') 
-                ? 'Create New Ticket'
-                : 'Quick Actions'}
-            </button>
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => {
+                  if (window.location.pathname.endsWith('/operators')) {
+                    window.dispatchEvent(new CustomEvent('open-add-operator-modal'));
+                  } else if (window.location.pathname.endsWith('/notifications')) {
+                    window.dispatchEvent(new CustomEvent('mark-all-notifications-read'));
+                  } else if (window.location.pathname.endsWith('/tickets')) {
+                    window.dispatchEvent(new CustomEvent('open-create-ticket-modal'));
+                  } else {
+                    setShowQuickActions(!showQuickActions);
+                  }
+                }}
+                style={{
+                  backgroundColor: '#2563EB',
+                  color: '#FFFFFF',
+                  border: 'none',
+                  borderRadius: '8px',
+                  padding: '10px 18px',
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 2px 4px rgba(37, 99, 235, 0.15)'
+                }}
+              >
+                {window.location.pathname.endsWith('/operators') 
+                  ? 'Add New Operator' 
+                  : window.location.pathname.endsWith('/notifications') 
+                  ? 'Mark All as Read' 
+                  : window.location.pathname.endsWith('/tickets') 
+                  ? 'Create New Ticket'
+                  : 'Quick Actions'}
+              </button>
+
+              {/* Quick Actions Dropdown */}
+              {showQuickActions && (
+                <>
+                  <div 
+                    style={{ position: 'fixed', inset: 0, zIndex: 40 }} 
+                    onClick={() => setShowQuickActions(false)} 
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 8px)',
+                    right: 0,
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #E2E8F0',
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                    width: '200px',
+                    zIndex: 50,
+                    overflow: 'hidden'
+                  }}>
+                    <button
+                      onClick={() => { setShowQuickActions(false); navigate('/applications'); }}
+                      style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', borderBottom: '1px solid #F1F5F9', fontSize: '14px', color: '#0F172A', cursor: 'pointer' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      Process Applications
+                    </button>
+                    <button
+                      onClick={() => { setShowQuickActions(false); navigate('/operators'); }}
+                      style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', borderBottom: '1px solid #F1F5F9', fontSize: '14px', color: '#0F172A', cursor: 'pointer' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      Manage Operators
+                    </button>
+                    <button
+                      onClick={() => { setShowQuickActions(false); navigate('/tickets'); }}
+                      style={{ width: '100%', textAlign: 'left', padding: '12px 16px', background: 'none', border: 'none', fontSize: '14px', color: '#0F172A', cursor: 'pointer' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#F8FAFC')}
+                      onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+                    >
+                      Resolve Support Tickets
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
 
             {/* User Profile */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', borderLeft: '1px solid #E2E8F0', paddingLeft: '24px' }}>
@@ -382,12 +532,13 @@ export default function DashboardLayout() {
         {/* Page Container */}
         <main style={{ flex: 1, overflowY: 'auto' }}>
           <Routes>
-            <Route path="/" element={<DashboardHome />} />
+            <Route path="/" element={user?.role === 'operator' ? <OperatorDashboardHome /> : <DashboardHome />} />
             <Route path="/applications" element={<ApplicationsQueuePage />} />
             <Route path="/applications/verify/:id" element={<ApplicationVerifyDetailsPage />} />
             <Route path="/operators" element={<OperatorsPage />} />
             <Route path="/citizens" element={<CitizensPage />} />
             <Route path="/services" element={<ServicesPage />} />
+            <Route path="/transactions" element={<WalletTransactionsPage />} />
             <Route path="/tickets" element={<TicketsPage />} />
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
@@ -396,6 +547,36 @@ export default function DashboardLayout() {
           </Routes>
         </main>
       </div>
+
+      {/* Real-time Push Notification Toast */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          bottom: '32px',
+          right: '32px',
+          zIndex: 9999,
+          backgroundColor: '#FFFFFF',
+          borderRadius: '16px',
+          padding: '20px 24px',
+          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.2)',
+          borderLeft: '4px solid #2563EB',
+          animation: 'slideUp 0.3s ease',
+          maxWidth: '350px',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+            <div style={{ fontSize: '15px', fontWeight: 800, color: '#0F172A' }}>{toast.title}</div>
+            <button 
+              onClick={() => setToast(null)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', padding: 0 }}
+            >
+              ✕
+            </button>
+          </div>
+          <div style={{ fontSize: '13.5px', color: '#475569', lineHeight: 1.5 }}>
+            {toast.body}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

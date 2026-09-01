@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { colors, spacing, radius, shadows } from '../../src/theme';
 
 import { useServices } from '../../src/api/applications';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 const COLUMN_WIDTH = (width - spacing.base * 2 - spacing.md) / 2;
@@ -158,6 +159,7 @@ const HUB_CARDS: HubCard[] = [
 ];
 
 export default function ServicesScreen() {
+    const { t } = useTranslation();
   const [selectedChip, setSelectedChip] = useState('All');
   const { data } = useServices();
 
@@ -234,7 +236,7 @@ export default function ServicesScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>All Services</Text>
+          <Text style={styles.headerTitle}>{t('services.all_services')}</Text>
           <View style={styles.placeholderWidth} />
         </View>
       </LinearGradient>

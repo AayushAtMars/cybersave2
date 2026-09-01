@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useServices } from '../../src/api/applications';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 interface HubService {
   name: string;
@@ -25,6 +26,7 @@ interface HubService {
 }
 
 export default function ServicesHubScreen() {
+    const { t } = useTranslation();
   const { category, parentServiceId } = useLocalSearchParams<{ category: string; parentServiceId?: string }>();
 
   // Fetch real services from DB for this category
@@ -255,7 +257,7 @@ export default function ServicesHubScreen() {
           </Text>
         </View>
 
-        <Text style={styles.sectionHeader}>Available Services</Text>
+        <Text style={styles.sectionHeader}>{t('hub.available_services')}</Text>
 
         {isLoading ? (
           <View style={styles.loader}>

@@ -31,7 +31,7 @@ const SkeletonBox: React.FC<{ width?: number | string; height?: number; borderRa
   );
 };
 
-// ── Pre-built skeleton patterns for specific screens ──────────────────────────
+// Pre-built skeleton patterns for specific screens
 export const ApplicationCardSkeleton: React.FC = () => (
   <View style={styles.card}>
     <View style={styles.row}>

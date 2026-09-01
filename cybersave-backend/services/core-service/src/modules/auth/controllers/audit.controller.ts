@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { getModels } from '../../../config/models';
 
-// ── POST /api/v1/auth/audit/log  (internal: called by other services) ────────
+//POST /api/v1/auth/audit/log  (internal: called by other services)
 export const createAuditLog = async (req: Request, res: Response): Promise<void> => {
   try {
     const { userId, userName, userRole, action, category, resource, ipAddress, status, meta } = req.body;
@@ -23,7 +23,7 @@ export const createAuditLog = async (req: Request, res: Response): Promise<void>
   }
 };
 
-// ── GET /api/v1/auth/admin/audit-logs ────────────────────────────────────────
+//GET /api/v1/auth/admin/audit-logs
 export const listAuditLogs = async (req: Request, res: Response): Promise<void> => {
   try {
     const {

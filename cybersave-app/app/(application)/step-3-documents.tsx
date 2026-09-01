@@ -19,6 +19,7 @@ import { useDraftStore } from '../../src/store/draftApplicationStore';
 import { useService, useSaveWizardStep } from '../../src/api/applications';
 import { useUploadDocument } from '../../src/api/documents';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 interface UploadedFile {
   id?: string;
@@ -29,6 +30,7 @@ interface UploadedFile {
 }
 
 export default function Step3DocumentsScreen() {
+    const { t } = useTranslation();
   const draft = useDraftStore((s) => s.draft);
   const updateDraft = useDraftStore((s) => s.updateDraft);
   const { data: service, isLoading } = useService(draft?.serviceId ?? '');
@@ -165,8 +167,8 @@ export default function Step3DocumentsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>Upload Proofs</Text>
-          <Text style={styles.headerStep}>Step 2/5</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>{t('step-3-documents.upload_proofs')}</Text>
+          <Text style={styles.headerStep}>{t('step-3-documents.step_2_5')}</Text>
         </View>
         {/* Progress track */}
         <View style={styles.progressContainer}>
@@ -186,7 +188,7 @@ export default function Step3DocumentsScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.sectionTitle}>Required Documents</Text>
+            <Text style={styles.sectionTitle}>{t('step-3-documents.required_documents')}</Text>
 
             <View style={styles.tilesList}>
               {requiredDocs.map((doc, idx) => {
@@ -236,13 +238,13 @@ export default function Step3DocumentsScreen() {
                             <Ionicons name="alert-circle-outline" size={14} color="#EF4444" />
                             <Text style={styles.errorText}>{file.error}</Text>
                             <TouchableOpacity onPress={() => handleRetry(doc.name)} style={styles.retryBtn}>
-                              <Text style={styles.retryText}>Retry</Text>
+                              <Text style={styles.retryText}>{t('step-3-documents.retry')}</Text>
                             </TouchableOpacity>
                           </View>
                         )}
                         {/* Pending upload note */}
                         {isPicked && !isConfirmed && !hasError && (
-                          <Text style={styles.pendingNote}>✓ Selected — will upload on Continue</Text>
+                          <Text style={styles.pendingNote}>{t('step-3-documents.selected_will_upload_on_contin')}</Text>
                         )}
                       </View>
                     ) : (

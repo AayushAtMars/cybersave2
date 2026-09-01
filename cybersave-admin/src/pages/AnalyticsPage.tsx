@@ -48,24 +48,27 @@ export default function AnalyticsPage() {
   const pendingCount = documents.filter(d => d.verifiedStatus === 'pending').length;
   const expiredCount = documents.filter(d => d.verifiedStatus === 'rejected').length;
 
-  // Category mapping and grouping
   const getCategoryDisplay = (cat: string) => {
     switch (cat) {
       case 'id_proof':
-        return 'Identity';
-      case 'income_proof':
-      case 'certificate':
-        return 'Taxation';
-      case 'proof':
-        return 'Transport';
+        return 'Identity Proof';
       case 'address_proof':
-        return 'Residence';
+        return 'Address Proof';
+      case 'income_proof':
+        return 'Financial / Income';
+      case 'birth_proof':
+      case 'certificate':
+      case 'photo':
+      case 'signature':
+        return 'Certificates & Personal';
+      case 'proof':
+      case 'other':
       default:
-        return 'Travel';
+        return 'Other Documents';
     }
   };
 
-  const categories = ['Identity', 'Taxation', 'Transport', 'Travel', 'Residence'];
+  const categories = ['Identity Proof', 'Address Proof', 'Financial / Income', 'Certificates & Personal', 'Other Documents'];
   const categoryCounts = categories.reduce((acc, cat) => {
     acc[cat] = 0;
     return acc;
@@ -76,22 +79,22 @@ export default function AnalyticsPage() {
     if (categoryCounts[disp] !== undefined) {
       categoryCounts[disp]++;
     } else {
-      categoryCounts['Travel']++;
+      categoryCounts['Other Documents']++;
     }
   });
 
   // Trend data: Group by month (Jan - Sep)
   const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
   const trendData = monthNames.map((month, index) => {
-    // Filter docs uploaded in this month
+    const currentYear = new Date().getFullYear();
     const uploads = documents.filter(d => {
       const dDate = new Date(d.createdAt);
-      return dDate.getMonth() === index && dDate.getFullYear() === 2024;
+      return dDate.getMonth() === index && dDate.getFullYear() === currentYear;
     }).length;
 
     const verifications = documents.filter(d => {
       const dDate = new Date(d.createdAt);
-      return dDate.getMonth() === index && dDate.getFullYear() === 2024 && d.verifiedStatus === 'verified';
+      return dDate.getMonth() === index && dDate.getFullYear() === currentYear && d.verifiedStatus === 'verified';
     }).length;
 
     return {
@@ -109,11 +112,18 @@ export default function AnalyticsPage() {
   ];
 
   const getDocIdStr = (doc: DocumentItem) => {
-    const indexStr = doc._id.slice(-2).toUpperCase();
-    if (doc.documentCategory === 'id_proof') return `DOC-AADHAAR-${indexStr}`;
-    if (doc.documentCategory === 'address_proof') return `DOC-RATION-${indexStr}`;
-    if (doc.documentCategory === 'proof') return `DOC-DRIVING-${indexStr}`;
-    return `DOC-VOTER-${indexStr}`;
+    const indexStr = doc._id.slice(-4).toUpperCase();
+    switch (doc.documentCategory) {
+      case 'id_proof': return `DOC-ID-${indexStr}`;
+      case 'address_proof': return `DOC-ADDR-${indexStr}`;
+      case 'income_proof': return `DOC-FIN-${indexStr}`;
+      case 'certificate': return `DOC-CERT-${indexStr}`;
+      case 'birth_proof': return `DOC-DOB-${indexStr}`;
+      case 'photo': return `DOC-IMG-${indexStr}`;
+      case 'signature': return `DOC-SIGN-${indexStr}`;
+      case 'proof': return `DOC-PROOF-${indexStr}`;
+      default: return `DOC-MISC-${indexStr}`;
+    }
   };
 
   return (
@@ -127,16 +137,19 @@ export default function AnalyticsPage() {
         </div>
         <button
           onClick={() => {
-            const csvContent = "data:text/csv;charset=utf-8," 
-              + ["Document ID,Name,Category,User,Uploaded Date,Status"].join(",") + "\n"
-              + documents.map(d => `"${getDocIdStr(d)}","${d.originalName}","${getCategoryDisplay(d.documentCategory)}","${d.ownerName || 'Unknown'}","${new Date(d.createdAt).toLocaleDateString('en-GB')}","${d.verifiedStatus}"`).join("\n");
-            const encodedUri = encodeURI(csvContent);
+            const header = ["Document ID,Name,Category,User,Uploaded Date,Status"].join(",");
+            const rows = documents.map(d => `"${getDocIdStr(d)}","${d.originalName?.replace(/"/g, '""')}","${getCategoryDisplay(d.documentCategory)}","${(d.ownerName || 'Unknown').replace(/"/g, '""')}","${new Date(d.createdAt).toLocaleDateString('en-GB')}","${d.verifiedStatus}"`);
+            const csvContent = header + "\n" + rows.join("\n");
+            
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
             const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
+            link.setAttribute("href", url);
             link.setAttribute("download", `platform_analytics_report_${new Date().toISOString().slice(0,10)}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
           }}
           style={{
             padding: '8px 16px',

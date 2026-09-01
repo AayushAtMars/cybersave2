@@ -29,6 +29,7 @@ import {
 } from '../../src/api/applications';
 import type { Application } from '../../src/api/applications';
 import { shadows, spacing, radius } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 const STATUS_FILTERS = [
   { label: 'All', value: 'all' },
@@ -53,6 +54,7 @@ const fmtDate = (iso?: string) =>
   iso ? new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 
 export default function AdminDashboard() {
+    const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Application | null>(null);
@@ -127,8 +129,8 @@ export default function AdminDashboard() {
         <SafeAreaView edges={['top']} />
         <View style={styles.headerRow}>
           <View>
-            <Text style={styles.headerGreeting}>Admin Portal</Text>
-            <Text style={styles.headerTitle}>Application Dashboard</Text>
+            <Text style={styles.headerGreeting}>{t('dashboard.admin_portal')}</Text>
+            <Text style={styles.headerTitle}>{t('dashboard.application_dashboard')}</Text>
           </View>
           <View style={styles.headerIcon}>
             <Ionicons name="shield-checkmark" size={22} color="#2563EB" />
@@ -187,7 +189,7 @@ export default function AdminDashboard() {
         ) : apps.length === 0 ? (
           <View style={styles.center}>
             <Ionicons name="document-text-outline" size={52} color="#CBD5E1" />
-            <Text style={styles.emptyTitle}>No Applications</Text>
+            <Text style={styles.emptyTitle}>{t('dashboard.no_applications')}</Text>
           </View>
         ) : (
           <FlatList
@@ -214,7 +216,7 @@ export default function AdminDashboard() {
                       <Text style={styles.cardMeta}>
                         {item.applicationRefNo} • {item.applicantName ?? '—'}
                       </Text>
-                      <Text style={styles.cardDate}>Submitted: {fmtDate(item.createdAt)}</Text>
+                      <Text style={styles.cardDate}>{t('dashboard.submitted')} {fmtDate(item.createdAt)}</Text>
                     </View>
                     <View style={[styles.badge, { backgroundColor: s.bg }]}>
                       <Text style={[styles.badgeText, { color: s.color }]}>{s.label}</Text>
@@ -233,13 +235,13 @@ export default function AdminDashboard() {
                     {canApprove && (
                       <TouchableOpacity style={styles.approveBtn} onPress={() => openAction(item, 'approve')}>
                         <Ionicons name="checkmark-circle-outline" size={14} color="#16A34A" />
-                        <Text style={styles.approveBtnText}>Approve</Text>
+                        <Text style={styles.approveBtnText}>{t('dashboard.approve')}</Text>
                       </TouchableOpacity>
                     )}
                     {canReject && (
                       <TouchableOpacity style={styles.rejectBtn} onPress={() => openAction(item, 'reject')}>
                         <Ionicons name="close-circle-outline" size={14} color="#DC2626" />
-                        <Text style={styles.rejectBtnText}>Reject</Text>
+                        <Text style={styles.rejectBtnText}>{t('dashboard.reject')}</Text>
                       </TouchableOpacity>
                     )}
                     {canCert && (
@@ -265,13 +267,15 @@ export default function AdminDashboard() {
         onClose={() => setActionModal(null)}
       >
         <Text style={styles.modalBody}>
-          Are you sure you want to approve{'\n'}
-          <Text style={{ fontWeight: '800' }}>{selected?.serviceName}</Text> for{' '}
+          
+                            {t('dashboard.are_you_sure_you_want_to_appro')}{'\n'}
+          <Text style={{ fontWeight: '800' }}>{selected?.serviceName}</Text>  {t('dashboard.for')}{' '}
           <Text style={{ fontWeight: '800' }}>{selected?.applicantName}</Text>?
         </Text>
         <Text style={styles.modalNote}>
-          The applicant will be notified. You can then upload the certificate.
-        </Text>
+          
+                            {t('dashboard.the_applicant_will_be_notified')}
+                          </Text>
         <TouchableOpacity
           style={[styles.modalBtn, { backgroundColor: '#16A34A' }]}
           onPress={handleApprove}
@@ -280,7 +284,7 @@ export default function AdminDashboard() {
           {updateStatus.isPending ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.modalBtnText}>✓ Confirm Approval</Text>
+            <Text style={styles.modalBtnText}>{t('dashboard.confirm_approval')}</Text>
           )}
         </TouchableOpacity>
       </ActionModal>
@@ -291,7 +295,7 @@ export default function AdminDashboard() {
         title="Reject Application"
         onClose={() => setActionModal(null)}
       >
-        <Text style={styles.modalLabel}>Rejection Reason *</Text>
+        <Text style={styles.modalLabel}>{t('dashboard.rejection_reason')}</Text>
         <TextInput
           style={styles.modalInput}
           placeholder="Describe why this application is rejected..."
@@ -310,7 +314,7 @@ export default function AdminDashboard() {
           {updateStatus.isPending ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.modalBtnText}>✗ Confirm Rejection</Text>
+            <Text style={styles.modalBtnText}>{t('dashboard.confirm_rejection')}</Text>
           )}
         </TouchableOpacity>
       </ActionModal>
@@ -321,7 +325,7 @@ export default function AdminDashboard() {
         title="Upload Certificate"
         onClose={() => setActionModal(null)}
       >
-        <Text style={styles.modalLabel}>Certificate URL *</Text>
+        <Text style={styles.modalLabel}>{t('dashboard.certificate_url')}</Text>
         <TextInput
           style={styles.modalInput}
           placeholder="https://storage.example.com/certificates/..."
@@ -331,7 +335,7 @@ export default function AdminDashboard() {
           autoCapitalize="none"
           keyboardType="url"
         />
-        <Text style={styles.modalLabel}>Department (optional)</Text>
+        <Text style={styles.modalLabel}>{t('dashboard.department_optional')}</Text>
         <TextInput
           style={styles.modalInput}
           placeholder="e.g. Revenue Department"
@@ -340,8 +344,9 @@ export default function AdminDashboard() {
           onChangeText={setCertDept}
         />
         <Text style={styles.modalNote}>
-          Once uploaded, the application will be marked as Completed and the citizen will be notified.
-        </Text>
+          
+                            {t('dashboard.once_uploaded_the_application_')}
+                          </Text>
         <TouchableOpacity
           style={[styles.modalBtn, { backgroundColor: '#2563EB' }]}
           onPress={handleUploadCert}
@@ -350,7 +355,7 @@ export default function AdminDashboard() {
           {uploadCert.isPending ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.modalBtnText}>⬆ Upload & Complete</Text>
+            <Text style={styles.modalBtnText}>{t('dashboard.upload_complete')}</Text>
           )}
         </TouchableOpacity>
       </ActionModal>

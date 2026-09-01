@@ -145,6 +145,11 @@ export default function CitizenDetailPage({ citizenId, onBack }: Props) {
   const [notifType, setNotifType] = useState('system');
   const [sendingNotif, setSendingNotif] = useState(false);
 
+  // Edit Profile Modal States
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Citizen>>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+
   const showToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3000);
@@ -239,6 +244,51 @@ export default function CitizenDetailPage({ citizenId, onBack }: Props) {
     }
   };
 
+  const handleEditProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const res = await adminClient.patch(`/auth/admin/citizens/${citizenId}`, {
+        name: editForm.name,
+        phone: editForm.phone,
+        email: editForm.email || undefined,
+        dob: editForm.dob || undefined,
+        gender: editForm.gender || undefined,
+        aadhaarNumber: editForm.aadhaarMasked || undefined,
+        panNumber: editForm.panMasked || undefined,
+        state: editForm.state || undefined,
+        district: editForm.district || undefined
+      });
+      if (res.data?.success) {
+        setCitizen((prev) => prev ? { ...prev, ...res.data.data } : prev);
+        showToast('Profile updated successfully');
+        setShowEditModal(false);
+      }
+    } catch (err: any) {
+      console.error(err);
+      showToast(err.response?.data?.error || 'Failed to update profile');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const openEditModal = () => {
+    if (citizen) {
+      setEditForm({
+        name: citizen.name,
+        phone: citizen.phone,
+        email: citizen.email || '',
+        dob: citizen.dob || '',
+        gender: citizen.gender || '',
+        aadhaarMasked: '', // Don't pre-fill masked values for editing
+        panMasked: '',
+        state: citizen.state || '',
+        district: citizen.district || ''
+      });
+      setShowEditModal(true);
+    }
+  };
+
   if (loading) {
     return (
       <div style={{ padding: '60px', textAlign: 'center', color: '#64748B' }}>
@@ -326,6 +376,7 @@ export default function CitizenDetailPage({ citizenId, onBack }: Props) {
         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' as const }}>
           <button
             id="view-edit-profile-btn"
+            onClick={openEditModal}
             style={{
               padding: '9px 18px', border: '1.5px solid #E2E8F0', backgroundColor: '#FFFFFF',
               borderRadius: '9px', fontSize: '13px', fontWeight: 700, color: '#334155', cursor: 'pointer',
@@ -767,6 +818,162 @@ export default function CitizenDetailPage({ citizenId, onBack }: Props) {
                   }}
                 >
                   {sendingNotif ? 'Sending...' : 'Send'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Edit Profile Modal ────────────────────────────────────────── */}
+      {showEditModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.4)', zIndex: 10000,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backdropFilter: 'blur(4px)',
+        }}>
+          <div style={{
+            backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1.5px solid #E2E8F0',
+            width: '500px', maxHeight: '90vh', overflowY: 'auto', padding: '28px', 
+            boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)',
+            display: 'flex', flexDirection: 'column', gap: '20px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Edit Citizen Profile</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '20px', color: '#94A3B8', fontWeight: 700 }}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleEditProfileSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Full Name *</label>
+                  <input
+                    type="text"
+                    value={editForm.name || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Mobile Number *</label>
+                  <input
+                    type="text"
+                    value={editForm.phone || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Email Address</label>
+                  <input
+                    type="email"
+                    value={editForm.email || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Date of Birth (DD/MM/YYYY)</label>
+                  <input
+                    type="text"
+                    placeholder="DD/MM/YYYY"
+                    value={editForm.dob || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, dob: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Gender</label>
+                  <select
+                    value={editForm.gender || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, gender: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box', backgroundColor: '#FFFFFF' }}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>Aadhaar Number</label>
+                  <input
+                    type="text"
+                    placeholder={citizen.aadhaarMasked || "Enter new Aadhaar"}
+                    value={editForm.aadhaarMasked || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, aadhaarMasked: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>PAN Number</label>
+                  <input
+                    type="text"
+                    placeholder={citizen.panMasked || "Enter new PAN"}
+                    value={editForm.panMasked || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, panMasked: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>State</label>
+                  <input
+                    type="text"
+                    value={editForm.state || ''}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, state: e.target.value }))}
+                    style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', display: 'block', marginBottom: '6px' }}>District</label>
+                <input
+                  type="text"
+                  value={editForm.district || ''}
+                  onChange={(e) => setEditForm(prev => ({ ...prev, district: e.target.value }))}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1.5px solid #E2E8F0', fontSize: '13.5px', color: '#0F172A', outline: 'none', boxSizing: 'border-box' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '16px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  style={{
+                    padding: '10px 18px', border: '1.5px solid #E2E8F0', backgroundColor: '#FFFFFF',
+                    borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#475569', cursor: 'pointer',
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingProfile}
+                  style={{
+                    padding: '10px 22px', border: 'none', backgroundColor: '#2563EB',
+                    borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#FFFFFF',
+                    cursor: savingProfile ? 'not-allowed' : 'pointer', opacity: savingProfile ? 0.7 : 1,
+                  }}
+                >
+                  {savingProfile ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
             </form>

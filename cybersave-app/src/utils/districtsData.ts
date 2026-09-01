@@ -1,4 +1,3 @@
-// Auto-generated complete list of Indian States and Districts
 export const STATE_DISTRICTS: Record<string, string[]> = {
   "Andhra Pradesh": [
     "Anantapur",

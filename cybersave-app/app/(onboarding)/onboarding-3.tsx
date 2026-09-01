@@ -9,20 +9,23 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 
 export default function Onboarding3() {
+    const { t } = useTranslation();
   const handleGetStarted = () => router.push('/(onboarding)/language-select');
 
   return (
     <View style={styles.container}>
       {/* Title (no skip on last screen) */}
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>Safe &amp; Secure</Text>
+        <Text style={styles.title}>{t('onboarding-3.safe_amp_secure')}</Text>
         <Text style={styles.subtitle}>
-          Bank-grade encryption protects your{'\n'}documents and personal identity data.
-        </Text>
+          
+                            {t('onboarding-3.bank_grade_encryption_protects')}{'\n'}{t('onboarding-3.documents_and_personal_identit')}
+                          </Text>
       </View>
 
       {/* Illustration */}
@@ -49,7 +52,7 @@ export default function Onboarding3() {
           end={{ x: 1, y: 0 }}
           style={styles.ctaBtn}
         >
-          <Text style={styles.ctaText}>Get Started</Text>
+          <Text style={styles.ctaText}>{t('onboarding-3.get_started')}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>

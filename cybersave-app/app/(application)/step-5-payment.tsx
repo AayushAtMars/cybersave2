@@ -17,20 +17,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { useQueryClient } from '@tanstack/react-query';
 import { useDraftStore } from '../../src/store/draftApplicationStore';
-import { useCreateOrder, useService } from '../../src/api/applications';
+import { useCreateOrder, useService, usePayWithWallet, useWallet } from '../../src/api/applications';
 import { useAuthStore } from '../../src/store/authStore';
 import { apiClient } from '../../src/api/client';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function Step5PaymentScreen() {
+    const { t } = useTranslation();
   const draft = useDraftStore((s) => s.draft);
   const clearDraft = useDraftStore((s) => s.clearDraft);
   const user = useAuthStore((s) => s.user);
   const createOrder = useCreateOrder();
   const queryClient = useQueryClient();
   const { data: service } = useService(draft?.serviceId ?? '');
+  const payWithWallet = usePayWithWallet();
+  const { data: wallet } = useWallet();
 
   const [selectedMethod, setSelectedMethod] = useState<string>('upi');
   const [upiId, setUpiId] = useState('username@okhdfcbank');
@@ -48,38 +54,43 @@ export default function Step5PaymentScreen() {
   const amountRupees = (draft?.totalAmount ?? 5500) / 100;
   const amountPaise = draft?.totalAmount ?? 5500;
 
-  const parseErrorDescription = (err: any): string => {
-    if (!err) return 'Payment could not be processed. Please try again.';
+  const parsePaymentError = (err: any) => {
+    let message = 'Payment could not be processed. Please try again.';
+    let code = 'BAD_REQUEST_ERROR';
+    let step = 'payment_authentication';
     
-    // Check if error is a stringified JSON
-    if (typeof err === 'string') {
-      try {
-        const parsed = JSON.parse(err);
-        if (parsed.error && typeof parsed.error === 'object') {
-          return parsed.error.description || parsed.error.reason || err;
-        }
-        return parsed.description || parsed.reason || err;
-      } catch {
-        return err;
-      }
-    }
+    if (!err) return { message, code, step };
 
-    if (err.description) return err.description;
-    if (err.message) return err.message;
+    let errStr = '';
+    if (typeof err === 'string') errStr = err;
+    else if (typeof err.description === 'string') errStr = err.description;
+    else if (typeof err.error === 'string') errStr = err.error;
+    else if (typeof err.message === 'string') errStr = err.message;
     
-    if (err.error) {
-      if (typeof err.error === 'object') {
-        return err.error.description || err.error.reason || 'Payment could not be processed. Please try again.';
-      }
+    if (err.code && typeof err.code !== 'object') code = String(err.code);
+    if (err.step) step = String(err.step);
+
+    if (errStr.trim().startsWith('{')) {
       try {
-        const parsed = JSON.parse(err.error);
-        return parsed.error?.description || parsed.description || err.error;
-      } catch {
-        return err.error;
-      }
+        const parsed = JSON.parse(errStr);
+        const nested = parsed.error || parsed;
+        
+        if (nested.code) code = nested.code;
+        if (nested.step) step = nested.step;
+        
+        const desc = nested.description;
+        const reason = nested.reason;
+        
+        if (desc && desc !== 'undefined') message = desc;
+        else if (reason && reason !== 'undefined') {
+          message = reason.split('_').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+      } catch {}
+    } else if (errStr && errStr !== 'undefined') {
+      message = errStr;
     }
     
-    return 'Payment could not be processed. Please try again.';
+    return { message, code, step };
   };
 
   // ── Simulate webhook for local dev (Razorpay can't reach localhost) ──────────
@@ -92,6 +103,7 @@ export default function Step5PaymentScreen() {
             id: paymentId,
             order_id: orderId,
             amount: amountPaise,
+            method: selectedMethod,
             notes: {
               applicationId: draft?.id,
               citizenId: user?.id || 'test',
@@ -110,6 +122,33 @@ export default function Step5PaymentScreen() {
     if (!draft) return;
     setPaying(true);
     let succeeded = false;
+
+    if (selectedMethod === 'wallets') {
+      try {
+        if (!wallet || (wallet.balancePaise || 0) < amountPaise) {
+          setErrorMessage('Insufficient balance. Please add money to your wallet to continue.');
+          setErrorDetails({ code: 'INSUFFICIENT_FUNDS', step: 'wallet_check' });
+          setErrorModalVisible(true);
+          setPaying(false);
+          return;
+        }
+
+        const res = await payWithWallet.mutateAsync(draft.id);
+        const txnId = res.txnId || `wal_${Date.now()}`;
+        setSuccessTxnId(txnId);
+        succeeded = true;
+        setShowSuccess(true);
+      } catch (err: any) {
+        const parsedErr = parsePaymentError(err);
+        setErrorMessage(parsedErr.message);
+        setErrorDetails(parsedErr);
+        setErrorModalVisible(true);
+      } finally {
+        if (!succeeded) setPaying(false);
+      }
+      return;
+    }
+
     try {
       const order = await createOrder.mutateAsync({
         applicationId: draft.id,
@@ -153,8 +192,9 @@ export default function Step5PaymentScreen() {
         setShowSuccess(true);
       }).catch((err: any) => {
         if (err.code !== 2) {
-          setErrorMessage(parseErrorDescription(err));
-          setErrorDetails(err);
+          const parsedErr = parsePaymentError(err);
+          setErrorMessage(parsedErr.message);
+          setErrorDetails(parsedErr);
           setErrorModalVisible(true);
         }
       });
@@ -201,31 +241,32 @@ export default function Step5PaymentScreen() {
 
           {/* Success message texts */}
           <View style={styles.successTextContainer}>
-            <Text style={styles.successTitle}>Application Submitted Successfully!</Text>
+            <Text style={styles.successTitle}>{t('step-5-payment.application_submitted_successf')}</Text>
             <Text style={styles.successSubtitle}>
-              Your request has been filed with the {service?.department || 'Municipal Health Department'}.
+              
+                                      {t('step-5-payment.your_request_has_been_filed_wi')} {service?.department || 'Municipal Health Department'}.
             </Text>
           </View>
 
           {/* Receipt box card */}
           <View style={styles.receiptBox}>
             <View style={styles.receiptHeader}>
-              <Text style={styles.receiptHeaderLabel}>Application Reference Number</Text>
+              <Text style={styles.receiptHeaderLabel}>{t('step-5-payment.application_reference_number')}</Text>
               <Text style={styles.receiptHeaderRef}>{draft?.applicationRefNo || 'CSB2024001234'}</Text>
             </View>
             <View style={styles.receiptDivider} />
             <View style={styles.receiptList}>
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Service Name</Text>
+                <Text style={styles.receiptLabel}>{t('step-5-payment.service_name')}</Text>
                 <Text style={styles.receiptValue} numberOfLines={1}>{draft?.serviceName || 'Birth Certificate'}</Text>
               </View>
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Date of Submission</Text>
+                <Text style={styles.receiptLabel}>{t('step-5-payment.date_of_submission')}</Text>
                 <Text style={styles.receiptValue}>{submissionDateStr}</Text>
               </View>
               <View style={styles.receiptRow}>
-                <Text style={styles.receiptLabel}>Est. Completion</Text>
-                <Text style={[styles.receiptValue, { color: '#10B981', fontWeight: '700' }]}>{estimatedDate} (7 Days)</Text>
+                <Text style={styles.receiptLabel}>{t('step-5-payment.est_completion')}</Text>
+                <Text style={[styles.receiptValue, { color: '#10B981', fontWeight: '700' }]}>{estimatedDate}  {t('step-5-payment.7_days')}</Text>
               </View>
             </View>
           </View>
@@ -240,17 +281,96 @@ export default function Step5PaymentScreen() {
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.trackBtnText}>Track Application Status</Text>
+              <Text style={styles.trackBtnText}>{t('step-5-payment.track_application_status')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.downloadBtn}
-              onPress={() => {
-                Alert.alert('Download Started', 'Your receipt is downloading...');
+              onPress={async () => {
+                try {
+                  const receiptHtml = `
+                    <html>
+                      <head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+                        <style>
+                          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #0F172A; }
+                          .header { text-align: center; margin-bottom: 40px; }
+                          .logo { font-size: 28px; font-weight: 800; color: #2563EB; margin-bottom: 8px; }
+                          .title { font-size: 20px; font-weight: 600; color: #64748B; }
+                          .details { width: 100%; max-width: 600px; margin: 0 auto; border: 1px solid #E2E8F0; border-radius: 12px; padding: 24px; }
+                          .row { display: flex; justify-content: space-between; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px solid #F1F5F9; }
+                          .row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+                          .label { font-size: 14px; font-weight: 700; color: #64748B; text-transform: uppercase; }
+                          .value { font-size: 16px; font-weight: 700; }
+                          .total-row { display: flex; justify-content: space-between; margin-top: 24px; padding-top: 24px; border-top: 2px dashed #E2E8F0; }
+                          .total-label { font-size: 18px; font-weight: 800; }
+                          .total-value { font-size: 28px; font-weight: 800; color: #2563EB; }
+                          .footer { text-align: center; margin-top: 50px; font-size: 14px; color: #94A3B8; }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="header">
+                          <div class="logo">CyberSave</div>
+                          <div class="title">Payment Receipt</div>
+                        </div>
+                        
+                        <div class="details">
+                          <div class="row">
+                            <span class="label">Transaction ID</span>
+                            <span class="value">${successTxnId}</span>
+                          </div>
+                          <div class="row">
+                            <span class="label">Application Ref</span>
+                            <span class="value">${draft?.applicationRefNo}</span>
+                          </div>
+                          <div class="row">
+                            <span class="label">Service Name</span>
+                            <span class="value">${draft?.serviceName}</span>
+                          </div>
+                          <div class="row">
+                            <span class="label">Applicant Name</span>
+                            <span class="value">${user?.name || draft?.applicantName || 'Citizen'}</span>
+                          </div>
+                          <div class="row">
+                            <span class="label">Payment Date</span>
+                            <span class="value">${new Date().toLocaleString('en-IN')}</span>
+                          </div>
+                          <div class="row">
+                            <span class="label">Payment Status</span>
+                            <span class="value" style="color: #15803D">PAID</span>
+                          </div>
+                          <div class="row">
+                            <span class="label">Payment Method</span>
+                            <span class="value" style="text-transform: capitalize;">${selectedMethod}</span>
+                          </div>
+                          
+                          <div class="total-row">
+                            <span class="total-label">Amount Paid</span>
+                            <span class="total-value">₹${amountRupees.toFixed(2)}</span>
+                          </div>
+                        </div>
+                        
+                        <div class="footer">
+                          This is a computer generated receipt and does not require a physical signature.<br/>
+                          Thank you for using CyberSave services.
+                        </div>
+                      </body>
+                    </html>
+                  `;
+                  
+                  const { uri } = await Print.printToFileAsync({ html: receiptHtml });
+                  await Sharing.shareAsync(uri, {
+                    UTI: '.pdf',
+                    mimeType: 'application/pdf',
+                    dialogTitle: 'Download Receipt'
+                  });
+                } catch (error) {
+                  Alert.alert('Error', 'Could not generate receipt');
+                }
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.downloadBtnText}>Download Receipt</Text>
+              <Text style={styles.downloadBtnText}>{t('step-5-payment.download_receipt')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -261,7 +381,7 @@ export default function Step5PaymentScreen() {
               }}
               activeOpacity={0.85}
             >
-              <Text style={styles.homeBtnText}>Back to Home Dashboard</Text>
+              <Text style={styles.homeBtnText}>{t('step-5-payment.back_to_home_dashboard')}</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -283,8 +403,8 @@ export default function Step5PaymentScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>Payment Gateway</Text>
-          <Text style={styles.headerStep}>Step 4/5</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>{t('step-5-payment.payment_gateway')}</Text>
+          <Text style={styles.headerStep}>{t('step-5-payment.step_4_5')}</Text>
         </View>
         {/* Progress track */}
         <View style={styles.progressContainer}>
@@ -308,16 +428,18 @@ export default function Step5PaymentScreen() {
             <View style={styles.amountCard}>
               <View style={styles.amountLeft}>
                 <Text style={styles.paymentInfoText} numberOfLines={1}>
-                  Payment for {draft?.serviceName || 'Birth Certificate'}
+                  
+                                                    {t('step-5-payment.payment_for')} {draft?.serviceName || 'Birth Certificate'}
                 </Text>
                 <Text style={styles.appRefText}>
-                  Application {draft?.applicationRefNo || 'CSC-2024'}
+                  
+                                                    {t('step-5-payment.application')} {draft?.applicationRefNo || 'CSC-2024'}
                 </Text>
               </View>
               <Text style={styles.amountValue}>₹{amountRupees.toFixed(0)}</Text>
             </View>
 
-            <Text style={styles.sectionHeader}>Select Payment Method</Text>
+            <Text style={styles.sectionHeader}>{t('step-5-payment.select_payment_method')}</Text>
 
             {/* UPI Option */}
             <View style={[styles.methodCard, selectedMethod === 'upi' ? styles.methodCardActive : styles.methodCardInactive]}>
@@ -330,15 +452,15 @@ export default function Step5PaymentScreen() {
                   {selectedMethod === 'upi' && <View style={styles.radioDot} />}
                 </View>
                 <View style={styles.methodInfo}>
-                  <Text style={styles.methodTitle}>UPI</Text>
-                  <Text style={styles.methodDesc}>Google Pay, PhonePe, Paytm</Text>
+                  <Text style={styles.methodTitle}>{t('step-5-payment.upi')}</Text>
+                  <Text style={styles.methodDesc}>{t('step-5-payment.google_pay_phonepe_paytm')}</Text>
                 </View>
                 <Ionicons name="qr-code-outline" size={18} color="#64748B" />
               </TouchableOpacity>
 
               {selectedMethod === 'upi' && (
                 <View style={styles.upiInputBox}>
-                  <Text style={styles.upiInputLabel}>Enter UPI ID</Text>
+                  <Text style={styles.upiInputLabel}>{t('step-5-payment.enter_upi_id')}</Text>
                   <TextInput
                     style={styles.upiInput}
                     value={upiId}
@@ -362,8 +484,8 @@ export default function Step5PaymentScreen() {
                   {selectedMethod === 'card' && <View style={styles.radioDot} />}
                 </View>
                 <View style={styles.methodInfo}>
-                  <Text style={styles.methodTitle}>Credit / Debit Card</Text>
-                  <Text style={styles.methodDesc}>Visa, MasterCard, RuPay</Text>
+                  <Text style={styles.methodTitle}>{t('step-5-payment.credit_debit_card')}</Text>
+                  <Text style={styles.methodDesc}>{t('step-5-payment.visa_mastercard_rupay')}</Text>
                 </View>
                 <Ionicons name="card-outline" size={18} color="#64748B" />
               </View>
@@ -380,8 +502,8 @@ export default function Step5PaymentScreen() {
                   {selectedMethod === 'netbanking' && <View style={styles.radioDot} />}
                 </View>
                 <View style={styles.methodInfo}>
-                  <Text style={styles.methodTitle}>Net Banking</Text>
-                  <Text style={styles.methodDesc}>SBI, HDFC, ICICI, Axis</Text>
+                  <Text style={styles.methodTitle}>{t('step-5-payment.net_banking')}</Text>
+                  <Text style={styles.methodDesc}>{t('step-5-payment.sbi_hdfc_icici_axis')}</Text>
                 </View>
                 <Ionicons name="business-outline" size={18} color="#64748B" />
               </View>
@@ -398,8 +520,8 @@ export default function Step5PaymentScreen() {
                   {selectedMethod === 'wallets' && <View style={styles.radioDot} />}
                 </View>
                 <View style={styles.methodInfo}>
-                  <Text style={styles.methodTitle}>Wallets</Text>
-                  <Text style={styles.methodDesc}>Amazon Pay, Mobikwik</Text>
+                  <Text style={styles.methodTitle}>{t('step-5-payment.wallets')}</Text>
+                  <Text style={styles.methodDesc}>{t('step-5-payment.amazon_pay_mobikwik')}</Text>
                 </View>
                 <Ionicons name="wallet-outline" size={18} color="#64748B" />
               </View>
@@ -415,7 +537,7 @@ export default function Step5PaymentScreen() {
               {paying ? (
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
-                <Text style={styles.payText}>Pay ₹{amountRupees.toFixed(0)} Securely</Text>
+                <Text style={styles.payText}>{t('step-5-payment.pay')}{amountRupees.toFixed(0)}  {t('step-5-payment.securely')}</Text>
               )}
             </TouchableOpacity>
           </ScrollView>
@@ -437,17 +559,17 @@ export default function Step5PaymentScreen() {
               </View>
             </View>
             
-            <Text style={styles.errorModalTitle}>Payment Failed</Text>
+            <Text style={styles.errorModalTitle}>{t('step-5-payment.payment_failed')}</Text>
             <Text style={styles.errorModalSubtitle}>
               {errorMessage}
             </Text>
 
             {errorDetails && (
               <View style={styles.errorDetailsBox}>
-                <Text style={styles.errorDetailsLabel}>Technical Details</Text>
+                <Text style={styles.errorDetailsLabel}>{t('step-5-payment.technical_details')}</Text>
                 <Text style={styles.errorDetailsText}>
-                  Code: {errorDetails.code || (typeof errorDetails.error === 'string' && JSON.parse(errorDetails.error).error?.code) || 'BAD_REQUEST_ERROR'}{'\n'}
-                  Step: {errorDetails.step || (typeof errorDetails.error === 'string' && JSON.parse(errorDetails.error).error?.step) || 'payment_authentication'}
+                  {t('step-5-payment.code')} {errorDetails?.code || 'BAD_REQUEST_ERROR'}{'\n'}
+                  {t('step-5-payment.step')} {errorDetails?.step || 'payment_authentication'}
                 </Text>
               </View>
             )}
@@ -459,14 +581,14 @@ export default function Step5PaymentScreen() {
                 handlePay();
               }}
             >
-              <Text style={styles.retryModalText}>Try Again</Text>
+              <Text style={styles.retryModalText}>{t('step-5-payment.try_again')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.cancelModalBtn}
               onPress={() => setErrorModalVisible(false)}
             >
-              <Text style={styles.cancelModalText}>Cancel</Text>
+              <Text style={styles.cancelModalText}>{t('step-5-payment.cancel')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -476,8 +598,8 @@ export default function Step5PaymentScreen() {
       {paying && (
         <View style={styles.processingOverlay}>
           <ActivityIndicator size="large" color="#FFFFFF" />
-          <Text style={styles.processingText}>Processing Payment...</Text>
-          <Text style={styles.processingSubtext}>Please do not close the app or press back</Text>
+          <Text style={styles.processingText}>{t('step-5-payment.processing_payment')}</Text>
+          <Text style={styles.processingSubtext}>{t('step-5-payment.please_do_not_close_the_app_or')}</Text>
         </View>
       )}
     </View>

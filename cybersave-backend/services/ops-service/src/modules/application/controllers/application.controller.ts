@@ -144,9 +144,10 @@ export const saveWizardStep = async (req: Request, res: Response): Promise<void>
 // ── POST /applications/:id/submit ─────────────────────────────────────────────
 export const submitApplication = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { paymentGatewayRef, paymentOrderId } = req.body as {
+  const { paymentGatewayRef, paymentOrderId, paymentMethod } = req.body as {
     paymentGatewayRef: string;
     paymentOrderId: string;
+    paymentMethod?: string;
   };
 
   const Application = getApplicationModel();
@@ -171,6 +172,9 @@ export const submitApplication = async (req: Request, res: Response): Promise<vo
   application.status = ApplicationStatus.SUBMITTED;
   application.paymentGatewayRef = paymentGatewayRef;
   application.paymentOrderId = paymentOrderId;
+  if (paymentMethod) {
+    application.paymentMethod = paymentMethod;
+  }
   application.paymentStatus = 'paid';
   application.slaDeadline = slaDeadline;
   application.timeline.push({
@@ -598,12 +602,20 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
     const assigned = req.query.assigned as string | undefined;
     const citizenId = req.query.citizenId as string | undefined;
     const operatorId = req.query.operatorId as string | undefined;
+    const requesterRole = req.headers['x-user-role'] as string;
+    const requesterId = req.headers['x-user-id'] as string;
+    
+    // If the caller is an operator, force the scope to themselves
+    const effectiveOperatorId = requesterRole === 'operator' ? requesterId : operatorId;
 
     const Application = getApplicationModel();
     const filter: Record<string, any> = {};
 
-    if (operatorId) {
-      filter.assignedOperatorId = operatorId;
+    const baseMetricsFilter: Record<string, any> = {};
+
+    if (effectiveOperatorId) {
+      filter.assignedOperatorId = effectiveOperatorId;
+      baseMetricsFilter.assignedOperatorId = effectiveOperatorId;
     } else if (citizenId) {
       filter.citizenId = citizenId;
     } else {
@@ -666,29 +678,33 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
 
     const { startOfDay, endOfDay } = getISTDayBounds(0);
     const todayReceived = await Application.countDocuments({
+      ...baseMetricsFilter,
       status: { $ne: ApplicationStatus.DRAFT },
       createdAt: { $gte: startOfDay, $lte: endOfDay }
     });
 
     const pendingReview = await Application.countDocuments({
+      ...baseMetricsFilter,
       status: { $in: [ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW, 'docs_pending'] }
     });
 
     const inProcessing = await Application.countDocuments({
+      ...baseMetricsFilter,
       status: 'processing'
     });
 
     const completedToday = await Application.countDocuments({
+      ...baseMetricsFilter,
       status: ApplicationStatus.COMPLETED,
       completedAt: { $gte: startOfDay, $lte: endOfDay }
     });
 
     const pipeline = {
-      submitted: await Application.countDocuments({ status: ApplicationStatus.SUBMITTED }),
-      underReview: await Application.countDocuments({ status: ApplicationStatus.UNDER_REVIEW }),
-      processing: await Application.countDocuments({ status: 'processing' }),
-      approved: await Application.countDocuments({ status: ApplicationStatus.APPROVED || 'approved' }),
-      completed: await Application.countDocuments({ status: ApplicationStatus.COMPLETED }),
+      submitted: await Application.countDocuments({ ...baseMetricsFilter, status: ApplicationStatus.SUBMITTED }),
+      underReview: await Application.countDocuments({ ...baseMetricsFilter, status: ApplicationStatus.UNDER_REVIEW }),
+      processing: await Application.countDocuments({ ...baseMetricsFilter, status: 'processing' }),
+      approved: await Application.countDocuments({ ...baseMetricsFilter, status: ApplicationStatus.APPROVED || 'approved' }),
+      completed: await Application.countDocuments({ ...baseMetricsFilter, status: ApplicationStatus.COMPLETED }),
     };
 
     res.json({
@@ -700,7 +716,7 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
         limit,
         totalPages: Math.ceil(total / limit),
         metrics: {
-          totalApplications: await Application.countDocuments({ status: { $ne: ApplicationStatus.DRAFT } }),
+          totalApplications: await Application.countDocuments({ ...baseMetricsFilter, status: { $ne: ApplicationStatus.DRAFT } }),
           todayReceived,
           pendingReview,
           inProcessing,
@@ -766,6 +782,189 @@ export const createApplicationByAdmin = async (req: Request, res: Response): Pro
     );
 
     res.status(201).json({ success: true, data: { application } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// ── GET /applications/operator/stats — operator stats aggregation ─────────────
+export const getOperatorStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const operatorId = req.headers['x-user-id'] as string;
+    const Application = getApplicationModel();
+
+    const totalAssigned = await Application.countDocuments({ assignedOperatorId: operatorId });
+    const pendingReview = await Application.countDocuments({
+      assignedOperatorId: operatorId,
+      status: { $in: [ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW, 'docs_pending', 'processing'] },
+    });
+    const completedCount = await Application.countDocuments({ 
+      assignedOperatorId: operatorId,
+      status: ApplicationStatus.COMPLETED 
+    });
+
+    const slaBreached = await Application.countDocuments({
+      assignedOperatorId: operatorId,
+      slaDeadline: { $lt: new Date() },
+      status: { $nin: [ApplicationStatus.COMPLETED, ApplicationStatus.REJECTED, ApplicationStatus.DRAFT] },
+    });
+
+    const { startOfDay, endOfDay } = getISTDayBounds(0);
+
+    const applicationsAssignedToday = await Application.countDocuments({
+      assignedOperatorId: operatorId,
+      status: { $ne: ApplicationStatus.DRAFT },
+      updatedAt: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    const completedToday = await Application.countDocuments({
+      assignedOperatorId: operatorId,
+      status: ApplicationStatus.COMPLETED,
+      completedAt: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    const rejectedToday = await Application.countDocuments({
+      assignedOperatorId: operatorId,
+      status: ApplicationStatus.REJECTED,
+      updatedAt: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    const recentApplicationsRaw = await Application.find({ assignedOperatorId: operatorId })
+      .sort({ updatedAt: -1 })
+      .limit(5)
+      .lean();
+    
+    const recentApplications = recentApplicationsRaw.map((app) => ({
+      ...app,
+      totalAmount: (app.totalAmount ?? 0) / 100,
+    }));
+
+    const appsWithOperatorTimeline = await Application.find({
+      'timeline.actorId': operatorId
+    })
+    .sort({ updatedAt: -1 })
+    .limit(20)
+    .lean();
+
+    const operatorLogsList: any[] = [];
+    appsWithOperatorTimeline.forEach(app => {
+      app.timeline.forEach((event: any) => {
+        if (event.actorId === operatorId) {
+          operatorLogsList.push({
+            applicationId: app._id,
+            applicationRefNo: app.applicationRefNo,
+            serviceName: app.serviceName,
+            applicantName: app.applicantName,
+            event: event.event,
+            note: event.note,
+            actorId: event.actorId,
+            timestamp: event.timestamp
+          });
+        }
+      });
+    });
+
+    operatorLogsList.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const finalOperatorLogs = operatorLogsList.slice(0, 10);
+
+    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const applicationTrends: any[] = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const { startOfDay: start, endOfDay: end } = getISTDayBounds(-i);
+
+      const comp = await Application.countDocuments({
+        assignedOperatorId: operatorId,
+        status: ApplicationStatus.COMPLETED,
+        completedAt: { $gte: start, $lte: end }
+      });
+      const pend = await Application.countDocuments({
+        assignedOperatorId: operatorId,
+        status: { $in: [ApplicationStatus.SUBMITTED, ApplicationStatus.UNDER_REVIEW, 'docs_pending', 'processing'] },
+        updatedAt: { $gte: start, $lte: end }
+      });
+      const rej = await Application.countDocuments({
+        assignedOperatorId: operatorId,
+        status: ApplicationStatus.REJECTED,
+        updatedAt: { $gte: start, $lte: end }
+      });
+
+      const labelDate = new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000) - (i * 24 * 60 * 60 * 1000));
+      const dayLabel = daysOfWeek[labelDate.getUTCDay()];
+
+      applicationTrends.push({
+        day: dayLabel,
+        completed: comp,
+        pending: pend,
+        rejected: rej
+      });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        totalAssigned,
+        pendingReview,
+        completedCount,
+        slaBreached,
+        applicationsToday: applicationsAssignedToday,
+        completedToday,
+        rejectedToday,
+        recentApplications,
+        applicationTrends,
+        operatorLogs: finalOperatorLogs,
+      },
+    });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// ── GET /applications/stats — citizen stats aggregation ───────────────────────
+export const getDashboardStats = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const citizenId = req.user!.id;
+    const { Application, DocumentRecord, Transaction } = getModels();
+
+    // 1. Active Applications (not draft, not completed, not rejected)
+    const activeApplications = await Application.countDocuments({
+      citizenId,
+      status: { $nin: [ApplicationStatus.DRAFT, ApplicationStatus.COMPLETED, ApplicationStatus.REJECTED] }
+    });
+
+    // 2. Services Completed
+    const servicesCompleted = await Application.countDocuments({
+      citizenId,
+      status: ApplicationStatus.COMPLETED
+    });
+
+    // 3. Stored Documents
+    const storedDocuments = await DocumentRecord.countDocuments({
+      ownerId: citizenId
+    });
+
+    // 4. Payments This Month
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    
+    // Sum totalAmount of paid applications this month
+    const paidApps = await Application.find({
+      citizenId,
+      paymentStatus: 'paid',
+      createdAt: { $gte: startOfMonth }
+    }).select('totalAmount');
+    
+    const paymentsThisMonth = paidApps.reduce((acc, curr) => acc + (curr.totalAmount ?? 0), 0);
+
+    res.json({
+      success: true,
+      data: {
+        activeApplications,
+        servicesCompleted,
+        storedDocuments,
+        paymentsThisMonth: paymentsThisMonth / 100 // Convert from paise to INR
+      }
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

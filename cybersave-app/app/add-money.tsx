@@ -21,6 +21,7 @@ import { useWallet, useCreateTopupOrder } from '../src/api/applications';
 import { useAuthStore } from '../src/store/authStore';
 import { apiClient } from '../src/api/client';
 import { colors, typography, spacing, radius, shadows } from '../src/theme';
+import { useTranslation } from "react-i18next";
 
 const QUICK_CHIPS = [500, 1000, 2000, 5000];
 
@@ -31,6 +32,7 @@ const PAYMENT_SOURCES = [
 ];
 
 export default function AddMoneyScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const { data: wallet, refetch: refetchWallet } = useWallet();
@@ -150,33 +152,34 @@ export default function AddMoneyScreen() {
           </View>
 
           {/* Success message text */}
-          <Text style={styles.successTitle}>Top-up Successful!</Text>
+          <Text style={styles.successTitle}>{t('add-money.top_up_successful')}</Text>
           <Text style={styles.successAmountText}>
             ₹{successAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </Text>
           <Text style={styles.successSubtitle}>
-            The money has been successfully credited to your CyberSave Wallet.
-          </Text>
+            
+                                {t('add-money.the_money_has_been_successfull')}
+                              </Text>
 
           {/* Transaction Info Box */}
           <View style={styles.receiptBox}>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Payment Source</Text>
+              <Text style={styles.receiptLabel}>{t('add-money.payment_source')}</Text>
               <Text style={styles.receiptValue}>{activeSource}</Text>
             </View>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Transaction status</Text>
+              <Text style={styles.receiptLabel}>{t('add-money.transaction_status')}</Text>
               <View style={styles.statusBadge}>
                 <View style={styles.statusDot} />
-                <Text style={styles.statusText}>Completed</Text>
+                <Text style={styles.statusText}>{t('add-money.completed')}</Text>
               </View>
             </View>
             <View style={styles.receiptRow}>
-              <Text style={styles.receiptLabel}>Transaction time</Text>
-              <Text style={styles.receiptValue}>Today, {currentTimeStr}</Text>
+              <Text style={styles.receiptLabel}>{t('add-money.transaction_time')}</Text>
+              <Text style={styles.receiptValue}>{t('add-money.today')} {currentTimeStr}</Text>
             </View>
             <View style={[styles.receiptRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-              <Text style={styles.receiptLabel}>Reference ID</Text>
+              <Text style={styles.receiptLabel}>{t('add-money.reference_id')}</Text>
               <Text style={styles.receiptValue} numberOfLines={1}>{successTxnId}</Text>
             </View>
           </View>
@@ -191,7 +194,7 @@ export default function AddMoneyScreen() {
           }}
           activeOpacity={0.85}
         >
-          <Text style={styles.doneBtnText}>Back to Wallet</Text>
+          <Text style={styles.doneBtnText}>{t('add-money.back_to_wallet')}</Text>
         </TouchableOpacity>
       </SafeAreaView>
     );
@@ -211,7 +214,7 @@ export default function AddMoneyScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Add Money</Text>
+          <Text style={styles.headerTitle}>{t('add-money.add_money')}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
@@ -221,7 +224,7 @@ export default function AddMoneyScreen() {
         <ScrollView style={styles.whiteContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Current Balance row */}
           <View style={styles.balanceRow}>
-            <Text style={styles.balanceLabel}>Current Wallet Balance</Text>
+            <Text style={styles.balanceLabel}>{t('add-money.current_wallet_balance')}</Text>
             <Text style={styles.balanceValue}>
               ₹{wallet?.balance ? wallet.balance.toLocaleString('en-IN', { minimumFractionDigits: 2 }) : '0.00'}
             </Text>
@@ -229,7 +232,7 @@ export default function AddMoneyScreen() {
 
           {/* Enter Amount */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Enter Amount</Text>
+            <Text style={styles.sectionLabel}>{t('add-money.enter_amount')}</Text>
             <View style={styles.amountInputContainer}>
               <Text style={styles.currencySymbol}>₹</Text>
               <TextInput
@@ -254,7 +257,8 @@ export default function AddMoneyScreen() {
                   onPress={() => handleChipPress(val)}
                 >
                   <Text style={[styles.chipLabel, isActive && styles.chipLabelActive]}>
-                    + ₹{val.toLocaleString('en-IN')}
+                    
+                                              {t('add-money.key_b3gc7a2')}{val.toLocaleString('en-IN')}
                   </Text>
                 </TouchableOpacity>
               );
@@ -263,7 +267,7 @@ export default function AddMoneyScreen() {
 
           {/* Payment sources */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Select Payment Source</Text>
+            <Text style={styles.sectionLabel}>{t('add-money.select_payment_source')}</Text>
             <View style={styles.sourceList}>
               {PAYMENT_SOURCES.map((source) => {
                 const isActive = selectedSource === source.id;
@@ -307,8 +311,9 @@ export default function AddMoneyScreen() {
               <ActivityIndicator color="#FFFFFF" />
             ) : (
               <Text style={styles.submitBtnText}>
-                Add ₹{displayAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })} to Wallet
-              </Text>
+                
+                                                  {t('add-money.add')}{displayAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}  {t('add-money.to_wallet')}
+                                                </Text>
             )}
           </TouchableOpacity>
         </ScrollView>

@@ -11,16 +11,16 @@ export const config = {
   port: parseInt(process.env.PORT ?? '3001', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
 
-  // ── MongoDB URIs — one per logical domain ──────────────────────────────────
+  // MongoDB URIs — one per logical domain
   mongoUriAuth: required('MONGO_URI_AUTH'),
   mongoUriNotification: required('MONGO_URI_NOTIFICATION'),
   mongoUriSupport: required('MONGO_URI_SUPPORT'),
 
-  // ── Upstash Redis (HTTP REST — works on Render & serverless alike) ─────────
+  // Upstash Redis
   redisUrl: required('UPSTASH_REDIS_REST_URL'),
   redisToken: required('UPSTASH_REDIS_REST_TOKEN'),
 
-  // ── JWT ────────────────────────────────────────────────────────────────────
+  // JWT
   jwt: {
     accessSecret: required('JWT_ACCESS_SECRET'),
     refreshSecret: required('JWT_REFRESH_SECRET'),
@@ -28,15 +28,24 @@ export const config = {
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '30d',
   },
 
-  // ── OTP ─────────────────────────────────────────────────────────────────────
+  // OTP
   otp: {
     ttlSeconds: parseInt(process.env.OTP_TTL_SECONDS ?? '600', 10),
     maxAttempts: parseInt(process.env.OTP_MAX_ATTEMPTS ?? '5', 10),
   },
 
-  // ── Cloudflare Turnstile ─────────────────────────────────────────────────────
+  // Cloudflare Turnstile
   turnstileSecretKey: process.env.TURNSTILE_SECRET_KEY ?? '',
 
-  // ── CORS ─────────────────────────────────────────────────────────────────────
+  // CORS
   allowedOrigins: (process.env.ALLOWED_ORIGINS ?? 'http://localhost:3000').split(','),
+
+  // SMTP Settings
+  smtp: {
+    host: process.env.SMTP_HOST ?? 'smtp.ethereal.email',
+    port: parseInt(process.env.SMTP_PORT ?? '587', 10),
+    user: process.env.SMTP_USER ?? 'mylene.wisoky45@ethereal.email',
+    pass: process.env.SMTP_PASS ?? 'vYtXF6pG7J8wQkP97v',
+    testReceiver: process.env.SMTP_TEST_RECEIVER,
+  }
 };

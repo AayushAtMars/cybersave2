@@ -12,7 +12,7 @@ import { logger } from './modules/auth/utils/logger';
 
 const app = express();
 
-// ── Security middleware ───────────────────────────────────────────────────────
+// security middleware
 app.use(helmet());
 app.use(
   cors({
@@ -28,7 +28,7 @@ app.use(
 );
 app.use(express.json({ limit: '1mb' }));
 
-// ── DB init — on Render (long-running server), connect once at startup ─────────
+// DB init
 let initialized = false;
 export const ensureConnected = async () => {
   if (initialized) return;
@@ -37,7 +37,7 @@ export const ensureConnected = async () => {
   initialized = true;
 };
 
-// Middleware to ensure DB connections are ready before any request
+// middleware to ensure DB connections are ready before any request
 app.use(async (_req, _res, next) => {
   try {
     await ensureConnected();
@@ -47,18 +47,18 @@ app.use(async (_req, _res, next) => {
   }
 });
 
-// ── Routes ─────────────────────────────────────────────────────────────────────
-// All original prefixes preserved — gateway routes don't need to change
+//Routes 
+// all original prefixes preserved — gateway routes don't need to change
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1', notificationRoutes);   // /api/v1/notifications/*
 app.use('/api/v1/support', supportRoutes); // /api/v1/support/*
 
-// ── Global health check ────────────────────────────────────────────────────────
+// global health check
 app.get('/health', (_req, res) =>
   res.json({ success: true, data: { service: 'core-service', status: 'ok', version: '1.0.0' } })
 );
 
-// ── Global error handler ──────────────────────────────────────────────────────
+// global error handler
 app.use(
   (
     err: Error,
@@ -75,7 +75,7 @@ app.use(
   }
 );
 
-// ── Server startup (Render long-running process) ───────────────────────────────
+// server startup
 if (require.main === module) {
   ensureConnected()
     .then(() => {

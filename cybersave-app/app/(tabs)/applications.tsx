@@ -17,6 +17,7 @@ import { useApplications } from '../../src/api/applications';
 import { shadows, spacing, radius } from '../../src/theme';
 import { EmptyApplications, SkeletonScreen, SystemError, NoInternet } from '../../src/components/UIStates';
 import { useNetworkStatus } from '../../src/hooks/useNetworkStatus';
+import { useTranslation } from "react-i18next";
 
 const FILTERS = [
   { label: 'All', value: undefined },
@@ -39,6 +40,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }
 };
 
 export default function ApplicationsScreen() {
+    const { t } = useTranslation();
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
   const [search, setSearch] = useState('');
   const { data, isLoading, isError, refetch, isRefetching } = useApplications(statusFilter);
@@ -70,7 +72,7 @@ export default function ApplicationsScreen() {
         end={{ x: 1, y: 0 }}
       >
         <SafeAreaView edges={['top']} />
-        <Text style={styles.headerTitle}>My Applications</Text>
+        <Text style={styles.headerTitle}>{t('applications.my_applications')}</Text>
       </LinearGradient>
 
       {/* Curved White Body Card */}
@@ -151,7 +153,8 @@ export default function ApplicationsScreen() {
                       <View style={styles.cardInfo}>
                         <Text style={styles.cardTitle} numberOfLines={1}>{item.serviceName}</Text>
                         <Text style={styles.cardMeta}>
-                          ID: {item.applicationRefNo} • Submitted {fmtDate(item.createdAt)}
+                          
+                                                                {t('applications.id')} {item.applicationRefNo}  {t('applications.submitted')} {fmtDate(item.createdAt)}
                         </Text>
                       </View>
                     </View>
@@ -172,7 +175,7 @@ export default function ApplicationsScreen() {
                       }}
                       activeOpacity={0.7}
                     >
-                      <Text style={styles.downloadText}>Download Certificate</Text>
+                      <Text style={styles.downloadText}>{t('applications.download_certificate')}</Text>
                       <Ionicons name="download" size={14} color="#2563EB" />
                     </TouchableOpacity>
                   )}
@@ -180,7 +183,8 @@ export default function ApplicationsScreen() {
                   {/* Rejection inline note */}
                   {isRejected && item.rejectionReason && (
                     <Text style={styles.rejectionNote} numberOfLines={2}>
-                      Reason: {item.rejectionReason}
+                      
+                                                    {t('applications.reason')} {item.rejectionReason}
                     </Text>
                   )}
                 </TouchableOpacity>

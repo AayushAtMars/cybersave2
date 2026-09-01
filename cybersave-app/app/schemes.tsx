@@ -16,6 +16,7 @@ import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useServices } from '../src/api/applications';
 import { colors, typography, spacing, radius, shadows } from '../src/theme';
+import { useTranslation } from "react-i18next";
 
 interface Scheme {
   id: string;
@@ -35,6 +36,7 @@ const CATEGORIES = [
 ];
 
 export default function SchemesScreen() {
+    const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -121,7 +123,7 @@ export default function SchemesScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back-outline" size={20} color="#1E3A8A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Government Schemes</Text>
+          <Text style={styles.headerTitle}>{t('schemes.government_schemes')}</Text>
           <View style={{ width: 36 }} />
         </View>
       </LinearGradient>
@@ -202,7 +204,7 @@ export default function SchemesScreen() {
                     onPress={() => handleApply(item)}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.applyBtnText}>Apply Now</Text>
+                    <Text style={styles.applyBtnText}>{t('schemes.apply_now')}</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -210,10 +212,11 @@ export default function SchemesScreen() {
             ListEmptyComponent={
               <View style={styles.emptyState}>
                 <Ionicons name="search-outline" size={48} color="#94A3B8" />
-                <Text style={styles.emptyTitle}>No Schemes Found</Text>
+                <Text style={styles.emptyTitle}>{t('schemes.no_schemes_found')}</Text>
                 <Text style={styles.emptySub}>
-                  Try adjusting your search terms or selecting a different category.
-                </Text>
+                  
+                                          {t('schemes.try_adjusting_your_search_term')}
+                                        </Text>
               </View>
             }
             showsVerticalScrollIndicator={false}

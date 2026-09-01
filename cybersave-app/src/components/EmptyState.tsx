@@ -11,10 +11,6 @@ interface EmptyStateProps {
   onAction?: () => void;
 }
 
-/**
- * Generic empty state component — used across applications-empty, notifications-empty,
- * and any data screen that has no items (design.md §5, §7).
- */
 export const EmptyState: React.FC<EmptyStateProps> = ({
   icon = '📋',
   title,

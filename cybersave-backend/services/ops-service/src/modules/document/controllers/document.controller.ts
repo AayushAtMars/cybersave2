@@ -107,6 +107,12 @@ export const confirmUpload = async (req: Request, res: Response): Promise<void> 
     status: 'success',
   });
 
+  axios.post(`${config.coreServiceUrl}/api/v1/notifications/internal/admin-alert`, {
+    title: 'New Document Upload',
+    body: `A new document (${doc.originalName}) was uploaded by ${citizenId}.`,
+    type: 'document_upload'
+  }).catch(() => {});
+
   res.json({ success: true, data: { document: { id: doc.id, originalName: doc.originalName, sizeBytes: doc.sizeBytes, documentCategory: doc.documentCategory } } });
 };
 
@@ -212,6 +218,7 @@ export const listDocuments = async (req: Request, res: Response): Promise<void> 
   const DocumentRecord = getDocumentModel();
   const docs = await DocumentRecord.find({ 
     ownerId: citizenId, 
+    applicationId: { $exists: false },
     deletedAt: { $exists: false } 
   }).sort({ createdAt: -1 });
 

@@ -1,7 +1,8 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '../store/authStore';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:3000';
+// Set EXPO_PUBLIC_API_URL in .env for physical devices or staging environments.
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? 'http://[IP_ADDRESS]';
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: `${BASE_URL}/api/v1`,

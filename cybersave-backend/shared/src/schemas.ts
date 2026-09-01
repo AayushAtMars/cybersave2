@@ -10,7 +10,7 @@ import {
   ServiceCategory,
 } from './enums';
 
-// ─── API Response Envelope ────────────────────────────────────────────────────
+//API Response Envelope
 export const ApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     success: z.boolean(),
@@ -26,7 +26,7 @@ export type ApiResponse<T = unknown> = {
   errorCode?: string;
 };
 
-// ─── Pagination ───────────────────────────────────────────────────────────────
+//Pagination
 export const PaginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -41,7 +41,7 @@ export type PaginatedResponse<T> = {
   totalPages: number;
 };
 
-// ─── User ─────────────────────────────────────────────────────────────────────
+// User
 export const RegisterSchema = z.object({
   phone: z.string().regex(/^[6-9]\d{9}$/, 'Invalid Indian mobile number'),
   name: z.string().min(2).max(100),
@@ -68,7 +68,7 @@ export const OperatorLoginSchema = z.object({
 });
 export type OperatorLoginInput = z.infer<typeof OperatorLoginSchema>;
 
-// ─── Address ──────────────────────────────────────────────────────────────────
+//Address
 export const AddressSchema = z.object({
   line1: z.string().min(1),
   line2: z.string().optional(),
@@ -79,7 +79,7 @@ export const AddressSchema = z.object({
 });
 export type Address = z.infer<typeof AddressSchema>;
 
-// ─── Service / Catalog ────────────────────────────────────────────────────────
+// Service / Catalog
 export const RequiredDocumentSchema = z.object({
   name: z.string(),
   description: z.string().optional(),
@@ -114,7 +114,7 @@ export const CreateServiceSchema = z.object({
 });
 export type CreateServiceInput = z.infer<typeof CreateServiceSchema>;
 
-// ─── Application Wizard ───────────────────────────────────────────────────────
+// Application Wizard
 export const WizardStep1Schema = z.object({
   // Personal details (citizen confirms their info)
   applicantName: z.string().min(2),
@@ -140,14 +140,14 @@ export const WizardStep4Schema = z.object({
   declarationAccepted: z.literal(true),
 });
 
-// ─── Payment ──────────────────────────────────────────────────────────────────
+// Payment
 export const CreatePaymentOrderSchema = z.object({
   applicationId: z.string(),
   paymentMethod: z.enum(['upi', 'card', 'netbanking', 'wallet']).optional(),
 });
 export type CreatePaymentOrderInput = z.infer<typeof CreatePaymentOrderSchema>;
 
-// ─── Support ──────────────────────────────────────────────────────────────────
+// Support
 export const CreateTicketSchema = z.object({
   subject: z.string().min(5).max(200),
   description: z.string().min(10).max(2000),
@@ -157,7 +157,7 @@ export const CreateTicketSchema = z.object({
 });
 export type CreateTicketInput = z.infer<typeof CreateTicketSchema>;
 
-// ─── Document Upload ──────────────────────────────────────────────────────────
+//Document Upload
 export const RequestUploadUrlSchema = z.object({
   fileName: z.string().min(1),
   mimeType: z.string().min(1),

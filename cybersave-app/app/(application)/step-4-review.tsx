@@ -17,8 +17,10 @@ import { useDraftStore } from '../../src/store/draftApplicationStore';
 import { useService, useSaveWizardStep } from '../../src/api/applications';
 import { useDocuments } from '../../src/api/documents';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function Step4ReviewScreen() {
+    const { t } = useTranslation();
   const draft = useDraftStore((s) => s.draft);
   const updateDraft = useDraftStore((s) => s.updateDraft);
   const { data: service, isLoading } = useService(draft?.serviceId ?? '');
@@ -131,8 +133,8 @@ export default function Step4ReviewScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle} numberOfLines={1}>Review Details</Text>
-          <Text style={styles.headerStep}>Step 3/5</Text>
+          <Text style={styles.headerTitle} numberOfLines={1}>{t('step-4-review.review_details')}</Text>
+          <Text style={styles.headerStep}>{t('step-4-review.step_3_5')}</Text>
         </View>
         {/* Progress track */}
         <View style={styles.progressContainer}>
@@ -152,14 +154,14 @@ export default function Step4ReviewScreen() {
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
-            <Text style={styles.sectionTitle}>Review Application</Text>
+            <Text style={styles.sectionTitle}>{t('step-4-review.review_application')}</Text>
 
             {/* Personal Details Card */}
             <View style={styles.summaryCard}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Personal Details</Text>
+                <Text style={styles.cardTitle}>{t('step-4-review.personal_details')}</Text>
                 <TouchableOpacity onPress={() => handleEdit(1)}>
-                  <Text style={styles.editText}>Edit</Text>
+                  <Text style={styles.editText}>{t('step-4-review.edit')}</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.dataGrid}>
@@ -179,9 +181,9 @@ export default function Step4ReviewScreen() {
             {/* Address Details Card */}
             <View style={styles.summaryCard}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Address Details</Text>
+                <Text style={styles.cardTitle}>{t('step-4-review.address_details')}</Text>
                 <TouchableOpacity onPress={() => handleEdit(1)}>
-                  <Text style={styles.editText}>Edit</Text>
+                  <Text style={styles.editText}>{t('step-4-review.edit')}</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.dataGrid}>
@@ -201,9 +203,9 @@ export default function Step4ReviewScreen() {
             {/* Uploaded Documents Card */}
             <View style={styles.summaryCard}>
               <View style={styles.cardHeader}>
-                <Text style={styles.cardTitle}>Uploaded Documents</Text>
+                <Text style={styles.cardTitle}>{t('step-4-review.uploaded_documents')}</Text>
                 <TouchableOpacity onPress={() => handleEdit(2)}>
-                  <Text style={styles.editText}>Edit</Text>
+                  <Text style={styles.editText}>{t('step-4-review.edit')}</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.dataGrid}>
@@ -223,8 +225,8 @@ export default function Step4ReviewScreen() {
                     <View key={idx} style={styles.docRow}>
                       <Ionicons name="document-text" size={16} color="#2563EB" />
                       <Text style={styles.docNameText} numberOfLines={1}>
-                        {doc.name.toLowerCase().replace(/\s+/g, '_')}.pdf
-                      </Text>
+                        {doc.name.toLowerCase().replace(/\s+/g, '_')}{t('step-4-review.pdf')}
+                                                    </Text>
                     </View>
                   ))
                 )}
@@ -233,19 +235,19 @@ export default function Step4ReviewScreen() {
 
             {/* Payment Summary Card */}
             <View style={styles.summaryCard}>
-              <Text style={styles.cardTitle}>Payment Summary</Text>
+              <Text style={styles.cardTitle}>{t('step-4-review.payment_summary')}</Text>
               <View style={[styles.dataGrid, { marginTop: 12 }]}>
                 <View style={styles.gridRow}>
-                  <Text style={styles.gridLabel}>Government Fee</Text>
+                  <Text style={styles.gridLabel}>{t('step-4-review.government_fee')}</Text>
                   <Text style={styles.gridFeeValue}>₹{govtFeeRupees.toFixed(2)}</Text>
                 </View>
                 <View style={styles.gridRow}>
-                  <Text style={styles.gridLabel}>Convenience Fee</Text>
+                  <Text style={styles.gridLabel}>{t('step-4-review.convenience_fee')}</Text>
                   <Text style={styles.gridFeeValue}>₹{convenienceFeeRupees.toFixed(2)}</Text>
                 </View>
                 <View style={styles.cardDivider} />
                 <View style={styles.totalRow}>
-                  <Text style={styles.totalLabel}>Total Payable</Text>
+                  <Text style={styles.totalLabel}>{t('step-4-review.total_payable')}</Text>
                   <Text style={styles.totalValue}>₹{totalPayableRupees.toFixed(2)}</Text>
                 </View>
               </View>

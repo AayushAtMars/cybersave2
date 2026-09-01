@@ -9,10 +9,12 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 
 export default function Onboarding2() {
+    const { t } = useTranslation();
   const handleNext = () => router.push('/(onboarding)/onboarding-3');
   const handleSkip = () => router.replace('/(auth)/login');
 
@@ -20,15 +22,16 @@ export default function Onboarding2() {
     <View style={styles.container}>
       {/* Skip */}
       <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
-        <Text style={styles.skipText}>Skip</Text>
+        <Text style={styles.skipText}>{t('onboarding-2.skip')}</Text>
       </TouchableOpacity>
 
       {/* Title */}
       <View style={styles.titleContainer}>
-        <Text style={styles.title}>All Services in One Place</Text>
+        <Text style={styles.title}>{t('onboarding-2.all_services_in_one_place')}</Text>
         <Text style={styles.subtitle}>
-          Aadhaar, PAN, Certificates, Bills, Banking &amp;{'\n'}more. Safe digital storage for daily life.
-        </Text>
+          
+                            {t('onboarding-2.aadhaar_pan_certificates_bills')}{'\n'}{t('onboarding-2.more_safe_digital_storage_for_')}
+                          </Text>
       </View>
 
       {/* Illustration */}
@@ -58,7 +61,7 @@ export default function Onboarding2() {
     end={{ x: 1, y: 0 }}
     style={styles.ctaBtn}
   >
-    <Text style={styles.ctaText}>Next</Text>
+    <Text style={styles.ctaText}>{t('onboarding-2.next')}</Text>
   </LinearGradient>
 </TouchableOpacity>
     </View>

@@ -17,6 +17,7 @@ import { useAuthStore } from '../src/store/authStore';
 import { Ionicons } from '@expo/vector-icons';
 import { colors, typography, spacing, radius, shadows } from '../src/theme';
 import { useServices } from '../src/api/applications';
+import { useTranslation } from "react-i18next";
 
 interface Message {
   id: string;
@@ -38,6 +39,7 @@ const QUICK_SUGGESTIONS = [
 ];
 
 export default function BotScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const userName = user?.name?.split(' ')[0] ?? 'there';
 
@@ -246,10 +248,10 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
               <Ionicons name="shield" size={24} color="#2563EB" />
             </View>
             <View style={styles.botMeta}>
-              <Text style={styles.botName}>cyberbot</Text>
+              <Text style={styles.botName}>{t('bot.cyberbot')}</Text>
               <View style={styles.botStatusRow}>
                 <View style={styles.statusIndicator} />
-                <Text style={styles.botStatus}>Official Assistant • Online</Text>
+                <Text style={styles.botStatus}>{t('bot.official_assistant_online')}</Text>
               </View>
             </View>
           </View>
@@ -273,7 +275,7 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
         >
           <View style={styles.dateStampContainer}>
             <View style={styles.dateStamp}>
-              <Text style={styles.dateStampText}>TODAY</Text>
+              <Text style={styles.dateStampText}>{t('bot.today')}</Text>
             </View>
           </View>
 
@@ -311,7 +313,7 @@ If the user asks about Aadhaar, PAN, paying electricity bills, or schemes, expla
 
           {isTyping && (
             <View style={[styles.msgRow, styles.msgRowBot]}>
-              <Text style={styles.senderLabel}>cyberbot</Text>
+              <Text style={styles.senderLabel}>{t('bot.cyberbot')}</Text>
               <View style={[styles.bubble, styles.bubbleBot, styles.bubbleTyping]}>
                 <ActivityIndicator size="small" color="#64748B" />
               </View>

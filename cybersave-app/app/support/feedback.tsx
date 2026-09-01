@@ -15,8 +15,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import * as DocumentPicker from 'expo-document-picker';
 import { colors, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function ShareFeedbackScreen() {
+    const { t } = useTranslation();
   const [rating, setRating] = useState(4);
   const [selectedTags, setSelectedTags] = useState<string[]>(['App Experience']);
   const [feedbackText, setFeedbackText] = useState('');
@@ -88,7 +90,7 @@ export default function ShareFeedbackScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Share Feedback</Text>
+          <Text style={styles.headerTitle}>{t('feedback.share_feedback')}</Text>
           <View style={{ width: 40 }} />
         </View>
       </LinearGradient>
@@ -102,7 +104,7 @@ export default function ShareFeedbackScreen() {
         <View style={styles.whiteCardContainer}>
           {/* Rate experience Card */}
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Rate Your Experience</Text>
+            <Text style={styles.cardTitle}>{t('feedback.rate_your_experience')}</Text>
             <View style={styles.starsRow}>
               {[1, 2, 3, 4, 5].map((star) => (
                 <TouchableOpacity key={star} onPress={() => setRating(star)} activeOpacity={0.7}>
@@ -115,13 +117,14 @@ export default function ShareFeedbackScreen() {
               ))}
             </View>
             <Text style={styles.ratingSub}>
-              You selected {rating} stars ({ratingLabels[rating]})
+              
+                                        {t('feedback.you_selected')} {rating}  {t('feedback.stars')}{ratingLabels[rating]})
             </Text>
           </View>
 
           {/* What should we improve? */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>What should we improve?</Text>
+            <Text style={styles.fieldLabel}>{t('feedback.what_should_we_improve')}</Text>
             <View style={styles.tagsRow}>
               {tags.map((tag) => {
                 const isSelected = selectedTags.includes(tag);
@@ -141,7 +144,7 @@ export default function ShareFeedbackScreen() {
 
           {/* Write your feedback */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>Write your feedback</Text>
+            <Text style={styles.fieldLabel}>{t('feedback.write_your_feedback')}</Text>
             <TextInput
               style={styles.textarea}
               value={feedbackText}
@@ -163,17 +166,17 @@ export default function ShareFeedbackScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.submitBtn} onPress={handleSubmitFeedback} activeOpacity={0.8}>
-              <Text style={styles.submitBtnText}>Submit Feedback</Text>
+              <Text style={styles.submitBtnText}>{t('feedback.submit_feedback')}</Text>
             </TouchableOpacity>
           </View>
 
           {/* Recent Reviews Feed */}
           <View style={styles.reviewsSection}>
-            <Text style={styles.sectionHeader}>Recent Reviews</Text>
+            <Text style={styles.sectionHeader}>{t('feedback.recent_reviews')}</Text>
             <View style={styles.reviewsList}>
               <View style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewerName}>Rakesh K.</Text>
+                  <Text style={styles.reviewerName}>{t('feedback.rakesh_k')}</Text>
                   <View style={styles.reviewStars}>
                     {[1, 2, 3, 4, 5].map((s) => (
                       <Ionicons key={s} name="star" size={12} color="#F59E0B" />
@@ -181,13 +184,14 @@ export default function ShareFeedbackScreen() {
                   </View>
                 </View>
                 <Text style={styles.reviewText}>
-                  Extremely smooth ITR filing experience! Verified within seconds.
-                </Text>
+                  
+                                                    {t('feedback.extremely_smooth_itr_filing_ex')}
+                                                  </Text>
               </View>
 
               <View style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
-                  <Text style={styles.reviewerName}>Ananya S.</Text>
+                  <Text style={styles.reviewerName}>{t('feedback.ananya_s')}</Text>
                   <View style={styles.reviewStars}>
                     {[1, 2, 3, 4].map((s) => (
                       <Ionicons key={s} name="star" size={12} color="#F59E0B" />
@@ -196,8 +200,9 @@ export default function ShareFeedbackScreen() {
                   </View>
                 </View>
                 <Text style={styles.reviewText}>
-                  Very intuitive UI, but I got a minor delay in Aadhaar update status. Overall nice.
-                </Text>
+                  
+                                                    {t('feedback.very_intuitive_ui_but_i_got_a_')}
+                                                  </Text>
               </View>
             </View>
           </View>
@@ -223,14 +228,14 @@ export default function ShareFeedbackScreen() {
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.successTitle}>Feedback Sent!</Text>
+            <Text style={styles.successTitle}>{t('feedback.feedback_sent')}</Text>
             <Text style={styles.successSub}>{successMsg}</Text>
             <TouchableOpacity 
               style={styles.successDoneBtn} 
               onPress={handleDismissSuccess}
               activeOpacity={0.8}
             >
-              <Text style={styles.successDoneBtnText}>Dismiss</Text>
+              <Text style={styles.successDoneBtnText}>{t('feedback.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>

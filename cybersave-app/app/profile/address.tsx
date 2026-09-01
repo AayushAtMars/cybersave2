@@ -20,6 +20,7 @@ import { router } from 'expo-router';
 import { useAuthStore } from '../../src/store/authStore';
 import { useUpdateAddress } from '../../src/api/auth';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 interface AddressItem {
   id: string;
@@ -33,6 +34,7 @@ interface AddressItem {
 }
 
 export default function MyAddressScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateAddress = useUpdateAddress();
 
@@ -193,7 +195,7 @@ export default function MyAddressScreen() {
           <Text style={styles.cardLabel}>{item.label}</Text>
           {item.isDefault && (
             <View style={styles.defaultBadge}>
-              <Text style={styles.defaultBadgeText}>Default</Text>
+              <Text style={styles.defaultBadgeText}>{t('address.default')}</Text>
             </View>
           )}
         </View>
@@ -213,7 +215,7 @@ export default function MyAddressScreen() {
         {'\n'}{item.city}, {item.state}
       </Text>
 
-      <Text style={styles.cardPincode}>Pincode: {item.pincode}</Text>
+      <Text style={styles.cardPincode}>{t('address.pincode')} {item.pincode}</Text>
     </View>
   );
 
@@ -231,7 +233,7 @@ export default function MyAddressScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>My Addresses</Text>
+          <Text style={styles.headerTitle}>{t('address.my_addresses')}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
@@ -241,17 +243,18 @@ export default function MyAddressScreen() {
         <View style={styles.cardContainer}>
           {/* Add New Address Button */}
           <TouchableOpacity style={styles.addBtn} onPress={openAddModal} activeOpacity={0.8}>
-            <Text style={styles.addBtnText}>+ Add New Address</Text>
+            <Text style={styles.addBtnText}>{t('address.add_new_address')}</Text>
           </TouchableOpacity>
 
           {/* Addresses List */}
           {addresses.length === 0 ? (
             <View style={styles.empty}>
               <Ionicons name="location-outline" size={48} color="#94A3B8" />
-              <Text style={styles.emptyTitle}>No saved addresses</Text>
+              <Text style={styles.emptyTitle}>{t('address.no_saved_addresses')}</Text>
               <Text style={styles.emptySub}>
-                Add an address to automatically pre-fill your applications and security logs.
-              </Text>
+                
+                                              {t('address.add_an_address_to_automaticall')}
+                                            </Text>
             </View>
           ) : (
             <FlatList
@@ -300,7 +303,7 @@ export default function MyAddressScreen() {
                 contentContainerStyle={styles.formContainer}
               >
                 <View style={styles.field}>
-                  <Text style={styles.label}>Tag / Label *</Text>
+                  <Text style={styles.label}>{t('address.tag_label')}</Text>
                   <TextInput 
                     style={styles.input} 
                     value={label} 
@@ -311,7 +314,7 @@ export default function MyAddressScreen() {
                 </View>
 
                 <View style={styles.field}>
-                  <Text style={styles.label}>Address Line 1 *</Text>
+                  <Text style={styles.label}>{t('address.address_line_1')}</Text>
                   <TextInput 
                     style={styles.input} 
                     value={line1} 
@@ -322,7 +325,7 @@ export default function MyAddressScreen() {
                 </View>
 
                 <View style={styles.field}>
-                  <Text style={styles.label}>Address Line 2</Text>
+                  <Text style={styles.label}>{t('address.address_line_2')}</Text>
                   <TextInput 
                     style={styles.input} 
                     value={line2} 
@@ -334,7 +337,7 @@ export default function MyAddressScreen() {
 
                 <View style={styles.row}>
                   <View style={[styles.field, styles.flex1]}>
-                    <Text style={styles.label}>City *</Text>
+                    <Text style={styles.label}>{t('address.city')}</Text>
                     <TextInput 
                       style={styles.input} 
                       value={city} 
@@ -344,7 +347,7 @@ export default function MyAddressScreen() {
                     />
                   </View>
                   <View style={[styles.field, styles.flex1]}>
-                    <Text style={styles.label}>State *</Text>
+                    <Text style={styles.label}>{t('address.state')}</Text>
                     <TextInput 
                       style={styles.input} 
                       value={state} 
@@ -356,7 +359,7 @@ export default function MyAddressScreen() {
                 </View>
 
                 <View style={styles.field}>
-                  <Text style={styles.label}>PIN Code *</Text>
+                  <Text style={styles.label}>{t('address.pin_code')}</Text>
                   <TextInput 
                     style={[styles.input, { width: 140 }]} 
                     value={pincode} 
@@ -370,8 +373,8 @@ export default function MyAddressScreen() {
 
                 <View style={styles.switchRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.switchLabel}>Set as default address</Text>
-                    <Text style={styles.switchSub}>Use this address as pre-filled default.</Text>
+                    <Text style={styles.switchLabel}>{t('address.set_as_default_address')}</Text>
+                    <Text style={styles.switchSub}>{t('address.use_this_address_as_pre_filled')}</Text>
                   </View>
                   <Switch
                     value={isDefault}
@@ -382,7 +385,7 @@ export default function MyAddressScreen() {
                 </View>
 
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
-                  <Text style={styles.saveText}>Save Address</Text>
+                  <Text style={styles.saveText}>{t('address.save_address')}</Text>
                 </TouchableOpacity>
               </ScrollView>
             </View>
@@ -409,14 +412,14 @@ export default function MyAddressScreen() {
                 <Ionicons name="checkmark" size={32} color="#FFFFFF" />
               </LinearGradient>
             </View>
-            <Text style={styles.statusTitle}>Success!</Text>
+            <Text style={styles.statusTitle}>{t('address.success')}</Text>
             <Text style={styles.statusSub}>{successMessage}</Text>
             <TouchableOpacity 
               style={styles.statusDoneBtn} 
               onPress={() => setShowSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.statusDoneBtnText}>Dismiss</Text>
+              <Text style={styles.statusDoneBtnText}>{t('address.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -436,14 +439,14 @@ export default function MyAddressScreen() {
                 <Ionicons name="trash-outline" size={32} color="#EF4444" />
               </View>
             </View>
-            <Text style={styles.statusTitle}>Address Deleted</Text>
-            <Text style={styles.statusSub}>The address has been permanently removed from your profile.</Text>
+            <Text style={styles.statusTitle}>{t('address.address_deleted')}</Text>
+            <Text style={styles.statusSub}>{t('address.the_address_has_been_permanent')}</Text>
             <TouchableOpacity 
               style={styles.deleteDoneBtn} 
               onPress={() => setShowDeleteSuccessModal(false)}
               activeOpacity={0.8}
             >
-              <Text style={styles.deleteDoneBtnText}>Dismiss</Text>
+              <Text style={styles.deleteDoneBtnText}>{t('address.dismiss')}</Text>
             </TouchableOpacity>
           </View>
         </View>

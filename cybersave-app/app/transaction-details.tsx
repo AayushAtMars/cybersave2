@@ -12,6 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { colors, typography, spacing, radius, shadows } from '../src/theme';
+import { useTranslation } from "react-i18next";
 
 const fmtDateDetail = (iso: string) => {
   if (!iso) return '—';
@@ -22,6 +23,7 @@ const fmtDateDetail = (iso: string) => {
 };
 
 export default function TransactionDetailsScreen() {
+    const { t } = useTranslation();
   const params = useLocalSearchParams();
   const {
     id,
@@ -53,12 +55,81 @@ export default function TransactionDetailsScreen() {
   const serviceCategory = isDebit ? 'Digital Governance Fees' : 'Wallet Top-up';
   const beneficiaryService = isDebit ? description : 'Wallet Refill';
 
-  const handleDownloadReceipt = () => {
-    Alert.alert('Download Started', 'The official receipt is downloading to your device.');
+  const handleDownloadReceipt = async () => {
+    try {
+      const { printToFileAsync } = await import('expo-print');
+      const { shareAsync } = await import('expo-sharing');
+
+      const html = `
+        <html>
+          <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+            <style>
+              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
+              .header { text-align: center; border-bottom: 2px solid #2563EB; padding-bottom: 20px; margin-bottom: 30px; }
+              .title { font-size: 28px; font-weight: bold; color: #1E3A8A; margin-bottom: 5px; }
+              .subtitle { font-size: 16px; color: #64748B; }
+              .row { display: flex; justify-content: space-between; margin-bottom: 10px; padding: 15px 0; border-bottom: 1px solid #f1f5f9; }
+              .label { font-size: 14px; font-weight: bold; color: #64748B; }
+              .value { font-size: 14px; font-weight: bold; color: #0F172A; text-align: right; }
+              .amount-container { text-align: center; margin: 30px 0; }
+              .amount { font-size: 42px; font-weight: bold; color: ${isFailed ? '#EF4444' : '#10B981'}; }
+              .status-badge { display: inline-block; padding: 6px 12px; border-radius: 20px; font-size: 14px; font-weight: bold; margin-bottom: 10px; background-color: ${isFailed ? '#FEE2E2' : '#ECFDF5'}; color: ${isFailed ? '#EF4444' : '#10B981'}; }
+              .footer { text-align: center; margin-top: 60px; font-size: 12px; color: #94A3B8; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+            </style>
+          </head>
+          <body>
+            <div class="header">
+              <div class="title">Official Receipt</div>
+              <div class="subtitle">Cybersave Transaction</div>
+            </div>
+            
+            <div class="amount-container">
+              <div class="status-badge">${isFailed ? 'Payment Failed' : 'Payment Successful'}</div>
+              <div class="amount">₹${(amountVal / 100).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div>
+            </div>
+            
+            <div class="row">
+              <span class="label">Transaction ID</span>
+              <span class="value">${razorpayPaymentId || id || '—'}</span>
+            </div>
+            <div class="row">
+              <span class="label">Date & Time</span>
+              <span class="value">${fmtDateDetail(createdAt)}</span>
+            </div>
+            <div class="row">
+              <span class="label">Payment Method</span>
+              <span class="value">${paymentMethod}</span>
+            </div>
+            <div class="row">
+              <span class="label">Service Category</span>
+              <span class="value">${serviceCategory}</span>
+            </div>
+            <div class="row">
+              <span class="label">Beneficiary Service</span>
+              <span class="value">${beneficiaryService}</span>
+            </div>
+            
+            <div class="footer">
+              <p>This is a computer-generated receipt and does not require a physical signature.</p>
+              <p>Generated on ${new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</p>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      const { uri } = await printToFileAsync({ html, base64: false });
+      await shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: 'Download Official Receipt' });
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Error', 'Failed to generate receipt');
+    }
   };
 
-  const handleShare = () => {
-    Alert.alert('Share', 'Sharing options initiated.');
+  const handleShare = async () => {
+    // We can just use the same logic for share button or a simpler text share.
+    // For now, let's reuse the receipt generation for share as well, as it's the most useful thing to share.
+    await handleDownloadReceipt();
   };
 
   const isFailed = status === 'failed';
@@ -79,7 +150,7 @@ export default function TransactionDetailsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Transaction Details</Text>
+          <Text style={styles.headerTitle}>{t('transaction-details.transaction_details')}</Text>
           <TouchableOpacity style={styles.headerRightBtn} onPress={handleShare}>
             <Ionicons name="share-social-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
@@ -107,34 +178,34 @@ export default function TransactionDetailsScreen() {
           </Text>
 
           <View style={[styles.refBadge, { backgroundColor: themeBg }]}>
-            <Text style={[styles.refBadgeText, { color: themeColor }]}>Ref: {shortRef}</Text>
+            <Text style={[styles.refBadgeText, { color: themeColor }]}>{t('transaction-details.ref')} {shortRef}</Text>
           </View>
         </View>
 
         {/* Detailed Fields List Card */}
         <View style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Transaction ID</Text>
+            <Text style={styles.detailLabel}>{t('transaction-details.transaction_id')}</Text>
             <Text style={styles.detailValue}>{razorpayPaymentId || id || '—'}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Date & Time</Text>
+            <Text style={styles.detailLabel}>{t('transaction-details.date_time')}</Text>
             <Text style={styles.detailValue}>{fmtDateDetail(createdAt)}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Payment Method</Text>
+            <Text style={styles.detailLabel}>{t('transaction-details.payment_method')}</Text>
             <Text style={styles.detailValue}>{paymentMethod}</Text>
           </View>
 
           <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Service Category</Text>
+            <Text style={styles.detailLabel}>{t('transaction-details.service_category')}</Text>
             <Text style={styles.detailValue}>{serviceCategory}</Text>
           </View>
 
           <View style={[styles.detailRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
-            <Text style={styles.detailLabel}>Beneficiary Service</Text>
+            <Text style={styles.detailLabel}>{t('transaction-details.beneficiary_service')}</Text>
             <Text style={styles.detailValue}>{beneficiaryService}</Text>
           </View>
         </View>
@@ -142,7 +213,7 @@ export default function TransactionDetailsScreen() {
         {/* Download Receipt CTA */}
         <TouchableOpacity style={styles.downloadBtn} onPress={handleDownloadReceipt} activeOpacity={0.8}>
           <Ionicons name="download-outline" size={18} color="#2563EB" style={{ marginRight: 8 }} />
-          <Text style={styles.downloadBtnText}>Download Official Receipt</Text>
+          <Text style={styles.downloadBtnText}>{t('transaction-details.download_official_receipt')}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>

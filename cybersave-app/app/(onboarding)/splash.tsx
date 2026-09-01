@@ -3,10 +3,12 @@ import { View, Text, StyleSheet, Image, Dimensions } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { useAuthStore } from '../../src/store/authStore';
+import { useTranslation } from "react-i18next";
 
 const { width, height } = Dimensions.get('window');
 
 export default function SplashScreen() {
+    const { t } = useTranslation();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   useEffect(() => {
@@ -39,8 +41,8 @@ export default function SplashScreen() {
 
       {/* Tagline */}
       <View style={styles.taglineContainer}>
-        <Text style={styles.taglineMain}>All Government Services, One App</Text>
-        <Text style={styles.taglineSub}>Ministry of Electronics &amp; IT Initiative</Text>
+        <Text style={styles.taglineMain}>{t('splash.all_government_services_one_ap')}</Text>
+        <Text style={styles.taglineSub}>{t('splash.ministry_of_electronics_amp_it')}</Text>
       </View>
 
       {/* Digital India Badge */}
@@ -52,7 +54,7 @@ export default function SplashScreen() {
           <View style={[styles.stripe, { backgroundColor: '#138808' }]} />
         </View>
         <View style={styles.badgeDivider} />
-        <Text style={styles.badgeText}>DIGITAL INDIA</Text>
+        <Text style={styles.badgeText}>{t('splash.digital_india')}</Text>
       </View>
     </LinearGradient>
   );

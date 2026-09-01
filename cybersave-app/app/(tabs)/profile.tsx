@@ -27,8 +27,10 @@ const ADMIN_MENU = [
 ];
 
 import { apiClient } from '../../src/api/client';
+import { useTranslation } from "react-i18next";
 
 export default function ProfileScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const refreshToken = useAuthStore((s) => s.refreshToken);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -73,7 +75,7 @@ export default function ProfileScreen() {
       >
         <SafeAreaView edges={['top']} style={styles.headerSafeArea} />
         <View style={styles.headerTop}>
-          <Text style={styles.headerTitle}>Profile</Text>
+          <Text style={styles.headerTitle}>{t('profile.profile')}</Text>
         </View>
       </LinearGradient>
 
@@ -96,7 +98,7 @@ export default function ProfileScreen() {
             <View style={styles.nameRow}>
               <Text style={styles.name} numberOfLines={1}>{user?.name ?? 'Rajesh Kumar'}</Text>
               <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>Verified</Text>
+                <Text style={styles.verifiedText}>{t('profile.verified')}</Text>
               </View>
             </View>
             {formattedPhone && (
@@ -105,7 +107,7 @@ export default function ProfileScreen() {
             {emailText ? (
               <Text style={styles.subText}>{emailText}</Text>
             ) : (
-              <Text style={[styles.subText, styles.notAddedText]}>Not added</Text>
+              <Text style={[styles.subText, styles.notAddedText]}>{t('profile.not_added')}</Text>
             )}
           </View>
         </View>
@@ -113,7 +115,7 @@ export default function ProfileScreen() {
         {/* Admin Section — only visible to admin/super_admin */}
         {(user?.role === 'admin' || user?.role === 'super_admin') && (
           <View style={styles.menuSection}>
-            <Text style={styles.menuSectionLabel}>Administration</Text>
+            <Text style={styles.menuSectionLabel}>{t('profile.administration')}</Text>
             {ADMIN_MENU.map((item) => (
               <TouchableOpacity
                 key={item.label}
@@ -155,7 +157,7 @@ export default function ProfileScreen() {
 
         {/* Logout */}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
-          <Text style={styles.logoutText}>Log Out</Text>
+          <Text style={styles.logoutText}>{t('profile.log_out')}</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -173,8 +175,8 @@ export default function ProfileScreen() {
         >
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Logout</Text>
-            <Text style={styles.modalDescription}>Are you sure you want to log out?</Text>
+            <Text style={styles.modalTitle}>{t('profile.logout')}</Text>
+            <Text style={styles.modalDescription}>{t('profile.are_you_sure_you_want_to_log_o')}</Text>
             <View style={styles.modalButtons}>
               <Button
                 title="Cancel"

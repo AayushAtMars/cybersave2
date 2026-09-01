@@ -19,8 +19,8 @@ export const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-// ── PII masking helper ─────────────────────────────────────────────────────────
-// Never log raw phone numbers or Aadhaar — mask before logging (rules.md §2)
+// PII masking helper
+// Never log raw phone numbers or Aadhaar — mask before logging
 export const maskPhone = (phone: string): string =>
   phone.replace(/(\d{2})\d{6}(\d{2})/, '$1XXXXXX$2');
 

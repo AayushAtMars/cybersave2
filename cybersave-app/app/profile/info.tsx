@@ -20,8 +20,10 @@ import { router } from 'expo-router';
 import { useAuthStore } from '../../src/store/authStore';
 import { useUpdateProfile } from '../../src/api/auth';
 import { colors, typography, spacing, radius, shadows } from '../../src/theme';
+import { useTranslation } from "react-i18next";
 
 export default function PersonalInfoScreen() {
+    const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const updateProfile = useUpdateProfile();
 
@@ -160,7 +162,7 @@ export default function PersonalInfoScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="chevron-back" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Personal Information</Text>
+          <Text style={styles.headerTitle}>{t('info.personal_information')}</Text>
           <View style={styles.headerSpacer} />
         </View>
       </LinearGradient>
@@ -179,7 +181,7 @@ export default function PersonalInfoScreen() {
                 )}
               </View>
               <TouchableOpacity style={styles.changePhotoBtn} onPress={handleChangePhoto}>
-                <Text style={styles.changePhotoText}>Change Photo</Text>
+                <Text style={styles.changePhotoText}>{t('info.change_photo')}</Text>
               </TouchableOpacity>
             </View>
 
@@ -187,7 +189,7 @@ export default function PersonalInfoScreen() {
             <View style={styles.form}>
               {/* Full Name */}
               <View style={styles.field}>
-                <Text style={styles.label}>Full Name</Text>
+                <Text style={styles.label}>{t('info.full_name')}</Text>
                 <TextInput 
                   style={[styles.input, styles.disabledInput]} 
                   value={name} 
@@ -199,9 +201,9 @@ export default function PersonalInfoScreen() {
               {/* Phone */}
               <View style={styles.field}>
                 <View style={styles.labelRow}>
-                  <Text style={styles.label}>Phone</Text>
+                  <Text style={styles.label}>{t('info.phone')}</Text>
                   <View style={styles.verifiedBadge}>
-                    <Text style={styles.verifiedText}>Verified</Text>
+                    <Text style={styles.verifiedText}>{t('info.verified')}</Text>
                   </View>
                 </View>
                 <TextInput 
@@ -213,7 +215,7 @@ export default function PersonalInfoScreen() {
 
               {/* Email */}
               <View style={styles.field}>
-                <Text style={styles.label}>Email</Text>
+                <Text style={styles.label}>{t('info.email')}</Text>
                 <TextInput 
                   style={styles.input} 
                   value={email} 
@@ -225,7 +227,7 @@ export default function PersonalInfoScreen() {
 
               {/* Date of Birth */}
               <View style={styles.field}>
-                <Text style={styles.label}>Date of Birth</Text>
+                <Text style={styles.label}>{t('info.date_of_birth')}</Text>
                 <View style={styles.inputWrapper}>
                   <TextInput 
                     style={styles.input} 
@@ -240,7 +242,7 @@ export default function PersonalInfoScreen() {
 
               {/* Gender */}
               <View style={styles.field}>
-                <Text style={styles.label}>Gender</Text>
+                <Text style={styles.label}>{t('info.gender')}</Text>
                 <View style={styles.inputWrapper}>
                   <TextInput 
                     style={styles.input} 
@@ -256,7 +258,7 @@ export default function PersonalInfoScreen() {
               {/* Aadhaar (Masked) */}
               <View style={styles.field}>
                 <View style={styles.labelRow}>
-                  <Text style={styles.label}>Aadhaar (Masked)</Text>
+                  <Text style={styles.label}>{t('info.aadhaar_masked')}</Text>
                   <TouchableOpacity 
                     onPress={() => !hasAadhaar && handleOpenLinkModal('aadhaar')}
                     activeOpacity={hasAadhaar ? 1 : 0.7}
@@ -285,7 +287,7 @@ export default function PersonalInfoScreen() {
               {/* PAN (Masked) */}
               <View style={styles.field}>
                 <View style={styles.labelRow}>
-                  <Text style={styles.label}>PAN (Masked)</Text>
+                  <Text style={styles.label}>{t('info.pan_masked')}</Text>
                   <TouchableOpacity 
                     onPress={() => !hasPan && handleOpenLinkModal('pan')}
                     activeOpacity={hasPan ? 1 : 0.7}
@@ -314,10 +316,10 @@ export default function PersonalInfoScreen() {
 
             {/* Action Button */}
             <TouchableOpacity style={styles.saveBtn} onPress={handleSave} activeOpacity={0.8}>
-              <Text style={styles.saveBtnText}>Save Changes</Text>
+              <Text style={styles.saveBtnText}>{t('info.save_changes')}</Text>
             </TouchableOpacity>
 
-            <Text style={styles.timestamp}>Last updated: 12 May 2026, 4:32 PM</Text>
+            <Text style={styles.timestamp}>{t('info.last_updated_12_may_2026_4_32_')}</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -333,16 +335,18 @@ export default function PersonalInfoScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Link {linkingType === 'aadhaar' ? 'Aadhaar' : 'PAN'} Card
-              </Text>
+                
+                                              {t('info.link')} {linkingType === 'aadhaar' ? 'Aadhaar' : 'PAN'}  {t('info.card')}
+                                            </Text>
               <TouchableOpacity onPress={() => setShowLinkModal(false)}>
                 <Ionicons name="close" size={24} color="#64748B" />
               </TouchableOpacity>
             </View>
 
             <Text style={styles.modalSub}>
-              Enter your 12-digit Aadhaar number or 10-character PAN card number to link it to your account.
-            </Text>
+              
+                                        {t('info.enter_your_12_digit_aadhaar_nu')}
+                                      </Text>
 
             <TextInput
               style={styles.modalInput}
@@ -357,7 +361,7 @@ export default function PersonalInfoScreen() {
 
             <View style={styles.modalActions}>
               <TouchableOpacity style={styles.modalApplyBtn} onPress={handleLinkSubmit}>
-                <Text style={styles.modalApplyBtnText}>Link Document</Text>
+                <Text style={styles.modalApplyBtnText}>{t('info.link_document')}</Text>
               </TouchableOpacity>
             </View>
           </View>

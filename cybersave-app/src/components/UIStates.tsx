@@ -1,13 +1,3 @@
-/**
- * UIStates.tsx
- *
- * Standardized full-screen state components matching the 5 design mockups:
- *  - EmptyNotifications  (bell icon, "All Caught Up!")
- *  - EmptyApplications   (folder icon, "No Applications Yet")
- *  - SkeletonScreen      (shimmering skeleton matching home layout)
- *  - SystemError         (warning icon, "Something Went Wrong", Retry + Go to Home)
- *  - NoInternet          (wifi-off icon, "No Internet Connection", Try Again + Offline)
- */
 import React, { useEffect, useRef } from 'react';
 import {
   View,
@@ -21,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { radius, spacing } from '../theme';
 
-// ── Shimmer pulse animation used by skeleton ────────────────────────────────
+// Shimmer pulse animation used by skeleton
 const usePulse = () => {
   const opacity = useRef(new Animated.Value(0.35)).current;
   useEffect(() => {
@@ -56,7 +46,7 @@ const SBar: React.FC<{
   );
 };
 
-// ── 1. Empty Notifications ────────────────────────────────────────────────────
+// 1. Empty Notifications
 export const EmptyNotifications: React.FC<{ onBack?: () => void }> = ({
   onBack,
 }) => (
@@ -75,7 +65,7 @@ export const EmptyNotifications: React.FC<{ onBack?: () => void }> = ({
   </View>
 );
 
-// ── 2. Empty Applications ─────────────────────────────────────────────────────
+// 2. Empty Applications
 export const EmptyApplications: React.FC<{ onBrowse?: () => void; style?: any }> = ({
   onBrowse,
   style,
@@ -95,7 +85,7 @@ export const EmptyApplications: React.FC<{ onBrowse?: () => void; style?: any }>
   </View>
 );
 
-// ── 3. Skeleton Screen (matches home layout from mockup) ──────────────────────
+// 3. Skeleton Screen 
 export const SkeletonScreen: React.FC = () => (
   <ScrollView style={styles.skeletonBg} contentContainerStyle={styles.skeletonContent} scrollEnabled={false}>
     {/* Header area */}
@@ -148,7 +138,7 @@ export const SkeletonScreen: React.FC = () => (
   </ScrollView>
 );
 
-// ── 4. System Error ───────────────────────────────────────────────────────────
+// 4. System Error
 export const SystemError: React.FC<{
   errorCode?: string;
   onRetry?: () => void;
@@ -193,7 +183,7 @@ export const SystemError: React.FC<{
   </View>
 );
 
-// ── 5. No Internet ────────────────────────────────────────────────────────────
+// 5. No Internet
 export const NoInternet: React.FC<{
   onRetry?: () => void;
   onOffline?: () => void;
@@ -225,7 +215,7 @@ export const NoInternet: React.FC<{
   </View>
 );
 
-// ── Styles ─────────────────────────────────────────────────────────────────────
+// Styles
 const styles = StyleSheet.create({
   // Shared
   center: {

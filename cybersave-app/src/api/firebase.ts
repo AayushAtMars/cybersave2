@@ -43,12 +43,11 @@ export async function sendFirebaseOtp(phoneNumber: string): Promise<any | null> 
     const authInstance = _getAuth!();
     return await _signInWithPhoneNumber!(authInstance, phoneNumber);
   } catch (e) {
-    // Re-throw so callers can fall back to backend OTP
     throw e;
   }
 }
 
-// ── Active confirmation (Firebase phone-auth session) ──────────────────────────
+// Active confirmation (Firebase phone-auth session)
 
 let activeConfirmation: any = null;
 

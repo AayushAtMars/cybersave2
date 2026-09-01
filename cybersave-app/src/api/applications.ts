@@ -170,6 +170,19 @@ export const useCreateTopupOrder = () => {
   });
 };
 
+export const usePayWithWallet = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (applicationId: string) =>
+      apiClient.post('/payments/wallet/pay-application', { applicationId }).then((r) => r.data.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['wallet'] });
+      qc.invalidateQueries({ queryKey: ['transactions'] });
+      qc.invalidateQueries({ queryKey: ['applications'] });
+    },
+  });
+};
+
 // ── Admin API ──────────────────────────────────────────────────────────────────────────────
 export const useAdminApplications = (status?: string, search?: string) =>
   useQuery<PaginatedResponse<Application>>({

@@ -14,10 +14,12 @@ import { router } from 'expo-router';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import { useAuthStore } from '../../src/store/authStore';
+import { useTranslation } from "react-i18next";
 
 const { width } = Dimensions.get('window');
 
 export default function BiometricScreen() {
+    const { t } = useTranslation();
   const triggerAuthentication = async () => {
     try {
       const hasHardware = await LocalAuthentication.hasHardwareAsync();
@@ -90,14 +92,14 @@ export default function BiometricScreen() {
           </View>
         </TouchableOpacity>
 
-        <Text style={styles.title}>Touch to Login</Text>
-        <Text style={styles.subtitle}>Place your registered finger on the sensor</Text>
+        <Text style={styles.title}>{t('biometric.touch_to_login')}</Text>
+        <Text style={styles.subtitle}>{t('biometric.place_your_registered_finger_o')}</Text>
       </View>
 
       {/* Bottom Option */}
       <View style={styles.bottomSection}>
         <TouchableOpacity onPress={() => router.replace('/(auth)/login')}>
-          <Text style={styles.otpLink}>Use OTP Instead</Text>
+          <Text style={styles.otpLink}>{t('biometric.use_otp_instead')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

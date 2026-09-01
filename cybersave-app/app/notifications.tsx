@@ -19,6 +19,7 @@ import { colors, typography, spacing, radius, shadows } from '../src/theme';
 import { EmptyNotifications, SkeletonScreen, NoInternet, SystemError } from '../src/components/UIStates';
 import { useNetworkStatus } from '../src/hooks/useNetworkStatus';
 import { usePushNotifications } from '../src/hooks/usePushNotifications';
+import { useTranslation } from "react-i18next";
 
 const fmtTimeAgo = (iso: string) => {
   const diffMs = Date.now() - new Date(iso).getTime();
@@ -32,6 +33,7 @@ const fmtTimeAgo = (iso: string) => {
 };
 
 export default function NotificationsScreen() {
+    const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'all' | 'alerts' | 'updates' | 'payments'>('all');
   const qc = useQueryClient();
   const seenIds = useRef<Set<string>>(new Set());
@@ -96,9 +98,9 @@ export default function NotificationsScreen() {
           <TouchableOpacity style={styles.backBtn} onPress={() => router.back()}>
             <Ionicons name="arrow-back-outline" size={20} color="#0F172A" />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Notifications</Text>
+          <Text style={styles.headerTitle}>{t('notifications.notifications')}</Text>
           <TouchableOpacity onPress={handleMarkAllRead}>
-            <Text style={styles.markRead}>Mark all read</Text>
+            <Text style={styles.markRead}>{t('notifications.mark_all_read')}</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>

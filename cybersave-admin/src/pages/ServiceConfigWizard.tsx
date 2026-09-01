@@ -35,9 +35,10 @@ interface ServiceConfigWizardProps {
   onSave: () => void;
   initialCategory?: string;
   initialDepartment?: string;
+  initialService?: any;
 }
 
-export default function ServiceConfigWizard({ onClose, onSave, initialCategory, initialDepartment }: ServiceConfigWizardProps) {
+export default function ServiceConfigWizard({ onClose, onSave, initialCategory, initialDepartment, initialService }: ServiceConfigWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -103,7 +104,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
   const [editingDocIndex, setEditingDocIndex] = useState<number | null>(null);
 
   // Step 6: Pricing State
-  const [serviceFee, setServiceFee] = useState(150);
+  const [serviceFee, setServiceFee] = useState<number | string>(150);
   const [applyGst, setApplyGst] = useState(true);
   const [paymentMethods, setPaymentMethods] = useState<string[]>(['Online Payment', 'UPI']);
   const [refundPolicy, setRefundPolicy] = useState('Non-refundable after processing starts');
@@ -119,6 +120,32 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
   const [effectiveDate, setEffectiveDate] = useState('Immediately upon publishing');
   const [notifyUsers, setNotifyUsers] = useState(true);
   const [targetEnvironment, setTargetEnvironment] = useState('Production (Live Portal)');
+
+  useEffect(() => {
+    if (initialService) {
+      setServiceName(initialService.name || '');
+      setServiceCategory(initialService.category || 'Government Schemes');
+      setIsActive(initialService.isActive !== undefined ? initialService.isActive : true);
+      setDescription(initialService.description || '');
+      setShortDesc(initialService.description || '');
+      setDetailedDesc(initialService.detailedDescription || '');
+      setDepartmentArea(initialService.department || '');
+      setServiceFee(initialService.govtFee ? initialService.govtFee / 100 : 0); // Convert from paise if necessary or raw value depending on API 
+      
+      if (initialService.requiredDocuments) {
+        setRequiredDocs(initialService.requiredDocuments.map((d: any) => ({
+          name: d.name,
+          acceptedFormats: d.acceptedFormats || ['PDF'],
+          maxSizeMb: d.maxSizeMb || 5,
+          mandatory: d.mandatory
+        })));
+      }
+      
+      if (initialService.formFields) {
+        setFormFields(initialService.formFields);
+      }
+    }
+  }, [initialService]);
 
   const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -335,8 +362,9 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
       const cat = reverseCategoryMap[serviceCategory] || 'gov_scheme';
 
       // Convert pricing convenience fee
-      const computedGovtFee = serviceFee * 100;
-      const computedConvenienceFee = applyGst ? Math.round(serviceFee * 0.18 * 100) : 0;
+      const parsedFee = typeof serviceFee === 'string' ? (parseFloat(serviceFee) || 0) : serviceFee;
+      const computedGovtFee = parsedFee * 100;
+      const computedConvenienceFee = applyGst ? Math.round(parsedFee * 0.18 * 100) : 0;
 
       // Map required docs
       const mappedDocs = requiredDocs.map(d => ({
@@ -363,7 +391,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
         isActive: s.status === 'Active'
       }));
 
-      await adminClient.post('/services', {
+      const payload = {
         name: serviceName,
         description: description || shortDesc,
         category: cat,
@@ -386,7 +414,13 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
         paymentMethods: paymentMethods,
         refundPolicy: refundPolicy,
         additionalCharges: additionalCharges
-      });
+      };
+
+      if (initialService && (initialService.id || initialService._id)) {
+        await adminClient.patch(`/services/${initialService.id || initialService._id}`, payload);
+      } else {
+        await adminClient.post('/services', payload);
+      }
 
       onSave();
     } catch (err: any) {
@@ -400,7 +434,8 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
   };
 
   // Calculations
-  const totalCitizenPrice = applyGst ? Math.round(serviceFee * 1.18) : serviceFee;
+  const parsedServiceFee = typeof serviceFee === 'string' ? (parseFloat(serviceFee) || 0) : serviceFee;
+  const totalCitizenPrice = applyGst ? Math.round(parsedServiceFee * 1.18) : parsedServiceFee;
 
   const steps = initialCategory ? [
     { step: 1, label: 'Sub Service' },
@@ -427,7 +462,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
       case 4: return 'Interface Form Builder';
       case 5: return 'Required Documents Configuration';
       case 6: return 'Service Pricing Configuration';
-      case 7: return 'Publish Service';
+      case 7: return initialService ? 'Save Changes' : 'Publish Service';
       default: return 'Service Configuration';
     }
   };
@@ -778,61 +813,6 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
                 </select>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Assigned Team Permissions</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', backgroundColor: '#F9FAFB', width: '100%', boxSizing: 'border-box' }}>
-                  {teamPermissions.map((perm, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#EFF6FF', color: '#2563EB', padding: '4px 10px', borderRadius: '100px', fontSize: '12.5px', fontWeight: 600 }}>
-                      <span>{perm}</span>
-                      <span onClick={() => setTeamPermissions(teamPermissions.filter((_, i) => i !== idx))} style={{ cursor: 'pointer', fontWeight: 800, color: '#3B82F6' }}>×</span>
-                    </div>
-                  ))}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Add..." 
-                      value={newPermission} 
-                      onChange={e => setNewPermission(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && newPermission.trim()) {
-                          e.preventDefault();
-                          setTeamPermissions([...teamPermissions, newPermission.trim()]);
-                          setNewPermission('');
-                        }
-                      }}
-                      style={{ border: 'none', background: 'none', outline: 'none', fontSize: '12.5px', width: '80px', color: '#374151' }} 
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', width: '100%' }}>
-                <label style={{ fontSize: '12px', fontWeight: 700, color: '#475569', textTransform: 'uppercase' }}>Search Optimization Tags</label>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', backgroundColor: '#F9FAFB', width: '100%', boxSizing: 'border-box' }}>
-                  {searchTags.map((tag, idx) => (
-                    <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#F3F4F6', color: '#4B5563', padding: '4px 10px', borderRadius: '100px', fontSize: '12.5px', fontWeight: 500 }}>
-                      <span>{tag}</span>
-                      <span onClick={() => setSearchTags(searchTags.filter((_, i) => i !== idx))} style={{ cursor: 'pointer', fontWeight: 800, color: '#9CA3AF' }}>×</span>
-                    </div>
-                  ))}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Add..." 
-                      value={newTag} 
-                      onChange={e => setNewTag(e.target.value)}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' && newTag.trim()) {
-                          e.preventDefault();
-                          setSearchTags([...searchTags, newTag.trim()]);
-                          setNewTag('');
-                        }
-                      }}
-                      style={{ border: 'none', background: 'none', outline: 'none', fontSize: '12.5px', width: '80px', color: '#374151' }} 
-                    />
-                  </div>
-                </div>
-              </div>
             </>
           )}
 
@@ -1113,7 +1093,11 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
                     <input 
                       type="number" 
                       value={serviceFee} 
-                      onChange={e => setServiceFee(parseFloat(e.target.value) || 0)} 
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '') setServiceFee('');
+                        else setServiceFee(Number(val));
+                      }}
                       style={{ boxSizing: 'border-box', padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: '14px', backgroundColor: '#FFFFFF', fontFamily: 'inherit', outline: 'none' }} 
                     />
                   </div>
@@ -1419,7 +1403,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
                 color: '#FFFFFF', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer'
               }}
             >
-              {isSubmitting ? 'Publishing...' : 'Publish Service'}
+              {isSubmitting ? (initialService ? 'Saving...' : 'Publishing...') : (initialService ? 'Save Changes' : 'Publish Service')}
             </button>
           </div>
         ) : (

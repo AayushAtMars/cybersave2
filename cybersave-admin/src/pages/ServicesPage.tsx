@@ -33,8 +33,9 @@ export default function ServicesPage() {
   const [wizardCategory, setWizardCategory] = useState<string | undefined>(undefined);
   const [wizardDepartment, setWizardDepartment] = useState<string | undefined>(undefined);
 
-  // Selected Service for deletion
+  // Selected Service for deletion / editing
   const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [editingService, setEditingService] = useState<Service | null>(null);
 
   // Search Filter & Pagination State
   const [search, setSearch] = useState('');
@@ -81,6 +82,8 @@ export default function ServicesPage() {
       alert(err.response?.data?.error || 'Failed to delete service');
     }
   };
+
+
 
   const handleAddNewSubService = (group: any) => {
     let catSlug = 'gov_scheme';
@@ -180,13 +183,14 @@ export default function ServicesPage() {
   const activeServices = services.filter(s => s.isActive).length;
   const underMaintenance = services.filter(s => !s.isActive).length;
 
-  if (showWizard) {
+  if (showWizard || editingService) {
     return (
       <ServiceConfigWizard 
-        onClose={() => { setShowWizard(false); setWizardCategory(undefined); setWizardDepartment(undefined); }} 
-        onSave={() => { setShowWizard(false); setWizardCategory(undefined); setWizardDepartment(undefined); fetchServices(); }} 
+        onClose={() => { setShowWizard(false); setWizardCategory(undefined); setWizardDepartment(undefined); setEditingService(null); }} 
+        onSave={() => { setShowWizard(false); setWizardCategory(undefined); setWizardDepartment(undefined); setEditingService(null); fetchServices(); }} 
         initialCategory={wizardCategory}
         initialDepartment={wizardDepartment}
+        initialService={editingService}
       />
     );
   }
@@ -448,6 +452,21 @@ export default function ServicesPage() {
                               <td style={{ padding: '14px 24px' }}>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                   <button
+                                    onClick={() => setEditingService(s)}
+                                    style={{
+                                      padding: '5px 12px',
+                                      border: '1.5px solid #E2E8F0',
+                                      borderRadius: '6px',
+                                      backgroundColor: '#FFFFFF',
+                                      color: '#475569',
+                                      fontSize: '12.5px',
+                                      fontWeight: 700,
+                                      cursor: 'pointer'
+                                    }}
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
                                     onClick={() => handleDeleteClick(s._id)}
                                     style={{
                                       padding: '5px 12px',
@@ -545,6 +564,8 @@ export default function ServicesPage() {
           </button>
         </div>
       </div>
+
+
 
       {/* Old modals completely removed in favor of premium config wizard */}
 
