@@ -55,6 +55,7 @@ const ApplicationSchema = new Schema(
     certificateUrl: { type: String },
     department: { type: String },
     lastDraftReminderSentAt: { type: Date },
+    priority: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'low' },
   },
   { timestamps: true }
 );

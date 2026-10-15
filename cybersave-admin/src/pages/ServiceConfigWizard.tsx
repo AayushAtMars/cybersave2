@@ -1264,7 +1264,7 @@ export default function ServiceConfigWizard({ onClose, onSave, initialCategory, 
                       { label: 'Overview information complete', ok: !!displayName && !!shortDesc },
                       { label: `Citizen Form Schema validated (${formFields.length} inputs)`, ok: formFields.length > 0 },
                       { label: `Attachment requirements assigned (${requiredDocs.length} files)`, ok: requiredDocs.length > 0 },
-                      { label: `Base pricing & tax configurations complete (₹${totalCitizenPrice})`, ok: serviceFee > 0 },
+                      { label: `Base pricing & tax configurations complete (₹${totalCitizenPrice})`, ok: Number(serviceFee) > 0 },
                       { label: 'Approval routing workflow compiled (5 nodes)', ok: true }
                     ].map((chk, i) => (
                       <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13.5px' }}>

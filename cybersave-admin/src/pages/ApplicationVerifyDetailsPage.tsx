@@ -52,6 +52,7 @@ interface Application {
   }>;
   certificateUrl?: string;
   department?: string;
+  priority?: string;
 }
 
 interface DocumentDetail {
@@ -380,9 +381,9 @@ export default function ApplicationVerifyDetailsPage() {
         ? `${(app.applicantAddress as any).line1 || ''}, ${(app.applicantAddress as any).city || ''}, ${(app.applicantAddress as any).state || ''} - ${(app.applicantAddress as any).pincode || ''}`
         : "—");
 
-  const proposedAddress = app.formData?.['New Address'] || app.formData?.['Proposed Address'] || app.formData?.newAddress || app.formData?.proposedAddress || Object.entries(app.formData || {}).find(([k]) => k.toLowerCase().includes('address'))?.[1] || "78, Civil Lines, Allahabad, UP - 211001";
+  const proposedAddress = app.formData?.['New Address'] || app.formData?.['Proposed Address'] || app.formData?.newAddress || app.formData?.proposedAddress || Object.entries(app.formData || {}).find(([k]) => k.toLowerCase().includes('address'))?.[1];
 
-  const reasonForUpdate = app.formData?.['Reason for Update'] || app.formData?.['Reason'] || app.formData?.reasonForUpdate || app.formData?.reason || Object.entries(app.formData || {}).find(([k]) => k.toLowerCase().includes('reason'))?.[1] || "Relocated for employment";
+  const reasonForUpdate = app.formData?.['Reason for Update'] || app.formData?.['Reason'] || app.formData?.reasonForUpdate || app.formData?.reason || Object.entries(app.formData || {}).find(([k]) => k.toLowerCase().includes('reason'))?.[1];
 
   // Compute SLA SLA: 4h 32m remaining (example calculation based on slaDeadline)
   let slaText = 'SLA: 24h remaining';
@@ -532,9 +533,10 @@ export default function ApplicationVerifyDetailsPage() {
             </span>
             <span style={{
               padding: '4px 10px', borderRadius: '20px', fontSize: '11px', fontWeight: 700,
-              backgroundColor: '#FEF2F2', color: '#DC2626'
+              backgroundColor: app.priority === 'critical' ? '#F1F5F9' : app.priority === 'high' ? '#FEF2F2' : app.priority === 'medium' ? '#FEF9C3' : '#F8FAFC',
+              color: app.priority === 'critical' ? '#475569' : app.priority === 'high' ? '#DC2626' : app.priority === 'medium' ? '#B45309' : '#64748B'
             }}>
-              High Priority
+              {app.priority ? app.priority.charAt(0).toUpperCase() + app.priority.slice(1) : 'Low'} Priority
             </span>
           </div>
 
@@ -585,10 +587,19 @@ export default function ApplicationVerifyDetailsPage() {
 
               {user?.permissions?.includes('escalate_to_admin') && (
                 <button
-                  onClick={() => handleStatusUpdate('under_review')}
+                  onClick={async () => {
+                    try {
+                      await adminClient.patch(`/applications/${id}/escalate`);
+                      showToast('Application escalated');
+                      fetchDetails();
+                    } catch (err) {
+                      showToast('Failed to escalate application');
+                    }
+                  }}
+                  disabled={app.priority === 'critical'}
                   style={{
-                    padding: '10px 18px', border: '1.5px solid #F59E0B', backgroundColor: '#FFFFFF',
-                    color: '#D97706', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: 'pointer'
+                    padding: '10px 18px', border: '1.5px solid ' + (app.priority === 'critical' ? '#CBD5E1' : '#F59E0B'), backgroundColor: app.priority === 'critical' ? '#F1F5F9' : '#FFFFFF',
+                    color: app.priority === 'critical' ? '#94A3B8' : '#D97706', borderRadius: '10px', fontSize: '13px', fontWeight: 700, cursor: app.priority === 'critical' ? 'not-allowed' : 'pointer'
                   }}
                 >
                   Escalate
@@ -678,22 +689,26 @@ export default function ApplicationVerifyDetailsPage() {
             </div>
 
             {/* Proposed field */}
-            <div style={{
-              backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: '12px',
-              padding: '16px 20px', marginBottom: '20px'
-            }}>
-              <label style={{ fontSize: '11px', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Proposed New Address (Requested)</label>
-              <span style={{ fontSize: '14.5px', fontWeight: 700, color: '#1E3A8A' }}>
-                {proposedAddress}
-              </span>
-            </div>
+            {proposedAddress && (
+              <div style={{
+                backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE', borderRadius: '12px',
+                padding: '16px 20px', marginBottom: '20px'
+              }}>
+                <label style={{ fontSize: '11px', fontWeight: 800, color: '#2563EB', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>Proposed New Address (Requested)</label>
+                <span style={{ fontSize: '14.5px', fontWeight: 700, color: '#1E3A8A' }}>
+                  {proposedAddress as string}
+                </span>
+              </div>
+            )}
 
-            <div>
-              <label style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>Reason For Update</label>
-              <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#475569' }}>
-                {reasonForUpdate}
-              </span>
-            </div>
+            {reasonForUpdate && (
+              <div>
+                <label style={{ fontSize: '11px', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '4px' }}>Reason For Update</label>
+                <span style={{ fontSize: '13.5px', fontWeight: 500, color: '#475569' }}>
+                  {reasonForUpdate as string}
+                </span>
+              </div>
+            )}
 
             {app.status === 'completed' && app.certificateUrl && (
               <div style={{

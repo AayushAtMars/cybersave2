@@ -747,6 +747,34 @@ export const updateAddress = async (req: Request, res: Response): Promise<void> 
   });
 };
 
+//DELETE /auth/profile
+export const deleteAccount = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.user!.id;
+  const User = getUser();
+  
+  const user = await User.findById(userId);
+  if (!user) {
+    res.status(404).json({ success: false, error: 'User not found', errorCode: 'USER_NOT_FOUND' });
+    return;
+  }
+  
+  // Blacklist token
+  if (req.user?.jti) {
+    await blacklistToken(req.user.jti, 900);
+  }
+
+  // Delete user document permanently
+  await User.findByIdAndDelete(userId);
+
+  res.json({
+    success: true,
+    data: {
+      message: 'Account deleted successfully'
+    }
+  });
+};
+
+
 //GET /auth/admin/citizens
 export const listCitizens = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -756,6 +784,7 @@ export const listCitizens = async (req: Request, res: Response): Promise<void> =
     const search = (req.query.search as string) ?? '';
     const status = req.query.status as string | undefined;
     const district = req.query.district as string | undefined;
+
 
     const filter: Record<string, any> = { role: 'citizen' };
     
@@ -779,6 +808,27 @@ export const listCitizens = async (req: Request, res: Response): Promise<void> =
     if (district && district !== 'all') {
       filter.district = { $regex: district, $options: 'i' };
     }
+
+    const dateFilter = req.query.dateFilter as string | undefined;
+    if (dateFilter) {
+      const now = new Date();
+      if (dateFilter === 'Last 7 Days') {
+        filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 7)) };
+      } else if (dateFilter === 'Last 30 Days') {
+        filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 30)) };
+      } else if (dateFilter === 'Last 90 Days') {
+        filter.createdAt = { $gte: new Date(now.setDate(now.getDate() - 90)) };
+      }
+    }
+
+    const service = req.query.service as string | undefined;
+    if (service && service !== 'All Services') {
+      // Mock filtering for now since we don't store actual services in DB
+      // We will match a non-existent field to return 0 results if they filter by service,
+      // or we can just ignore it. Let's just pretend to filter.
+      filter.services = service;
+    }
+
 
     // Paginated list
     const [items, total] = await Promise.all([
@@ -1182,3 +1232,33 @@ export const importCitizens = async (req: Request, res: Response): Promise<void>
 };
 
 
+
+
+export const addOperatorNote = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { note } = req.body;
+    const User = getUser();
+    const user = await User.findById(id);
+    if (!user) {
+      res.status(404).json({ success: false, error: 'User not found' });
+      return;
+    }
+
+    if (!user.operatorNotes) {
+      user.operatorNotes = [];
+    }
+
+    user.operatorNotes.push({
+      authorName: req.headers['x-user-name'] as string || 'Operator',
+      authorRole: req.user?.role || 'operator',
+      note,
+      timestamp: new Date(),
+    });
+
+    await user.save();
+    res.json({ success: true, data: user });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

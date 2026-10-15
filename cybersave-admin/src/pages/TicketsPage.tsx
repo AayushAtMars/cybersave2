@@ -11,6 +11,7 @@ interface Message {
 interface Ticket {
   _id: string;
   citizenId: string;
+  citizenName?: string;
   subject: string;
   description: string;
   status: 'open' | 'in_progress' | 'resolved' | 'closed' | 'escalated';
@@ -120,6 +121,34 @@ export default function TicketsPage() {
     }
   };
 
+
+
+  const handleViewAttachment = async (e: React.MouseEvent, url: string) => {
+    e.preventDefault();
+    try {
+      const match = url.match(/\/sign\/cybersave-documents\/(.*?)\?token=/);
+      if (match && match[1]) {
+        const storageKey = decodeURIComponent(match[1]);
+        const res = await adminClient.post('/documents/refresh-url', { storageKey });
+        window.open(res.data.data.url, '_blank');
+      } else {
+        window.open(url, '_blank');
+      }
+    } catch (err) {
+      alert("Failed to open attachment.");
+    }
+  };
+
+  const handleUpdatePriority = async (id: string, newPriority: string) => {
+    try {
+      await adminClient.patch(`/support/operator/tickets/${id}/priority`, { priority: newPriority });
+      alert(`Ticket priority upgraded to ${newPriority.toUpperCase()}`);
+      fetchTickets();
+    } catch (err) {
+      alert('Failed to update priority');
+    }
+  };
+
   const handleUpdateStatus = async (id: string, newStatus: 'in_progress' | 'resolved' | 'closed' | 'escalated') => {
     try {
       // The status patch endpoint on support-service is /operator/tickets/:id/status
@@ -196,7 +225,8 @@ export default function TicketsPage() {
     const tktId = getTktIdStr(selectedTicket);
     const statusBadge = getStatusBadgeStyles(selectedTicket.status);
     const priorityBadge = getPriorityBadgeStyles(selectedTicket.priority);
-    const citizenInitials = 'JS';
+    const reporterName = selectedTicket.citizenName || 'User ' + selectedTicket.citizenId.slice(-4);
+    const citizenInitials = reporterName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
     const agentInitials = selectedTicket.assignedOperatorName ? selectedTicket.assignedOperatorName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) : 'AS';
 
     const handleConfirmResolution = async () => {
@@ -333,7 +363,7 @@ export default function TicketsPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderTop: '1px solid #F1F5F9', paddingTop: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', display: 'block' }}>Notify Reporter (John Smith) via Email</span>
+                    <span style={{ fontSize: '14px', fontWeight: 700, color: '#0F172A', display: 'block' }}>Notify Reporter ({reporterName}) via Email</span>
                     <span style={{ fontSize: '12.5px', color: '#64748B', display: 'block', marginTop: '2px' }}>Send a summary and resolution notes immediately upon confirmation.</span>
                   </div>
                   <div 
@@ -425,12 +455,9 @@ export default function TicketsPage() {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
                   <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Reporter</span>
-                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>John Smith</span>
+                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{reporterName}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Assigned To</span>
-                  <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{selectedTicket.assignedOperatorName || 'Unassigned'}</span>
-                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Created</span>
                   <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{new Date(selectedTicket.createdAt).toLocaleDateString('en-GB')}</span>
@@ -438,7 +465,7 @@ export default function TicketsPage() {
                 {selectedTicket.attachmentUrl && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '10px', marginTop: '10px' }}>
                     <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Attachment</span>
-                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563EB', fontWeight: 750, textDecoration: 'underline' }}>View Image/PDF</a>
+                    <a href="#" onClick={(e) => handleViewAttachment(e, selectedTicket.attachmentUrl!)} style={{ fontSize: '13px', color: '#2563EB', fontWeight: 750, textDecoration: 'underline' }}>View Image/PDF</a>
                   </div>
                 )}
               </div>
@@ -456,7 +483,7 @@ export default function TicketsPage() {
                   <span style={{ fontWeight: 700 }}>Subject:</span> Resolved: {selectedTicket.subject} (#{tktId})
                 </div>
                 <div style={{ borderTop: '1px solid #E2E8F0', paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <p style={{ margin: 0, fontWeight: 700 }}>Hello John Smith,</p>
+                  <p style={{ margin: 0, fontWeight: 700 }}>Hello {reporterName},</p>
                   <p style={{ margin: 0, color: '#475569', lineHeight: 1.4 }}>
                     Our technical support team has marked your issue as <span style={{ color: '#2563EB', fontWeight: 700 }}>Resolved</span>.
                   </p>
@@ -488,7 +515,8 @@ export default function TicketsPage() {
     const tktId = getTktIdStr(selectedTicket);
     const statusBadge = getStatusBadgeStyles(selectedTicket.status);
     const priorityBadge = getPriorityBadgeStyles(selectedTicket.priority);
-    const citizenInitials = 'JS';
+    const reporterName = selectedTicket.citizenName || 'User ' + selectedTicket.citizenId.slice(-4);
+    const citizenInitials = reporterName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
     const agentInitials = selectedTicket.assignedOperatorName ? selectedTicket.assignedOperatorName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2) : 'AS';
 
     return (
@@ -525,9 +553,9 @@ export default function TicketsPage() {
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '24px' }}>
                 {selectedTicket.messages.map((m, idx) => {
-                  const isOp = m.senderRole === 'operator';
+                  const isOp = ['operator', 'admin', 'super_admin'].includes(m.senderRole);
                   const isBot = m.senderRole === 'system';
-                  const senderName = isOp ? (selectedTicket.assignedOperatorName || 'Support Agent') : isBot ? 'System Bot' : 'John Smith';
+                  const senderName = isOp ? (selectedTicket.assignedOperatorName && selectedTicket.assignedOperatorName !== 'Unassigned' ? selectedTicket.assignedOperatorName : 'Admin') : isBot ? 'System Bot' : reporterName;
                   const initials = senderName.split(' ').map(w => w[0]).join('').toUpperCase().substring(0, 2);
                   
                   return (
@@ -562,7 +590,7 @@ export default function TicketsPage() {
               <div style={{ borderTop: '1.5px solid #F1F5F9', paddingTop: '20px' }}>
                 <h4 style={{ fontSize: '14.5px', fontWeight: 800, color: '#0F172A', margin: 0, marginBottom: '12px' }}>Write a Response</h4>
                 <textarea
-                  placeholder={`Type your response to John Smith here...`}
+                  placeholder={`Type your response to ${reporterName} here...`}
                   value={replyText}
                   onChange={e => setReplyText(e.target.value)}
                   style={{
@@ -572,7 +600,7 @@ export default function TicketsPage() {
                 />
                 <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: '12px' }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button style={{ padding: '8px 14px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }} onClick={() => alert("Draft saved locally.")}>Save Draft</button>
+
                     <button style={{ padding: '8px 18px', border: 'none', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backgroundColor: '#2563EB', color: '#FFFFFF', cursor: 'pointer' }} onClick={async () => {
                       if (!replyText.trim()) return;
                       await adminClient.post(`/support/tickets/${selectedTicket._id}/reply`, { message: replyText });
@@ -615,41 +643,32 @@ export default function TicketsPage() {
                   <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Last Updated</span>
                   <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{new Date(selectedTicket.updatedAt).toLocaleDateString('en-GB')}</span>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Assigned To</span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '24px', height: '24px', borderRadius: '12px', backgroundColor: '#EFF6FF', color: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>{agentInitials}</div>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{selectedTicket.assignedOperatorName || 'Unassigned'}</span>
-                  </div>
-                </div>
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9', paddingBottom: '10px', alignItems: 'center' }}>
                   <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Reporter</span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ width: '24px', height: '24px', borderRadius: '12px', backgroundColor: '#F1F5F9', color: '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: 700 }}>{citizenInitials}</div>
-                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>John Smith</span>
+                    <span style={{ fontSize: '13px', fontWeight: 800, color: '#0F172A' }}>{reporterName}</span>
                   </div>
                 </div>
                 {selectedTicket.attachmentUrl && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '13px', fontWeight: 650, color: '#64748B' }}>Attachment</span>
-                    <a href={selectedTicket.attachmentUrl} target="_blank" rel="noreferrer" style={{ fontSize: '13px', color: '#2563EB', fontWeight: 750, textDecoration: 'underline' }}>View Image/PDF</a>
+                    <a href="#" onClick={(e) => handleViewAttachment(e, selectedTicket.attachmentUrl!)} style={{ fontSize: '13px', color: '#2563EB', fontWeight: 750, textDecoration: 'underline' }}>View Image/PDF</a>
                   </div>
                 )}
               </div>
 
               {/* Action Buttons */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <button style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: '#FEE2E2', color: '#EF4444', cursor: 'pointer' }} onClick={() => handleUpdateStatus(selectedTicket._id, 'escalated')}>Escalate Ticket</button>
+                <button style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: selectedTicket.priority === 'critical' ? '#F1F5F9' : '#FEE2E2', color: selectedTicket.priority === 'critical' ? '#94A3B8' : '#EF4444', cursor: selectedTicket.priority === 'critical' ? 'not-allowed' : 'pointer' }} disabled={selectedTicket.priority === 'critical'} onClick={() => {
+                  const current = selectedTicket.priority || 'medium';
+                  const mapping: Record<string, string> = { low: 'medium', medium: 'high', high: 'critical' };
+                  const next = mapping[current.toLowerCase()];
+                  if (next) handleUpdatePriority(selectedTicket._id, next);
+                }}>Escalate Ticket</button>
                 <button style={{ width: '100%', padding: '10px', border: 'none', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: '#E6FDF3', color: '#10B981', cursor: 'pointer' }} onClick={() => handleUpdateStatus(selectedTicket._id, 'resolved')}>Mark as Resolved</button>
-                <button style={{ width: '100%', padding: '10px', border: '1.5px solid #E2E8F0', borderRadius: '8px', fontSize: '13.5px', fontWeight: 700, backgroundColor: '#FFFFFF', color: '#475569', cursor: 'pointer' }} onClick={() => {
-                  const agentName = window.prompt("Enter agent name to reassign to:");
-                  if (agentName) {
-                    adminClient.patch(`/support/operator/tickets/${selectedTicket._id}/reassign`, { assignedOperatorName: agentName }).then(() => {
-                      alert(`Ticket reassigned to ${agentName}`);
-                      fetchTickets();
-                    }).catch(() => alert("Failed to reassign"));
-                  }
-                }}>Reassign Ticket</button>
+
               </div>
             </div>
           </div>
@@ -713,8 +732,8 @@ export default function TicketsPage() {
         </div>
         <button
           onClick={() => {
-            const header = ["Ticket ID,Subject,Category,Priority,Status,Assigned To,Created At"].join(",");
-            const rows = tickets.map(t => `"${getTktIdStr(t)}","${t.subject?.replace(/"/g, '""')}","${t.category || ''}","${t.priority || ''}","${t.status}","${t.assignedOperatorName || 'Unassigned'}","${new Date(t.createdAt).toLocaleDateString('en-GB')}"`);
+            const header = ["Ticket ID,Subject,Category,Priority,Status,Created At"].join(",");
+            const rows = tickets.map(t => `"${getTktIdStr(t)}","${t.subject?.replace(/"/g, '""')}","${t.category || ''}","${t.priority || ''}","${t.status}","${new Date(t.createdAt).toLocaleDateString('en-GB')}"`);
             const csvContent = header + "\n" + rows.join("\n");
             
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -965,10 +984,7 @@ export default function TicketsPage() {
                     <span style={{ color: '#64748B', fontWeight: 650 }}>Last Updated</span>
                     <span style={{ color: '#0F172A', fontWeight: 750 }}>{new Date(t.updatedAt).toLocaleDateString('en-GB')}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span style={{ color: '#64748B', fontWeight: 650 }}>Assigned To</span>
-                    <span style={{ color: '#0F172A', fontWeight: 750 }}>{t.assignedOperatorName || 'Unassigned'}</span>
-                  </div>
+
                 </div>
 
                 {/* Action Buttons */}
@@ -1198,7 +1214,12 @@ export default function TicketsPage() {
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => handleUpdateStatus(selectedTicket._id, 'in_progress')} style={{ padding: '5px 10px', backgroundColor: '#FFFBEB', color: '#F59E0B', border: '1px solid #F59E0B', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>In Progress</button>
                 <button onClick={() => handleUpdateStatus(selectedTicket._id, 'resolved')} style={{ padding: '5px 10px', backgroundColor: '#E6FDF3', color: '#10B981', border: '1px solid #10B981', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>Resolve</button>
-                <button onClick={() => handleUpdateStatus(selectedTicket._id, 'escalated')} style={{ padding: '5px 10px', backgroundColor: '#FEE2E2', color: '#EF4444', border: '1px solid #EF4444', borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>Escalate</button>
+                <button disabled={selectedTicket.priority === 'critical'} onClick={() => {
+                  const current = selectedTicket.priority || 'medium';
+                  const mapping: Record<string, string> = { low: 'medium', medium: 'high', high: 'critical' };
+                  const next = mapping[current.toLowerCase()];
+                  if (next) handleUpdatePriority(selectedTicket._id, next);
+                }} style={{ padding: '5px 10px', backgroundColor: selectedTicket.priority === 'critical' ? '#F1F5F9' : '#FEE2E2', color: selectedTicket.priority === 'critical' ? '#94A3B8' : '#EF4444', border: '1px solid ' + (selectedTicket.priority === 'critical' ? '#CBD5E1' : '#EF4444'), borderRadius: '6px', fontSize: '12px', fontWeight: 700, cursor: selectedTicket.priority === 'critical' ? 'not-allowed' : 'pointer' }}>Escalate</button>
               </div>
             </div>
 

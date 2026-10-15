@@ -170,6 +170,24 @@ export const updateTicketStatus = async (req: Request, res: Response): Promise<v
   res.json({ success: true, data: { ticket } });
 };
 
+//Operator: PATCH /support/operator/tickets/:id/priority
+export const updateTicketPriority = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { priority } = req.body as { priority: 'low' | 'medium' | 'high' | 'critical' };
+
+  const { Ticket } = getModels();
+  const ticket = await Ticket.findById(id);
+  if (!ticket) {
+    res.status(404).json({ success: false, error: 'Ticket not found', errorCode: 'TICKET_NOT_FOUND' });
+    return;
+  }
+
+  ticket.priority = priority;
+  await ticket.save();
+
+  res.json({ success: true, data: { ticket } });
+};
+
 //Admin: GET /support/admin/tickets — list all tickets
 export const listAdminTickets = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -185,6 +203,15 @@ export const listAdminTickets = async (req: Request, res: Response): Promise<voi
     }
 
     const items = await Ticket.find().sort({ createdAt: -1 }).lean();
+    const { User } = getModels();
+    
+    for (const item of items as any[]) {
+      if (item.citizenId) {
+        const user = await User.findById(item.citizenId).lean().catch(() => null) as any;
+        item.citizenName = user ? user.name : item.citizenId;
+      }
+    }
+
     res.json({ success: true, data: { items } });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });

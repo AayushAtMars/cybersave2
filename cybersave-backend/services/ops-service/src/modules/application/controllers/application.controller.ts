@@ -479,11 +479,14 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
     operatorLogsList.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     const finalOperatorLogs = operatorLogsList.slice(0, 5);
 
+    const daysParam = parseInt(req.query.days as string, 10) || 7;
+    const daysToIterate = Math.min(daysParam, 30); // max 30 days
     const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const monthsOfYear = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     const revenueOverview: any[] = [];
     const applicationTrends: any[] = [];
 
-    for (let i = 6; i >= 0; i--) {
+    for (let i = daysToIterate - 1; i >= 0; i--) {
       const { startOfDay: start, endOfDay: end } = getISTDayBounds(-i);
 
       const dayPaid = await Application.find({
@@ -507,7 +510,9 @@ export const getAdminStats = async (req: Request, res: Response): Promise<void> 
 
       // Get the correct day of week label in IST
       const labelDate = new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000) - (i * 24 * 60 * 60 * 1000));
-      const dayLabel = daysOfWeek[labelDate.getUTCDay()];
+      const dayLabel = daysToIterate <= 7 
+        ? daysOfWeek[labelDate.getUTCDay()] 
+        : `${labelDate.getUTCDate()} ${monthsOfYear[labelDate.getUTCMonth()]}`;
 
       revenueOverview.push({
         day: dayLabel,
@@ -602,6 +607,8 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
     const assigned = req.query.assigned as string | undefined;
     const citizenId = req.query.citizenId as string | undefined;
     const operatorId = req.query.operatorId as string | undefined;
+    const priority = req.query.priority as string | undefined;
+    const dateFilter = req.query.date as string | undefined;
     const requesterRole = req.headers['x-user-role'] as string;
     const requesterId = req.headers['x-user-id'] as string;
     
@@ -656,10 +663,58 @@ export const listAllApplications = async (req: Request, res: Response): Promise<
       }
     }
 
+    if (priority && priority !== 'all') {
+      if (priority === 'high') {
+        filter.$or = [
+          ...(filter.$or || []),
+          { priority: { $in: ['high', 'critical'] } },
+          { serviceName: { $regex: 'pan|mobile', $options: 'i' } },
+          { status: 'docs_pending' }
+        ];
+      } else if (priority === 'medium') {
+        filter.$or = [
+          ...(filter.$or || []),
+          { priority: 'medium' },
+          { serviceName: { $regex: 'address', $options: 'i' } },
+          { status: 'under_review' }
+        ];
+      } else if (priority === 'low') {
+        filter.$and = [
+          ...(filter.$and || []),
+          { priority: { $in: ['low', null, undefined] } },
+          { serviceName: { $not: { $regex: 'pan|mobile|address', $options: 'i' } } },
+          { status: { $nin: ['docs_pending', 'under_review'] } }
+        ];
+      }
+    }
+
+
     if (assigned === 'unassigned') {
       filter.assignedOperatorId = { $exists: false };
     } else if (assigned === 'assigned') {
       filter.assignedOperatorId = { $exists: true, $ne: null };
+    }
+
+    
+    if (dateFilter && dateFilter !== 'all') {
+      if (dateFilter.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        // Handle specific YYYY-MM-DD date
+        const targetDate = new Date(dateFilter);
+        // Start of day in IST
+        const startOfDay = new Date(targetDate.getTime() - (5.5 * 60 * 60 * 1000));
+        // End of day in IST
+        const endOfDay = new Date(targetDate.getTime() + (24 * 60 * 60 * 1000) - 1 - (5.5 * 60 * 60 * 1000));
+        filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
+      } else if (dateFilter === 'today') {
+        const { startOfDay, endOfDay } = getISTDayBounds(0);
+        filter.createdAt = { $gte: startOfDay, $lte: endOfDay };
+      } else if (dateFilter === '7days') {
+        const { startOfDay } = getISTDayBounds(-7);
+        filter.createdAt = { $gte: startOfDay };
+      } else if (dateFilter === '30days') {
+        const { startOfDay } = getISTDayBounds(-30);
+        filter.createdAt = { $gte: startOfDay };
+      }
     }
 
     const [itemsRaw, total] = await Promise.all([
@@ -965,6 +1020,44 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<vo
         paymentsThisMonth: paymentsThisMonth / 100 // Convert from paise to INR
       }
     });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+
+// ── PATCH /applications/:id/escalate — bump priority ────────────────────
+export const escalateApplication = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { Application } = getModels();
+
+    const app = await Application.findById(id);
+    if (!app) {
+      res.status(404).json({ success: false, error: 'Application not found' });
+      return;
+    }
+
+    const priorityLevels = ['low', 'medium', 'high', 'critical'];
+    let currentIdx = priorityLevels.indexOf(app.priority || 'low');
+    if (currentIdx < priorityLevels.length - 1) {
+      currentIdx++;
+    }
+    const newPriority = priorityLevels[currentIdx];
+
+    app.priority = newPriority;
+    
+    // Also add to timeline
+    app.addTimelineEvent(
+      'Application Escalated',
+      req.user?.id || 'system',
+      req.user?.role || 'system',
+      `Priority changed to ${newPriority}`
+    );
+
+    await app.save();
+
+    res.json({ success: true, data: app });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err.message });
   }

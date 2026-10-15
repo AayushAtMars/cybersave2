@@ -253,7 +253,6 @@ function OperatorProfileView({ op, applications, tab, setTab, onClose, onStatusC
             <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', padding: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', margin: 0 }}>Personal Information</h3>
-                <span style={{ fontSize: '13px', fontWeight: 700, color: '#2563EB', cursor: 'pointer' }}>Verify Identity</span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>

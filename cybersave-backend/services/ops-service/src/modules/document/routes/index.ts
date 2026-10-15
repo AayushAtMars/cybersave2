@@ -8,6 +8,7 @@ import {
   runRetentionCleanup,
   listDocuments,
   listAdminDocuments,
+  refreshDownloadUrl,
 } from '../controllers/document.controller';
 
 const router = Router();
@@ -18,6 +19,7 @@ router.get('/documents/admin/all', authenticateGateway, listAdminDocuments);
 router.post('/documents/upload-url', authenticateGateway, requestUploadUrl);
 router.post('/documents/confirm', authenticateGateway, confirmUpload);
 router.get('/documents/:id/download-url', authenticateGateway, getDocumentDownloadUrl);
+router.post('/documents/refresh-url', authenticateGateway, refreshDownloadUrl);
 router.delete('/documents/:id', authenticateGateway, deleteDocument);
 
 // Cron retention endpoint

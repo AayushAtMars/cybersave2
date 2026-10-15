@@ -50,6 +50,14 @@ const UserSchema = new Schema(
         lastActive: { type: Date, default: Date.now },
       },
     ],
+    operatorNotes: [
+      {
+        authorName: String,
+        authorRole: String,
+        note: String,
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -163,6 +171,15 @@ const TicketSchema = new Schema(
     messages: { type: [MessageSchema], default: [] },
     assignedOperatorId: { type: String, index: true },
     assignedOperatorName: { type: String },
+    internalNotes: { 
+      type: [{ 
+        authorName: String, 
+        authorRole: String, 
+        note: String, 
+        timestamp: Date 
+      }], 
+      default: [] 
+    },
   },
   { timestamps: true }
 );

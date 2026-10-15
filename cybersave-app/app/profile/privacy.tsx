@@ -159,41 +159,7 @@ export default function PrivacySecurityScreen() {
             </View>
           </View>
 
-          {/* Consent Management Section */}
-          <View style={styles.sectionHeaderContainer}>
-            <Text style={styles.sectionHeader}>{t('privacy.consent_management')}</Text>
-          </View>
-          <View style={styles.sectionCard}>
-            {/* Option: Analytics */}
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>{t('privacy.analytics_consent')}</Text>
-                <Text style={styles.optionDesc}>{t('privacy.allow_anonymous_diagnostic_rep')}</Text>
-              </View>
-              <Switch
-                value={analyticsConsent}
-                onValueChange={handleAnalyticsToggle}
-                trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
 
-            <View style={styles.divider} />
-
-            {/* Option: Third-Party Sharing */}
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text style={styles.optionTitle}>{t('privacy.third_party_sharing')}</Text>
-                <Text style={styles.optionDesc}>{t('privacy.share_verified_tags_with_offic')}</Text>
-              </View>
-              <Switch
-                value={sharingConsent}
-                onValueChange={handleSharingToggle}
-                trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
-                thumbColor="#FFFFFF"
-              />
-            </View>
-          </View>
 
           {/* Active Sessions Section */}
           <View style={styles.sectionHeaderContainer}>

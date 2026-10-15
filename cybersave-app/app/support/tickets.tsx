@@ -203,15 +203,7 @@ export default function SupportTicketsScreen() {
             <Text style={styles.emergencyNumber}>{t('tickets.112')}</Text>
           </TouchableOpacity>
 
-          {/* Share App Feedback Button */}
-          <TouchableOpacity 
-            style={styles.feedbackBtn} 
-            activeOpacity={0.8}
-            onPress={() => router.push('/support/feedback')}
-          >
-            <Ionicons name="chatbubble-outline" size={16} color="#2563EB" />
-            <Text style={styles.feedbackBtnText}>{t('tickets.share_app_feedback')}</Text>
-          </TouchableOpacity>
+
         </View>
       </ScrollView>
 

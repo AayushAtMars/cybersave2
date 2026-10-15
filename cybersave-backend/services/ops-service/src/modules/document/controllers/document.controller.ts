@@ -152,6 +152,21 @@ export const getDocumentDownloadUrl = async (req: Request, res: Response): Promi
   res.json({ success: true, data: { downloadUrl, expiresInSeconds: 300 } });
 };
 
+// ── POST /documents/refresh-url ──────────────────────────────────────────
+export const refreshDownloadUrl = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { storageKey } = req.body as { storageKey: string };
+    if (!storageKey) {
+      res.status(400).json({ success: false, error: 'storageKey is required', errorCode: 'BAD_REQUEST' });
+      return;
+    }
+    const url = await getDownloadUrl(storageKey);
+    res.json({ success: true, data: { url } });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message, errorCode: 'SERVER_ERROR' });
+  }
+};
+
 // ── DELETE /documents/:id ─────────────────────────────────────────────────────
 export const deleteDocument = async (req: Request, res: Response): Promise<void> => {
   const citizenId = req.user!.id;

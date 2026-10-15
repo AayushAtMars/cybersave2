@@ -73,6 +73,7 @@ export default function CitizensPage() {
   const [selectedDistrict, setSelectedDistrict] = useState('All');
   const [availableDistricts, setAvailableDistricts] = useState<string[]>(['All']);
   const [selectedService, setSelectedService] = useState('All Services');
+  const [dateFilter, setDateFilter] = useState('Last 30 Days');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   
   // Pagination
@@ -106,6 +107,8 @@ export default function CitizensPage() {
           limit: 10,
           status: statusTab !== 'all' ? statusTab : undefined,
           district: selectedDistrict !== 'All' ? selectedDistrict : undefined,
+          dateFilter: dateFilter !== 'All Time' ? dateFilter : undefined,
+          service: selectedService !== 'All Services' ? selectedService : undefined,
         }
       });
       setCitizens(data.data.items);
@@ -126,9 +129,9 @@ export default function CitizensPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusTab, selectedDistrict]);
+  }, [search, statusTab, selectedDistrict, dateFilter, selectedService]);
 
-  useEffect(() => { fetchCitizens(); }, [search, page, statusTab, selectedDistrict]);
+  useEffect(() => { fetchCitizens(); }, [search, page, statusTab, selectedDistrict, dateFilter, selectedService]);
 
   // Close action menus on outside click
   useEffect(() => {
@@ -383,12 +386,7 @@ export default function CitizensPage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button
-            onClick={handleImportCSVClick}
-            style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
-          >
-            Import
-          </button>
+
           <button
             onClick={handleExportCSV}
             style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', padding: '10px 18px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, color: '#334155', cursor: 'pointer' }}
@@ -534,58 +532,14 @@ export default function CitizensPage() {
           </div>
 
           {/* Date Selector */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', border: '1px solid #E2E8F0', padding: '9px 12px', borderRadius: '8px', backgroundColor: '#FFFFFF', fontSize: '13px', fontWeight: 600, color: '#334155', cursor: 'pointer' }}>
-            <span>Last 30 Days</span>
-            <Icons.ChevronDown />
-          </div>
-
-          {/* District Selector */}
-          <div style={{ position: 'relative' }}>
+                    <div style={{ position: 'relative' }}>
             <select
-              value={selectedDistrict}
-              onChange={(e) => setSelectedDistrict(e.target.value)}
-              style={{
-                appearance: 'none',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E2E8F0',
-                padding: '9px 32px 9px 12px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#334155',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{ appearance: 'none', backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', padding: '9px 32px 9px 12px', borderRadius: '8px', fontSize: '13px', fontWeight: 600, color: '#334155', outline: 'none', cursor: 'pointer' }}
             >
-              {availableDistricts.map(d => (
-                <option key={d} value={d}>District: {d}</option>
-              ))}
-            </select>
-            <span style={{ position: 'absolute', right: '12px', top: '14px', pointerEvents: 'none', color: '#64748B' }}>
-              <Icons.ChevronDown />
-            </span>
-          </div>
-
-          {/* Service Selector */}
-          <div style={{ position: 'relative' }}>
-            <select
-              value={selectedService}
-              onChange={(e) => setSelectedService(e.target.value)}
-              style={{
-                appearance: 'none',
-                backgroundColor: '#FFFFFF',
-                border: '1px solid #E2E8F0',
-                padding: '9px 32px 9px 12px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                color: '#334155',
-                outline: 'none',
-                cursor: 'pointer'
-              }}
-            >
-              {servicesList.map(s => (
-                <option key={s} value={s}>Service: {s}</option>
+              {['All Time', 'Last 7 Days', 'Last 30 Days', 'Last 90 Days'].map(d => (
+                <option key={d} value={d}>{d}</option>
               ))}
             </select>
             <span style={{ position: 'absolute', right: '12px', top: '14px', pointerEvents: 'none', color: '#64748B' }}>

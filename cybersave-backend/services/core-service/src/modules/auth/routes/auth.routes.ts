@@ -11,6 +11,7 @@ import {
   operatorLogin,
   updateProfile,
   updateAddress,
+  deleteAccount,
   listCitizens,
   listOperators,
   createOperator,
@@ -28,6 +29,7 @@ import {
   adminToggleOperator2FA,
   adminUpdateOperatorRBAC,
   adminUpdateOperatorProfile,
+  addOperatorNote,
 } from '../controllers/auth.controller';
 import { createAuditLog, listAuditLogs } from '../controllers/audit.controller';
 import { SendOtpSchema, VerifyOtpSchema, OperatorLoginSchema } from '@cybersave/shared';
@@ -105,6 +107,8 @@ router.patch(
   updateProfile
 );
 
+router.delete('/profile', authenticate, deleteAccount);
+
 router.patch(
   '/profile/address',
   authenticate,
@@ -168,6 +172,7 @@ router.post(
 );
 router.patch('/admin/citizens/:id', authenticate, adminUpdateCitizenProfile);
 router.patch('/admin/citizens/:id/block', authenticate, toggleCitizenStatus);
+router.post('/admin/citizens/:id/notes', authenticate, addOperatorNote);
 router.patch('/admin/operators/:id', authenticate, adminUpdateOperatorProfile);
 router.patch('/admin/operators/:id/status', authenticate, updateOperatorStatus);
 router.patch('/admin/operators/:id/password', authenticate, adminResetOperatorPassword);

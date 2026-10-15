@@ -637,7 +637,6 @@ export default function SettingsPage() {
             </p>
 
             {([
-              { key: 'emailNotifications', label: 'Email Notifications', desc: 'Receive daily status logs and summary digests in your email inbox.' },
               { key: 'pushNotifications', label: 'Push Notifications', desc: 'Allow browser instant popups for critical document verifications.' },
               { key: 'documentUploadAlerts', label: 'Document Upload Alerts', desc: 'Get notified instantly when standard operators submit upload batches.' },
               { key: 'expiryReminders', label: 'Expiry Reminders', desc: 'Receive notice sequences 30 days before document validity expires.' },

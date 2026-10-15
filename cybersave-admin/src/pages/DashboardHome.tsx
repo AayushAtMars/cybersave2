@@ -62,14 +62,15 @@ const COLORS = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#EFF6FF'];
 export default function DashboardHome() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [revenueDays, setRevenueDays] = useState(7);
   const user = useAdminStore((s) => s.user);
 
   useEffect(() => {
-    adminClient.get('/applications/admin/stats')
+    adminClient.get(`/applications/admin/stats?days=${revenueDays}`)
       .then(({ data }) => setStats(data.data))
       .catch((err) => console.error('Failed to load stats', err))
       .finally(() => setLoading(false));
-  }, []);
+  }, [revenueDays]);
 
   // Format today's date
   const todayFormatted = new Intl.DateTimeFormat('en-IN', {
@@ -306,11 +307,21 @@ export default function DashboardHome() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
               <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0F172A', margin: 0 }}>Revenue Overview</h3>
-              <p style={{ fontSize: '12px', color: '#64748B', margin: '2px 0 0 0' }}>7-day digital service transactions</p>
+              <p style={{ fontSize: '12px', color: '#64748B', margin: '2px 0 0 0' }}>{revenueDays}-day digital service transactions</p>
             </div>
             <div style={{ display: 'flex', gap: '4px', fontSize: '12px', fontWeight: 700 }}>
-              <span style={{ padding: '4px 8px', backgroundColor: '#EFF6FF', color: '#2563EB', borderRadius: '4px', cursor: 'pointer' }}>7 Days</span>
-              <span style={{ padding: '4px 8px', color: '#64748B', borderRadius: '4px', cursor: 'pointer' }}>30 Days</span>
+              <span 
+                onClick={() => setRevenueDays(7)}
+                style={{ padding: '4px 8px', backgroundColor: revenueDays === 7 ? '#EFF6FF' : 'transparent', color: revenueDays === 7 ? '#2563EB' : '#64748B', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                7 Days
+              </span>
+              <span 
+                onClick={() => setRevenueDays(30)}
+                style={{ padding: '4px 8px', backgroundColor: revenueDays === 30 ? '#EFF6FF' : 'transparent', color: revenueDays === 30 ? '#2563EB' : '#64748B', borderRadius: '4px', cursor: 'pointer' }}
+              >
+                30 Days
+              </span>
             </div>
           </div>
           <div style={{ height: '220px', width: '100%' }}>

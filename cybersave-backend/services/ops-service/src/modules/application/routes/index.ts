@@ -12,6 +12,7 @@ import {
   assignApplication,
   verifyDocument,
   updateApplicationStatus,
+  escalateApplication,
   getAdminStats,
   uploadCertificate,
   listAllApplications,
@@ -150,6 +151,13 @@ router.patch(
     })
   ),
   updateApplicationStatus
+);
+
+router.patch(
+  '/applications/:id/escalate',
+  authenticateGateway,
+  requireRole('super_admin', 'admin', 'operator'),
+  escalateApplication
 );
 
 // ── Internal Submit ──────────────────────────────────────────────────────────

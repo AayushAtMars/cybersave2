@@ -72,6 +72,7 @@ export default function ApplicationsQueuePage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [dateFilter, setDateFilter] = useState('all');
+  const [customDate, setCustomDate] = useState('');
   const [assignedFilter, setAssignedFilter] = useState('all');
 
   // Table selection states
@@ -114,7 +115,9 @@ export default function ApplicationsQueuePage() {
           search: search || undefined,
           status: statusFilter !== 'all' ? statusFilter : undefined,
           category: activeTab !== 'All Applications' ? activeTab : undefined,
-          assigned: assignedFilter !== 'all' ? assignedFilter : undefined
+          assigned: assignedFilter !== 'all' ? assignedFilter : undefined,
+          priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+          date: dateFilter === 'custom' ? (customDate || undefined) : (dateFilter !== 'all' ? dateFilter : undefined)
         }
       });
       setApps(data.data.items);
@@ -237,11 +240,11 @@ export default function ApplicationsQueuePage() {
 
   useEffect(() => {
     setPage(1);
-  }, [search, statusFilter, activeTab, assignedFilter, priorityFilter, dateFilter]);
+  }, [search, statusFilter, activeTab, assignedFilter, priorityFilter, dateFilter, customDate]);
 
   useEffect(() => {
     fetchApplications();
-  }, [page, search, statusFilter, activeTab, assignedFilter, priorityFilter, dateFilter]);
+  }, [page, search, statusFilter, activeTab, assignedFilter, priorityFilter, dateFilter, customDate]);
 
   // Master Checkbox Toggle
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -389,7 +392,9 @@ export default function ApplicationsQueuePage() {
           search: search || undefined,
           status: statusFilter !== 'all' ? statusFilter : undefined,
           category: activeTab !== 'All Applications' ? activeTab : undefined,
-          assigned: assignedFilter !== 'all' ? assignedFilter : undefined
+          assigned: assignedFilter !== 'all' ? assignedFilter : undefined,
+          priority: priorityFilter !== 'all' ? priorityFilter : undefined,
+          date: dateFilter === 'custom' ? (customDate || undefined) : (dateFilter !== 'all' ? dateFilter : undefined)
         }
       });
       
@@ -596,9 +601,9 @@ export default function ApplicationsQueuePage() {
         </div>
 
         {[
-          { value: statusFilter, onChange: setStatusFilter, label: 'Status', opts: [{ v: 'all', l: 'All' }, { v: 'submitted', l: 'Submitted' }, { v: 'under_review', l: 'In Review' }, { v: 'processing', l: 'Processing' }, { v: 'approved', l: 'Approved' }, { v: 'completed', l: 'Completed' }, { v: 'rejected', l: 'Rejected' }, { v: 'docs_pending', l: 'Docs Pending' }] },
+          { value: statusFilter, onChange: setStatusFilter, label: 'Status', opts: [{ v: 'all', l: 'All' }, { v: 'submitted', l: 'Submitted' }, { v: 'under_review', l: 'In Review' }, { v: 'completed', l: 'Completed' }, { v: 'rejected', l: 'Rejected' }] },
           { value: priorityFilter, onChange: setPriorityFilter, label: 'Priority', opts: [{ v: 'all', l: 'All' }, { v: 'high', l: 'High' }, { v: 'medium', l: 'Medium' }, { v: 'low', l: 'Low' }] },
-          { value: dateFilter, onChange: setDateFilter, label: 'Date', opts: [{ v: 'all', l: 'Custom Date' }, { v: 'today', l: 'Today' }, { v: '7days', l: 'Last 7 Days' }, { v: '30days', l: 'Last 30 Days' }] },
+          { value: dateFilter, onChange: setDateFilter, label: 'Date', opts: [{ v: 'all', l: 'All Time' }, { v: 'today', l: 'Today' }, { v: '7days', l: 'Last 7 Days' }, { v: '30days', l: 'Last 30 Days' }, { v: 'custom', l: 'Custom Date' }] },
           { value: assignedFilter, onChange: setAssignedFilter, label: 'Assigned', opts: [{ v: 'all', l: 'All' }, { v: 'assigned', l: 'Assigned' }, { v: 'unassigned', l: 'Unassigned' }] }
         ].map((f, idx) => (
           <div key={idx} style={{ position: 'relative' }}>
@@ -628,6 +633,26 @@ export default function ApplicationsQueuePage() {
             </span>
           </div>
         ))}
+        {dateFilter === 'custom' && (
+          <div style={{ position: 'relative' }}>
+            <input
+              type="date"
+              value={customDate}
+              onChange={e => setCustomDate(e.target.value)}
+              style={{
+                padding: '9px 14px',
+                border: '1.5px solid #E2E8F0',
+                borderRadius: '10px',
+                fontSize: '13.5px',
+                fontWeight: 700,
+                color: '#334155',
+                outline: 'none',
+                backgroundColor: '#FFFFFF',
+                cursor: 'pointer'
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Main Table Card */}

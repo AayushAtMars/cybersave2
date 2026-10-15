@@ -8,8 +8,10 @@ import {
   listOperatorTickets,
   updateTicketStatus,
   listAdminTickets,
+
   addInternalNote,
   reassignTicket,
+  updateTicketPriority,
 } from '../controllers/support.controller';
 
 const router = Router();
@@ -26,6 +28,7 @@ router.get('/admin/tickets', authenticateGateway, listAdminTickets);
 // Operator exclusive endpoints
 router.get('/operator/tickets', authenticateGateway, listOperatorTickets);
 router.patch('/operator/tickets/:id/status', authenticateGateway, updateTicketStatus);
+router.patch('/operator/tickets/:id/priority', authenticateGateway, updateTicketPriority);
 router.post('/operator/tickets/:id/notes', authenticateGateway, addInternalNote);
 router.patch('/operator/tickets/:id/reassign', authenticateGateway, reassignTicket);
 

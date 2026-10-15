@@ -260,6 +260,9 @@ export default function SettingsScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Call API to delete user from backend
+              await apiClient.delete('/auth/profile');
+
               // Delete session and settings from SecureStore
               await SecureStore.deleteItemAsync('user_session');
               await SecureStore.deleteItemAsync('biometric_enabled');
